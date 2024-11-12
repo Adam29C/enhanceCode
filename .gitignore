@@ -1,0 +1,15 @@
+node_modules
+package-lock.json
+.env
+.env.example
+.idea/
+.dockerignore
+.project
+.vs/
+.vscode/
+276.gif
+Dockerfile
+libssl1.1
+lib/
+khatri-dc19d-firebase-adminsdk-rwip0-524330e408.json
+public/apk
