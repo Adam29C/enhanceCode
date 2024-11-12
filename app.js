@@ -317,7 +317,7 @@ cron.schedule("*/1 * * * *", async (req, res) => {
     console.log(error);
   }
 });
-let port = 6000
+let port = 5200
 app.listen(port, () => {
   new Date().toLocaleDateString();
   console.log(`Running on PORT: ${port} Date: ${new Date().toLocaleString()}`);
