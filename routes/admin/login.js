@@ -14,7 +14,7 @@ router.post("/registerAdmin", async (req, res) => {
     try {
         const apiKey = req.header("x-api-key");
         if (!apiKey) {
-            return res.status(403).json({
+            return res.status(400).json({
                 status: 0,
                 message: "Access Denied. API Key missing",
             });
@@ -23,7 +23,7 @@ router.post("/registerAdmin", async (req, res) => {
         const decodedKey = Buffer.from(apiKey, "base64").toString("ascii");
         const validAPI = await bcrypt.compare(process.env.REGISTER_API_KEY, decodedKey);
         if (!validAPI) {
-            return res.status(403).json({
+            return res.status(400).json({
                 status: 0,
                 message: "Access Denied. Invalid API Key",
             });
@@ -45,7 +45,7 @@ router.post("/registerAdmin", async (req, res) => {
             ],
         });
         if (userExists) {
-            return res.status(409).json({
+            return res.status(400).json({
                 status: 0,
                 message: "User Already Registered with provided email, username, or mobile",
             });
@@ -73,7 +73,7 @@ router.post("/registerAdmin", async (req, res) => {
         const responseData = { ...savedUser._doc };
         delete responseData.password;
 
-        return res.status(201).json({
+        return res.status(200).json({
             status: 1,
             message: "Admin Registered Successfully",
             data: responseData,
