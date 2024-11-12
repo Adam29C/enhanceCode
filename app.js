@@ -80,6 +80,12 @@ const payment_additional = require("./routes/paymentAdditional/getway")
 const chat = require("./routes/chat/chat");
 const manualPayment = require("./routes/API/manualPayment")
 const manual = require("./routes/wallet/manualpayment");
+
+//new route add
+const adminLogin=require("./routes/admin/login")
+
+
+
 dotenv.config();
 
 // Connect To DB
@@ -220,7 +226,10 @@ app.use("/api", website);
 app.use("/chat", chat);
 app.use("/paymentMode", payment_additional);
 app.use("/manualPayment", manualPayment);
-app.use("/manual", manual)
+app.use("/manual", manual);
+
+// new Route add
+app.use("/adminLogin",adminLogin)
 
 
 const gameProvi = require("./model/games/Games_Provider");
