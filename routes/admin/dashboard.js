@@ -9,6 +9,7 @@ const permission = require("../helpersModule/permission");
 const deleteduser = require("../../model/API/Deleted_User");
 const Users = require("../../model/API/Users");
 const moment =require("moment");
+const total = require("../../model/API/FundRequest");
 
 router.post("/getBriefDeposit", session, async (req, res) => {
   try {
@@ -108,112 +109,97 @@ router.get("/dashboardCount", async (req, res) => {
   }
 });
 
-router.get("/getRegisteredUser/:reqType", session, async (req, res) => {
-  try {
-    const { reqType } = req.params; // Get the request type from the URL parameter
-    const { page = 1, limit = 10, searchQuery = "" } = req.query; // Pagination and search parameters
-    const todayDate = moment().format("DD/MM/YYYY"); // Get today's date in the format "DD/MM/YYYY"
+router.post("/getRegisteredUser",session, async (req, res) => {
+    try {
+      const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
+      const todayDate = moment().format("DD/MM/YYYY"); 
+  
+      let query = {};
+      let userFundArr = {}; 
+      let returnJson = {};
+      query.CreatedAt = { $regex: todayDate };
+  
+      if (searchQuery) {
+        query.$or = [
+          { username: { $regex: searchQuery, $options: "i" } }, 
+          { email: { $regex: searchQuery, $options: "i" } }, 
+        ];
+      }
+  
+      if (reqType == "1") {
+        query.wallet_balance = 0;
 
-    let query = {}; // The main query object
-    let userFundArr = {}; // Object to hold user funds mapping
-    let returnJson = {}; // Response object to send back
+        const todayRegistered = await Users
+          .find(query)
+          .skip((page - 1) * limit) 
+          .limit(parseInt(limit)); 
+        const totalUsers = await Users.countDocuments(query);
+  
+        returnJson = {
+          todayRegistered,
+          pagination: {
+            totalUsers,
+            totalPages: Math.ceil(totalUsers / limit),
+            currentPage: page,
+            pageSize: limit,
+          },
+        };
+      } else {
+        query.wallet_balance = { $gt: 0 };
+        const todayRegistered = await Users
+          .find(query)
+          .skip((page - 1) * limit) 
+          .limit(parseInt(limit));
+        const userIds = todayRegistered.map((user) => user._id);
 
-    // Prepare the base query for today’s registered users
-    query.CreatedAt = { $regex: todayDate };
-
-    // If search query is provided, add it to the search criteria
-    if (searchQuery) {
-      query.$or = [
-        { username: { $regex: searchQuery, $options: "i" } }, // Case-insensitive search for 'username'
-        { email: { $regex: searchQuery, $options: "i" } }, // Case-insensitive search for 'email'
-      ];
-    }
-
-    // For request type 1 (users with 0 wallet balance)
-    if (reqType == "1") {
-      query.wallet_balance = 0;
-
-      // Fetch paginated users who match the query
-      const todayRegistered = await users
-        .find(query)
-        .skip((page - 1) * limit) // Skip the records for pagination
-        .limit(parseInt(limit)); // Limit the number of records returned
-
-      // Get the total count of users matching the query for pagination
-      const totalUsers = await users.countDocuments(query);
-
-      returnJson = {
-        todayRegistered,
-        pagination: {
-          totalUsers,
-          totalPages: Math.ceil(totalUsers / limit),
-          currentPage: page,
-          pageSize: limit,
-        },
-      };
-    } else {
-      // For request type 2 (users with wallet balance > 0)
-      query.wallet_balance = { $gt: 0 };
-
-      // Fetch paginated users who match the query
-      const todayRegistered = await users
-        .find(query)
-        .skip((page - 1) * limit) // Skip the records for pagination
-        .limit(parseInt(limit)); // Limit the number of records returned
-
-      // Extract userIds from the registered users
-      const userIds = todayRegistered.map((user) => user._id);
-
-      // Fetch all funds for the users with 'Credit' requests that are 'Approved' for today
-      const userFunds = await total.find({
-        userId: { $in: userIds },
-        reqDate: todayDate,
-        reqType: "Credit",
-        reqStatus: "Approved",
+        const userFunds = await total.find({
+          userId: { $in: userIds },
+          reqDate: todayDate,
+          reqType: "Credit",
+          reqStatus: "Approved",
+        });
+  
+        userFunds.forEach((fund) => {
+          const userId = fund.userId.toString(); // Ensure userId is treated as a string for consistency
+          const reqAmount = fund.reqAmount;
+  
+          // Sum the requested amounts for each user
+          if (!userFundArr[userId]) {
+            userFundArr[userId] = reqAmount;
+          } else {
+            userFundArr[userId] += reqAmount; // Accumulate funds if user already exists in the object
+          }
+        });
+  
+        // Get the total count of users matching the query for pagination
+        const totalUsers = await Users.countDocuments(query);
+  
+        returnJson = {
+          todayRegistered,
+          userFundArr,
+          pagination: {
+            totalUsers,
+            totalPages: Math.ceil(totalUsers / limit),
+            currentPage: page,
+            pageSize: limit,
+          },
+        };
+      }
+  
+      // Send the response back to the client
+      return res.json({
+        success: true,
+        message: "Data fetched successfully",
+        data: returnJson,
       });
-
-      // Map user funds to the userFundArr object
-      userFunds.forEach((fund) => {
-        const userId = fund.userId.toString(); // Ensure userId is treated as a string for consistency
-        const reqAmount = fund.reqAmount;
-
-        // Sum the requested amounts for each user
-        if (!userFundArr[userId]) {
-          userFundArr[userId] = reqAmount;
-        } else {
-          userFundArr[userId] += reqAmount; // Accumulate funds if user already exists in the object
-        }
+    } catch (error) {
+      console.error("Error in getRegisteredUser route:", error); // Log error for debugging
+      return res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching registered users.",
+        error: error.message,
       });
-
-      // Get the total count of users matching the query for pagination
-      const totalUsers = await users.countDocuments(query);
-
-      returnJson = {
-        todayRegistered,
-        userFundArr,
-        pagination: {
-          totalUsers,
-          totalPages: Math.ceil(totalUsers / limit),
-          currentPage: page,
-          pageSize: limit,
-        },
-      };
     }
-
-    // Send the response back to the client
-    return res.json({
-      success: true,
-      message: "Data fetched successfully",
-      data: returnJson,
-    });
-  } catch (error) {
-    console.error("Error in getRegisteredUser route:", error); // Log error for debugging
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred while fetching registered users.",
-      error: error.message,
-    });
-  }
 });
 
 module.exports = router;
