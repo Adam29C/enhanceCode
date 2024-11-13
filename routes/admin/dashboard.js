@@ -3,7 +3,7 @@ const upi_entries = require("../../model/API/upiPayments");
 const session = require("../helpersModule/session");
 const express = require("express");
 const router =express.Router()
-router.post("/getBriefDeposit", async (req, res) => {
+router.post("/getBriefDeposit",session, async (req, res) => {
     console.log(1)
     try {
         const startOfDay = moment().startOf('day').unix();
