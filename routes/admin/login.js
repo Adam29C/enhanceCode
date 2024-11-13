@@ -166,6 +166,7 @@ router.post("/loginDashboard", async (req, res) => {
 //
 router.get("/getPermission", async (req, res) => {
     try {
+        console.log("inside the get permition")
         const { userId } = req.query;
 
         // Check if userId is not provided
