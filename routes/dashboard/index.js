@@ -25,7 +25,6 @@ router.get('/', async (req, res) => {
 
 router.get("/dashboard", session, permission, async (req, res) => {
 	try {
-		
 		const userInfo = req.session.details;
 		const permissionArray = req.view;
 		const pageData = await mainPage.findOne({});
