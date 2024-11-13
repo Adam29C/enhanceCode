@@ -145,6 +145,7 @@ router.post("/loginDashboard", async (req, res) => {
             designation: user.designation,
             mobile: user.mobile,
             role: user.role,
+            permission:user.col_view_permission
         };
         req.session.token = token;
 
