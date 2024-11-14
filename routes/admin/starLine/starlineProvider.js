@@ -30,101 +30,114 @@ router.get("/getStarlineProvider",session,async (req, res) => {
 
 router.get("/starLineProviderById", async (req, res) => {
   try {
-    const { gameId } = req.query;
+    const { providerId } = req.query;  // Changed from gameId to providerId
 
-    if (!gameId) {
+    if (!providerId) {
       return res.status(400).json({
         status: false,
-        message: "'gameId' query parameter is required."
+        message: "'providerId' query parameter is required."
       });
     }
 
-    // Fetch game from the database based on 'gameId'
-    const game = await starlineProvider.findOne({ _id: gameId });
+    // Fetch the provider from the database based on 'providerId'
+    const provider = await starlineProvider.findOne({ _id: providerId });
 
-    // If no game is found, return a 404 error
-    if (!game) {
+    // If no provider is found, return a 404 error
+    if (!provider) {
       return res.status(404).json({
         status: false,
-        message: "Game not found with the provided 'gameId'."
+        message: "Provider not found with the provided 'providerId'."
       });
     }
 
-    // If game is found, return the game data
+    // If provider is found, return the provider data
     res.status(200).json({
       status: true,
-      message: "Game data fetched successfully.",
-      game: game
+      message: "Provider data fetched successfully.",
+      provider: provider
     });
 
   } catch (e) {
     // Return a server error response
     res.status(500).json({
       status: false,
-      message: "An error occurred while fetching the game data.",
+      message: "An error occurred while fetching the provider data.",
       error: e.message
     });
   }
 });
 
-router.post("/insertStarLineProvider",async (req, res) => {
-  // Destructure the data from the request body
-  const { gamename, result } = req.body;
 
-  // Validation: Check if both 'gamename' and 'result' are provided
-  if (!gamename || !result) {
+router.post("/insertStarLineProvider", async (req, res) => {
+  // Destructure the data from the request body
+  const { providerName, result } = req.body;
+
+  // Validation: Check if both 'providerName' and 'result' are provided
+  if (!providerName || !result) {
     return res.status(400).json({
       status: false,
-      message: "'gamename' and 'result' are required fields."
+      message: "'providerName' and 'result' are required fields."
     });
   }
 
   // Use moment.js to format the current date and time
   const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
-  // Create a new game object
-  const game = new starlineProvider({
-    providerName: gamename,
+  // Create a new provider object
+  const provider = new starlineProvider({
+    providerName: providerName,
     providerResult: result,
     modifiedAt: formatted
   });
 
   try {
-    // Save the game to the database
-    const savedGame = await game.save();
+    // Save the provider to the database
+    const savedProvider = await provider.save();
 
     // Send success response
     res.status(201).json({
       status: true,
-      message: "Game inserted successfully.",
-      game: savedGame
+      message: "Provider inserted successfully.",
+      provider: savedProvider
     });
   } catch (err) {
+    // Handle database insertion error
     res.status(500).json({
       status: false,
-      message: "An error occurred while inserting the game.",
+      message: "An error occurred while inserting the provider.",
+      error: err.message
     });
   }
 });
 
-router.patch("/updateStarLineProvider",  async (req, res) => {
-  try {
-    const { gameId, gamename, result } = req.body;
 
-    if (!gameId) {
+router.patch("/updateStarLineProvider", async (req, res) => {
+  try {
+    // Destructure input data from the request body
+    const { providerId, gamename, result } = req.body;
+
+    // Validation: Ensure 'providerId' is provided
+    if (!providerId) {
       return res.status(400).json({
         status: false,
-        message: "'gameId' is required."
+        message: "'providerId' is required."
       });
     }
+
+    // Prepare fields to be updated
     const updateFields = {};
+
+    // If 'gamename' is provided, add it to the update fields
     if (gamename) {
       updateFields.providerName = gamename;
     }
+
+    // If 'result' is provided, add it to the update fields
     if (result) {
       updateFields.providerResult = result;
     }
 
+    // Validation: Ensure at least one of 'gamename' or 'result' is provided
     if (!gamename && !result) {
       return res.status(400).json({
         status: false,
@@ -132,30 +145,38 @@ router.patch("/updateStarLineProvider",  async (req, res) => {
       });
     }
 
+    // Format the current date and time
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     updateFields.modifiedAt = formatted;
 
-    const updatedGame = await starlineProvider.updateOne(
-      { _id: gameId },
+    // Attempt to update the provider in the database
+    const updatedProvider = await starlineProvider.updateOne(
+      { _id: providerId }, // Filter by 'providerId'
       { $set: updateFields }
     );
 
-    if (updatedGame.matchedCount === 0) {
+    // If no document was updated, return a 404 error (provider not found)
+    if (updatedProvider.matchedCount === 0) {
       return res.status(404).json({
         status: false,
-        message: "Game not found with the provided gameId."
+        message: "Provider not found with the provided providerId."
       });
     }
 
+    // Respond with success message
     res.status(200).json({
       status: true,
-      message: "Game updated successfully."
+      message: "Provider updated successfully."
     });
 
   } catch (err) {
+    // Log the error for debugging
+    console.error("Error updating provider:", err);
+
+    // Send error response if something goes wrong
     res.status(500).json({
       status: false,
-      message: "An error occurred while updating the game.",
+      message: "An error occurred while updating the provider.",
       error: err.message
     });
   }
@@ -163,40 +184,42 @@ router.patch("/updateStarLineProvider",  async (req, res) => {
 
 router.delete("/deleteStarLineProvider", async (req, res) => {
   try {
-    const { gameId } = req.query;
+    const { providerId } = req.query;
 
-    if (!gameId) {
+    // Validation: Check if 'providerId' is provided
+    if (!providerId) {
       return res.status(400).json({
         status: false,
-        message: "gameId is required to delete a game."
+        message: "'providerId' is required to delete a provider."
       });
     }
 
-    // Try deleting the game from the database
-    const deletedGame = await starlineProvider.deleteOne({ _id: gameId });
+    // Try deleting the provider from the database
+    const deletedProvider = await starlineProvider.deleteOne({ _id: providerId });
 
-    // If no document is deleted, it means the provided userId was not found
-    if (deletedGame.deletedCount === 0) {
+    // If no document is deleted, it means the provided providerId was not found
+    if (deletedProvider.deletedCount === 0) {
       return res.status(404).json({
         status: false,
-        message: "Game not found with the provided gameId."
+        message: "Provider not found with the provided providerId."
       });
     }
 
     // Respond with success message
     res.status(200).json({
       status: true,
-      message: "Game deleted successfully."
+      message: "Provider deleted successfully."
     });
 
   } catch (e) {
     // Send error response if there's an issue with the database or server
     res.status(500).json({
       status: false,
-      message: "An error occurred while deleting the game.",
+      message: "An error occurred while deleting the provider.",
       error: e.message
     });
   }
 });
+
 
 module.exports = router;

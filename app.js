@@ -84,9 +84,6 @@ const manual = require("./routes/wallet/manualpayment");
 //new route add
 const adminLogin=require("./routes/admin/login")
 const dashboard=require("./routes/admin/dashboard")
-
-const adminLogin=require("./routes/admin/login");
-const dashboard=require("./routes/admin/dashboard");
 const allUser=require("./routes/admin/allUser")
 const mainGames=require("./routes/admin/games/gamesProvider");
 const gameSettings=require("./routes/admin/games/gamesSetting")
