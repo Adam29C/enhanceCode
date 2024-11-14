@@ -56,44 +56,41 @@ router.post("/getBriefDeposit", session, async (req, res) => {
 
 router.get("/dashboardCount", async (req, res) => {
   try {
-    const pageData = await mainPage.findOne({});
-    const traceBal = await walletTrace.findOne({}).sort({ _id: -1 }).limit(1);
-    const countDlt = await deleteduser.countDocuments();
-    // Fetch users data
-    const usersData = await Users.find({});
-    const allUsersCount = usersData.length;
+    const thirtyDaysAgo = moment().subtract(30, 'days').toDate();
 
-    // Count banned users
-    const bannedUsersCount = usersData.filter((user) => user.banned).length;
+    const [pageData, traceBal, countDlt, userCounts] = await Promise.all([
+      mainPage.findOne({}),
+      walletTrace.findOne({}).sort({ _id: -1 }).limit(1),
+      deleteduser.countDocuments(),
+      Users.aggregate([
+        {
+          $facet: {
+            totalUsers: [{ $count: "total" }],
+            bannedUsers: [{ $match: { banned: true } }, { $count: "banned" }],
+            activeUsers: [
+              { $match: { lastLoginDate: { $gte: thirtyDaysAgo } } },
+              { $count: "active" }
+            ]
+          }
+        }
+      ])
+    ]);
 
-    // Update page data
+    const allUsersCount = userCounts[0].totalUsers[0]?.total || 0;
+    const bannedUsersCount = userCounts[0].bannedUsers[0]?.banned || 0;
+    const activeUsersCount = userCounts[0].activeUsers[0]?.active || 0;
+
+    // Update the pageData object with new counts
     pageData.banned_Users = bannedUsersCount;
     pageData.total_user = allUsersCount;
-    pageData.active_count = 0;
+    pageData.active_count = activeUsersCount;
 
-    // Count active users (last login within 30 days)
-    usersData.forEach((user) => {
-      if (user.lastLoginDate) {
-        const startDate = moment(user.lastLoginDate, "DD.MM.YYYY");
-        const endDate = moment();
-        const days = endDate.diff(startDate, "days");
-        if (days <= 30) {
-          pageData.active_count++;
-        }
-      }
-    });
-
-    // Update IP (Assuming this function is correctly defined elsewhere)
-
-    // Prepare response data
     const responseData = {
       data: pageData,
-      yesTerday: traceBal, // If 'yesTerday' is intended as variable name, leave it as is.
+      yesTerday: traceBal,
       countDlt,
       title: "Dashboard",
     };
-
-    // Send JSON response
 
     return res.status(200).json({
       success: true,
@@ -101,7 +98,6 @@ router.get("/dashboardCount", async (req, res) => {
       data: responseData,
     });
   } catch (error) {
-    console.error("Error in dashboard route:", error); // Log error for debugging
     return res.status(500).json({
       success: false,
       message: "An error occurred while loading the dashboard.",
