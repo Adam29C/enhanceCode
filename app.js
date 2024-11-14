@@ -82,16 +82,13 @@ const manualPayment = require("./routes/API/manualPayment")
 const manual = require("./routes/wallet/manualpayment");
 
 //new route add
-const adminLogin=require("./routes/admin/login")
-const dashboard=require("./routes/admin/dashboard")
-
 const adminLogin=require("./routes/admin/login");
 const dashboard=require("./routes/admin/dashboard");
-const allUser=require("./routes/admin/allUser")
+const allUser=require("./routes/admin/allUser");
 const mainGames=require("./routes/admin/games/gamesProvider");
-const gameSettings=require("./routes/admin/games/gamesSetting")
-const mainGameRate=require("./routes/admin/games/mainGamesRate")
-const starLine=require("./routes/admin/starLine/starlineProvider.js")
+const gameSettings=require("./routes/admin/games/gamesSetting");
+const mainGameRate=require("./routes/admin/games/mainGamesRate");
+const starLine=require("./routes/admin/starLine/starlineProvider.js");
 
 dotenv.config();
 
