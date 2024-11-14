@@ -134,13 +134,13 @@ router.get("/getRegisteredUser/:reqType", session, async (req, res) => {
       query.wallet_balance = 0;
 
       // Fetch paginated users who match the query
-      const todayRegistered = await users
+      const todayRegistered = await Users
         .find(query)
         .skip((page - 1) * limit) // Skip the records for pagination
         .limit(parseInt(limit)); // Limit the number of records returned
 
       // Get the total count of users matching the query for pagination
-      const totalUsers = await users.countDocuments(query);
+      const totalUsers = await Users.countDocuments(query);
 
       returnJson = {
         todayRegistered,
