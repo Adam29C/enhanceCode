@@ -312,61 +312,79 @@ router.post("/deleteduserAjax", function (req, res) {
 });
 
 router.post("/deleteUserByAdmin", session, async (req, res) => {
-	try {
-		const { id } = req.body;
-		const userData = await User.findOne({ _id: id });
-		if (!userData) {
-			return res.status(400).send({
-				statusCode: 400,
-				status: "Failure",
-				msg: "User Data Not Found",
-			});
-		}
-		const filter = {
-			userId: new ObjectId(id)
-		};
+    try {
+        const { id } = req.body;
 
-		const formatted = moment().format("DD/MM/YYYY HH:mm:ss");
-		await abBids.deleteMany({ userId: id });
-		await chats.deleteOne({ users: { $in: [id] } });
-		await foundRequest.deleteMany({ userId: id });
-		await gameBids.deleteMany({ userId: id });
-		await gatewayPayments.deleteMany({ userId: id });
-		await ideasUser.deleteMany({ userid: id });
-		await manualPayments.deleteMany({ userId: id });
-		await revertPayments.deleteMany(filter);
-		await starlineBids.deleteMany(filter);
-		await upiPayments.deleteMany(filter);
-		await userProfiles.deleteOne(filter);
-		await walletHistories.deleteMany(filter)
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: "Failure",
+                message: "Invalid user ID format.",
+            });
+        }
 
-		await client.connect();
-		const database = client.db("admin");
-		const mappingCollection = database.collection("mapping_tables");
-		await mappingCollection.deleteMany(filter);
-		const messageCollection = database.collection("messages");
-		await messageCollection.deleteMany(filter);
-		await client.close();
+        const userData = await User.findById(id);
+        if (!userData) {
+            return res.status(404).json({
+                statusCode: 404,
+                status: "Failure",
+                message: "User Data Not Found",
+            });
+        }
 
-		// messages
-		const user = {
-			userId: userData._id,
-			name: userData.name,
-			username: userData.username,
-			mobile: userData.mobile,
-			CreatedAt: formatted,
-		};
-		await deletedUser.insertMany([user]);
-		await User.deleteOne({ _id: req.body.id });
-		return res.status(200).send({
-			statusCode: 200,
-			status: "Success",
-			msg: "Deleted successfully",
-		});
-	} catch (err) {
-		res.json({ status: false, message: err.message });
-	}
+        const filter = { userId: new ObjectId(id) };
+        const formattedDate = moment().format("DD/MM/YYYY HH:mm:ss");
+
+        await Promise.all([
+            abBids.deleteMany({ userId: id }),
+            chats.deleteOne({ users: { $in: [id] } }),
+            foundRequest.deleteMany({ userId: id }),
+            gameBids.deleteMany({ userId: id }),
+            gatewayPayments.deleteMany({ userId: id }),
+            ideasUser.deleteMany({ userid: id }),
+            manualPayments.deleteMany({ userId: id }),
+            revertPayments.deleteMany(filter),
+            starlineBids.deleteMany(filter),
+            upiPayments.deleteMany(filter),
+            userProfiles.deleteOne(filter),
+            walletHistories.deleteMany(filter),
+        ]);
+
+        await client.connect();
+        const database = client.db("admin");
+        const mappingCollection = database.collection("mapping_tables");
+        const messageCollection = database.collection("messages");
+
+        await Promise.all([
+            mappingCollection.deleteMany(filter),
+            messageCollection.deleteMany(filter),
+        ]);
+        await client.close();
+
+        const deletedUserData = {
+            userId: userData._id,
+            name: userData.name,
+            username: userData.username,
+            mobile: userData.mobile,
+            CreatedAt: formattedDate,
+        };
+        await deletedUser.insertOne(deletedUserData);
+
+        await User.deleteOne({ _id: id });
+
+        return res.status(200).json({
+            statusCode: 200,
+            status: "Success",
+            message: "User deleted successfully",
+        });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            status: "Failure",
+            message: "Internal Server Error",
+            error: err.message,
+        });
+    }
 });
-
 
 module.exports = router;

@@ -9,6 +9,8 @@ const permission = require("../helpersModule/permission");
 const deleteduser = require("../../model/API/Deleted_User");
 const Users = require("../../model/API/Users");
 const moment =require("moment");
+const total = require("../../model/API/FundRequest");
+const dashboard = require("../../model/MainPage");
 
 router.post("/getBriefDeposit", session, async (req, res) => {
   try {
@@ -54,44 +56,41 @@ router.post("/getBriefDeposit", session, async (req, res) => {
 
 router.get("/dashboardCount", async (req, res) => {
   try {
-    const pageData = await mainPage.findOne({});
-    const traceBal = await walletTrace.findOne({}).sort({ _id: -1 }).limit(1);
-    const countDlt = await deleteduser.countDocuments();
-    // Fetch users data
-    const usersData = await Users.find({});
-    const allUsersCount = usersData.length;
+    const thirtyDaysAgo = moment().subtract(30, 'days').toDate();
 
-    // Count banned users
-    const bannedUsersCount = usersData.filter((user) => user.banned).length;
+    const [pageData, traceBal, countDlt, userCounts] = await Promise.all([
+      mainPage.findOne({}),
+      walletTrace.findOne({}).sort({ _id: -1 }).limit(1),
+      deleteduser.countDocuments(),
+      Users.aggregate([
+        {
+          $facet: {
+            totalUsers: [{ $count: "total" }],
+            bannedUsers: [{ $match: { banned: true } }, { $count: "banned" }],
+            activeUsers: [
+              { $match: { lastLoginDate: { $gte: thirtyDaysAgo } } },
+              { $count: "active" }
+            ]
+          }
+        }
+      ])
+    ]);
 
-    // Update page data
+    const allUsersCount = userCounts[0].totalUsers[0]?.total || 0;
+    const bannedUsersCount = userCounts[0].bannedUsers[0]?.banned || 0;
+    const activeUsersCount = userCounts[0].activeUsers[0]?.active || 0;
+
+    // Update the pageData object with new counts
     pageData.banned_Users = bannedUsersCount;
     pageData.total_user = allUsersCount;
-    pageData.active_count = 0;
+    pageData.active_count = activeUsersCount;
 
-    // Count active users (last login within 30 days)
-    usersData.forEach((user) => {
-      if (user.lastLoginDate) {
-        const startDate = moment(user.lastLoginDate, "DD.MM.YYYY");
-        const endDate = moment();
-        const days = endDate.diff(startDate, "days");
-        if (days <= 30) {
-          pageData.active_count++;
-        }
-      }
-    });
-
-    // Update IP (Assuming this function is correctly defined elsewhere)
-
-    // Prepare response data
     const responseData = {
       data: pageData,
-      yesTerday: traceBal, // If 'yesTerday' is intended as variable name, leave it as is.
+      yesTerday: traceBal,
       countDlt,
       title: "Dashboard",
     };
-
-    // Send JSON response
 
     return res.status(200).json({
       success: true,
@@ -99,7 +98,6 @@ router.get("/dashboardCount", async (req, res) => {
       data: responseData,
     });
   } catch (error) {
-    console.error("Error in dashboard route:", error); // Log error for debugging
     return res.status(500).json({
       success: false,
       message: "An error occurred while loading the dashboard.",
@@ -108,110 +106,113 @@ router.get("/dashboardCount", async (req, res) => {
   }
 });
 
-router.get("/getRegisteredUser/:reqType", session, async (req, res) => {
+router.post("/getRegisteredUser", async (req, res) => {
+    try {
+      const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
+      //const todayDate = moment().format("DD/MM/YYYY"); 
+      const todayDate = "14/11/2023"
+      let query = {};
+      let userFundArr = {}; 
+      let returnJson = {};
+      query.CreatedAt = { $regex: todayDate };
+  
+      if (searchQuery) {
+        query.$or = [
+          { username: { $regex: searchQuery, $options: "i" } }, 
+          { email: { $regex: searchQuery, $options: "i" } }, 
+        ];
+      }
+  
+      if (reqType == "1") {
+        query.wallet_balance = 0;
+
+        const todayRegistered = await Users
+          .find(query)
+          .skip((page - 1) * limit) 
+          .limit(parseInt(limit)); 
+        const totalUsers = await Users.countDocuments(query);
+  
+      console.log(totalUsers)
+        returnJson = {
+          todayRegistered,
+          pagination: {
+            totalUsers,
+            totalPages: Math.ceil(totalUsers / limit),
+            currentPage: page,
+            pageSize: limit,
+          },
+        };
+      } else {
+        query.wallet_balance = { $gt: 0 };
+        const todayRegistered = await Users
+          .find(query)
+          .skip((page - 1) * limit) 
+          .limit(parseInt(limit));
+        const userIds = todayRegistered.map((user) => user._id);
+
+        const userFunds = await total.find({
+          userId: { $in: userIds },
+          reqDate: todayDate,
+          reqType: "Credit",
+          reqStatus: "Approved",
+        });
+  
+        userFunds.forEach((fund) => {
+          const userId = fund.userId.toString(); // Ensure userId is treated as a string for consistency
+          const reqAmount = fund.reqAmount;
+  
+          // Sum the requested amounts for each user
+          if (!userFundArr[userId]) {
+            userFundArr[userId] = reqAmount;
+          } else {
+            userFundArr[userId] += reqAmount; // Accumulate funds if user already exists in the object
+          }
+        });
+  
+        // Get the total count of users matching the query for pagination
+        const totalUsers = await Users.countDocuments(query);
+  
+        returnJson = {
+          todayRegistered,
+          userFundArr,
+          pagination: {
+            totalUsers,
+            totalPages: Math.ceil(totalUsers / limit),
+            currentPage: page,
+            pageSize: limit,
+          },
+        };
+      }
+  
+      // Send the response back to the client
+      return res.json({
+        success: true,
+        message: "Data fetched successfully",
+        data: returnJson,
+      });
+    } catch (error) {
+      console.error("Error in getRegisteredUser route:", error); // Log error for debugging
+      return res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching registered users.",
+        error: error.message,
+      });
+    }
+});
+
+router.post("/getRegisteredUserLogs",session, async (req, res) => {
   try {
-    const { reqType } = req.params; // Get the request type from the URL parameter
-    const { page = 1, limit = 10, searchQuery = "" } = req.query; // Pagination and search parameters
-    const todayDate = moment().format("DD/MM/YYYY"); // Get today's date in the format "DD/MM/YYYY"
-
-    let query = {}; // The main query object
-    let userFundArr = {}; // Object to hold user funds mapping
-    let returnJson = {}; // Response object to send back
-
-    // Prepare the base query for today’s registered users
-    query.CreatedAt = { $regex: todayDate };
-
-    // If search query is provided, add it to the search criteria
-    if (searchQuery) {
-      query.$or = [
-        { username: { $regex: searchQuery, $options: "i" } }, // Case-insensitive search for 'username'
-        { email: { $regex: searchQuery, $options: "i" } }, // Case-insensitive search for 'email'
-      ];
-    }
-
-    // For request type 1 (users with 0 wallet balance)
-    if (reqType == "1") {
-      query.wallet_balance = 0;
-
-      // Fetch paginated users who match the query
-      const todayRegistered = await users
-        .find(query)
-        .skip((page - 1) * limit) // Skip the records for pagination
-        .limit(parseInt(limit)); // Limit the number of records returned
-
-      // Get the total count of users matching the query for pagination
-      const totalUsers = await users.countDocuments(query);
-
-      returnJson = {
-        todayRegistered,
-        pagination: {
-          totalUsers,
-          totalPages: Math.ceil(totalUsers / limit),
-          currentPage: page,
-          pageSize: limit,
-        },
-      };
-    } else {
-      // For request type 2 (users with wallet balance > 0)
-      query.wallet_balance = { $gt: 0 };
-
-      // Fetch paginated users who match the query
-      const todayRegistered = await users
-        .find(query)
-        .skip((page - 1) * limit) // Skip the records for pagination
-        .limit(parseInt(limit)); // Limit the number of records returned
-
-      // Extract userIds from the registered users
-      const userIds = todayRegistered.map((user) => user._id);
-
-      // Fetch all funds for the users with 'Credit' requests that are 'Approved' for today
-      const userFunds = await total.find({
-        userId: { $in: userIds },
-        reqDate: todayDate,
-        reqType: "Credit",
-        reqStatus: "Approved",
-      });
-
-      // Map user funds to the userFundArr object
-      userFunds.forEach((fund) => {
-        const userId = fund.userId.toString(); // Ensure userId is treated as a string for consistency
-        const reqAmount = fund.reqAmount;
-
-        // Sum the requested amounts for each user
-        if (!userFundArr[userId]) {
-          userFundArr[userId] = reqAmount;
-        } else {
-          userFundArr[userId] += reqAmount; // Accumulate funds if user already exists in the object
-        }
-      });
-
-      // Get the total count of users matching the query for pagination
-      const totalUsers = await users.countDocuments(query);
-
-      returnJson = {
-        todayRegistered,
-        userFundArr,
-        pagination: {
-          totalUsers,
-          totalPages: Math.ceil(totalUsers / limit),
-          currentPage: page,
-          pageSize: limit,
-        },
-      };
-    }
-
-    // Send the response back to the client
-    return res.json({
-      success: true,
-      message: "Data fetched successfully",
-      data: returnJson,
-    });
-  } catch (error) {
-    console.error("Error in getRegisteredUser route:", error); // Log error for debugging
+    const findRegisterLogs = await dashboard.find({});
+    return res.status(200).json({
+      success:true,
+      message:"Registered UserLogs Shown Successfully",
+      data:findRegisterLogs
+    })
+  }catch(err){
     return res.status(500).json({
       success: false,
-      message: "An error occurred while fetching registered users.",
-      error: error.message,
+      message: "Internal server Error",
+      error: err.message,
     });
   }
 });
