@@ -12,7 +12,7 @@ const moment =require("moment");
 const total = require("../../model/API/FundRequest");
 const dashboard = require("../../model/MainPage");
 
-router.post("/getBriefDeposit", session, async (req, res) => {
+router.get("/getBriefDeposit", async (req, res) => {
   try {
     const startOfDay = moment().startOf("day").unix();
     const gatewayAmount = await trakpay.aggregate([
