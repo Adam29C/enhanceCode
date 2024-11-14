@@ -229,8 +229,8 @@ app.use("/manualPayment", manualPayment);
 app.use("/manual", manual);
 
 // new Route add
-app.use("/adminLogin",adminLogin)
-app.use("/dashboard",dashboard)
+app.use("/adminLogin",adminLogin);
+app.use("/dashboard",dashboard);
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
