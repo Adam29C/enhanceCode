@@ -10,6 +10,7 @@ const deleteduser = require("../../model/API/Deleted_User");
 const Users = require("../../model/API/Users");
 const moment =require("moment");
 const total = require("../../model/API/FundRequest");
+const dashboard = require("../../model/MainPage");
 
 router.post("/getBriefDeposit", session, async (req, res) => {
   try {
@@ -109,11 +110,11 @@ router.get("/dashboardCount", async (req, res) => {
   }
 });
 
-router.post("/getRegisteredUser",session, async (req, res) => {
+router.post("/getRegisteredUser", async (req, res) => {
     try {
       const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
-      const todayDate = moment().format("DD/MM/YYYY"); 
-  
+      //const todayDate = moment().format("DD/MM/YYYY"); 
+      const todayDate = "14/11/2023"
       let query = {};
       let userFundArr = {}; 
       let returnJson = {};
@@ -135,6 +136,7 @@ router.post("/getRegisteredUser",session, async (req, res) => {
           .limit(parseInt(limit)); 
         const totalUsers = await Users.countDocuments(query);
   
+      console.log(totalUsers)
         returnJson = {
           todayRegistered,
           pagination: {
@@ -200,6 +202,23 @@ router.post("/getRegisteredUser",session, async (req, res) => {
         error: error.message,
       });
     }
+});
+
+router.post("/getRegisteredUserLogs",session, async (req, res) => {
+  try {
+    const findRegisterLogs = await dashboard.find({});
+    return res.status(200).json({
+      success:true,
+      message:"Registered UserLogs Shown Successfully",
+      data:findRegisterLogs
+    })
+  }catch(err){
+    return res.status(500).json({
+      success: false,
+      message: "Internal server Error",
+      error: err.message,
+    });
+  }
 });
 
 module.exports = router;

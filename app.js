@@ -84,7 +84,7 @@ const manual = require("./routes/wallet/manualpayment");
 //new route add
 const adminLogin=require("./routes/admin/login")
 const dashboard=require("./routes/admin/dashboard")
-
+const allUser=require("./routes/admin/allUser")
 
 dotenv.config();
 
@@ -231,6 +231,7 @@ app.use("/manual", manual);
 // new Route add
 app.use("/adminLogin",adminLogin)
 app.use("/dashboard",dashboard)
+app.use("/allUser",allUser)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
