@@ -19,9 +19,7 @@ router.get("/getStarlineProvider",session,async (req, res) => {
         data: provider,
         userInfo: userInfo
       });
-    } catch (e) {
-      // Error handling
-      console.error("Error fetching Starline Providers:", e);
+    } catch (err) {
       return res.status(500).json({
         status: false,
         message: "An error occurred while fetching the data.",
@@ -60,8 +58,6 @@ router.get("/starLineProviderById", async (req, res) => {
     });
 
   } catch (e) {
-    console.error("Error fetching game:", e);  // Log the error for debugging
-
     // Return a server error response
     res.status(500).json({
       status: false,
@@ -194,8 +190,6 @@ router.delete("/deleteStarLineProvider", async (req, res) => {
     });
 
   } catch (e) {
-    console.error("Error deleting game:", e); // Log the error for debugging
-
     // Send error response if there's an issue with the database or server
     res.status(500).json({
       status: false,
