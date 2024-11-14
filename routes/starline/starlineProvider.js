@@ -40,6 +40,7 @@ router.get("/specificUser", session, async (req, res) => {
 });
 
 router.post("/insertGame", session, async (req, res) => {
+  console.log("ttttttttttttttttttttttttttttttt")
   const dt = dateTime.create();
   const formatted = dt.format("Y-m-d H:M:S");
   const games = new starlineProvider({
