@@ -82,19 +82,14 @@ const manualPayment = require("./routes/API/manualPayment")
 const manual = require("./routes/wallet/manualpayment");
 
 //new route add
-<<<<<<< HEAD
-const adminLogin=require("./routes/admin/login")
-const dashboard=require("./routes/admin/dashboard")
-const allUser=require("./routes/admin/allUser")
-=======
 const adminLogin=require("./routes/admin/login");
 const dashboard=require("./routes/admin/dashboard");
 const allUser=require("./routes/admin/allUser");
->>>>>>> fcc829bb5e03069dbbfa7b57c893d919a40a9b47
 const mainGames=require("./routes/admin/games/gamesProvider");
 const gameSettings=require("./routes/admin/games/gamesSetting");
 const mainGameRate=require("./routes/admin/games/mainGamesRate");
 const starLine=require("./routes/admin/starLine/starlineProvider.js");
+const starLineSetting=require("./routes/admin/starLine/starlineSetting.js");
 
 dotenv.config();
 
@@ -246,6 +241,7 @@ app.use("/mainGames",mainGames);
 app.use("/mainGameSetting",gameSettings);
 app.use("/mainGameRate",mainGameRate)
 app.use("/starLine",starLine)
+app.use("/starLineSetting",starLineSetting)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
