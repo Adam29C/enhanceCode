@@ -5,7 +5,7 @@ const gamesProvider = require("../../../model/games/Games_Provider");
 const gamesSetting = require("../../../model/games/AddSetting");
 const session = require("../../helpersModule/session");
 
-router.get("/", session, permission, async (req, res) => {
+router.get("/", session, async (req, res) => {
     try {
         const provider = await gamesProvider.find().sort({ _id: 1 });
         let finalArr = {};
