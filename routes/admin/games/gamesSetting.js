@@ -3,9 +3,9 @@ const dateTime = require("node-datetime");
 const mongoose = require("mongoose");
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gamesSetting = require("../../../model/games/AddSetting");
-const session = require("../../helpersModule/session");
+const authMiddleware=require("../../helpersModule/athetication")
 
-router.get("/", session, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const provider = await gamesProvider.find().sort({ _id: 1 });
         let finalArr = {};
@@ -42,7 +42,7 @@ router.get("/", session, async (req, res) => {
     }
 });
 
-router.post("/insertSettings", session, async (req, res) => {
+router.post("/insertSettings", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
         const formatted = dt.format("Y-m-d H:M:S");
@@ -113,7 +113,7 @@ router.post("/insertSettings", session, async (req, res) => {
     }
 });
 
-router.post("/:providerId", session, async (req, res) => {
+router.post("/:providerId", authMiddleware, async (req, res) => {
     try {
         const id = mongoose.Types.ObjectId(req.params.providerId);
         const result = await gamesProvider.aggregate([
@@ -144,7 +144,7 @@ router.post("/:providerId", session, async (req, res) => {
     }
 });
 
-router.patch("/", session, async (req, res) => {
+router.patch("/", authMiddleware, async (req, res) => {
     try {
         const { id, obt, cbt, obrt, cbrt, close } = req.body;
         if (!id || !obt || !cbt || !obrt || !cbrt || close === undefined) {
@@ -191,7 +191,7 @@ router.patch("/", session, async (req, res) => {
     }
 });
 
-router.post("/updateAll", session, async (req, res) => {
+router.post("/updateAll", authMiddleware, async (req, res) => {
     try {
         const { providerId, obtTime, cbtTime, obrtTime, cbrtTime, openClose } = req.body;
         if (!providerId || !obtTime || !cbtTime || !obrtTime || !cbrtTime || openClose === undefined) {

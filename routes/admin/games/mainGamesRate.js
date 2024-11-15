@@ -1,9 +1,9 @@
 const router = require("express").Router();
 const dateTime = require("node-datetime");
 const gameList = require("../../../model/games/GameList");
-const session = require("../../helpersModule/session");
+const authMiddleware=require("../../helpersModule/athetication")
 
-router.get("/", session, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const gameRate = await gameList.find().sort({ _id: 1 });
         return res.status(200).json({
@@ -22,7 +22,7 @@ router.get("/", session, async (req, res) => {
     }
 });
 
-router.post("/insertGame", session, async (req, res) => {
+router.post("/insertGame", authMiddleware, async (req, res) => {
     try {
         const { gamename, price } = req.body;
         if (!gamename || !price) {
@@ -54,7 +54,7 @@ router.post("/insertGame", session, async (req, res) => {
     }
 });
 
-router.get("/specificUser", session, async (req, res) => {
+router.get("/specificUser", authMiddleware, async (req, res) => {
     try {
         const { userId } = req.query;
         if (!userId) {
@@ -85,7 +85,7 @@ router.get("/specificUser", session, async (req, res) => {
     }
 });
 
-router.patch("/", session, async (req, res) => {
+router.patch("/", authMiddleware, async (req, res) => {
     try {
         const { userId, gamename, price } = req.body;
         if (!userId || !gamename || !price) {
@@ -125,7 +125,7 @@ router.patch("/", session, async (req, res) => {
     }
 });
 
-router.delete("/", session, async (req, res) => {
+router.delete("/", authMiddleware, async (req, res) => {
     try {
         const { userId } = req.body;
         if (!userId) {
