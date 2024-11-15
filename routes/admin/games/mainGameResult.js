@@ -2,8 +2,9 @@ const dateTime = require("node-datetime");
 const moment = require('moment');
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gameResult = require("../../../model/games/GameResult");
+const authMiddleware = require("../../helpersModule/athetication")
 
-router.get("/", session, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
         const formatted = dt.format("m/d/Y");
@@ -65,7 +66,7 @@ router.get("/", session, async (req, res) => {
     }
 });
 
-router.get("/pastResult", session, async (req, res) => {
+router.get("/pastResult", authMiddleware, async (req, res) => {
     try {
         const date = req.query.date;
         if (!date) {
@@ -94,6 +95,103 @@ router.get("/pastResult", session, async (req, res) => {
             status: "Failure",
             message: "Error retrieving past results",
             error: error.message,
+        });
+    }
+});
+
+router.delete("/delete", authMiddleware, async (req, res) => {
+    try {
+        const dt = dateTime.create();
+        const formatted1 = dt.format("m/d/Y I:M:S p");
+        const { resultId, providerId, session: sessionType, dltPast: dltStatus } = req.body;
+
+        if (!resultId || !providerId || !sessionType) {
+            return res.status(400).json({
+                status: 0,
+                message: "Missing required fields",
+            });
+        }
+
+        const dltResult = await gameResult.deleteOne({ _id: resultId });
+        if (dltResult.deletedCount === 0) {
+            return res.status(404).json({
+                status: 0,
+                message: "Result not found or already deleted",
+            });
+        }
+
+        if (dltStatus === 0) {
+            if (sessionType === "Open") {
+                await gamesProvider.updateOne(
+                    { _id: providerId },
+                    {
+                        $set: {
+                            providerResult: "***-**-***",
+                            modifiedAt: formatted1,
+                            resultStatus: 0,
+                        },
+                    }
+                );
+            } else {
+                const result = await gamesProvider.findOne({ _id: providerId });
+                if (!result) {
+                    return res.status(404).json({
+                        status: 0,
+                        message: "Provider not found",
+                    });
+                }
+
+                let digit = result.providerResult;
+                const data = digit.split("-");
+                let openDigit = data[0];
+                let sumDgit = parseInt(data[1].charAt(0));
+                let finalDigit = `${openDigit}-${sumDgit}`;
+                await gamesProvider.updateOne(
+                    { _id: providerId },
+                    {
+                        $set: {
+                            providerResult: finalDigit,
+                            modifiedAt: formatted1,
+                            resultStatus: 1,
+                        },
+                    }
+                );
+            }
+        }
+        return res.status(200).json({
+            status: 1,
+            message: "Result deleted successfully",
+            data: dltResult,
+        });
+    } catch (e) {
+        return res.status(500).json({
+            status: 0,
+            message: "Server error. Please contact support.",
+            error: e.message,
+        });
+    }
+});
+
+router.post("/digits", async (req, res) => {
+    try {
+        const digitArray = req.body;
+        if (!Array.isArray(digitArray) || digitArray.length === 0) {
+            return res.status(400).json({
+                status: 0,
+                message: "Invalid input: Array of digits is required.",
+            });
+        }
+        const insertedDigits = await gameDigit.insertMany(digitArray);
+        res.status(201).json({
+            status: 1,
+            message: "Digits inserted successfully",
+            data: insertedDigits,
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 0,
+            message: "Server error occurred while inserting digits.",
+            error: err.message,
         });
     }
 });
