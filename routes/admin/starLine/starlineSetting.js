@@ -4,8 +4,9 @@ const starSettings = require("../../../model/starline/AddSetting");
 const dateTime = require("node-datetime");
 const session = require("../../helpersModule/session");
 const moment = require("moment");
+const authMiddleware = require("../../helpersModule/athetication");
 
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
     const finalArr = {};
     const provider = await starProvider.find().sort({ _id: 1 });
@@ -43,7 +44,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/addSetting", async (req, res) => {
+router.get("/addSetting", authMiddleware, async (req, res) => {
   try {
     const provider = await starProvider.find().sort({ _id: 1 });
 
@@ -68,7 +69,7 @@ router.get("/addSetting", async (req, res) => {
   }
 });
 
-router.post("/updateProviderSettings", async (req, res) => {
+router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
   try {
     const { providerId, obtTime, cbtTime, obrtTime, openClose } = req.body;
 
@@ -123,7 +124,7 @@ router.post("/updateProviderSettings", async (req, res) => {
   }
 });
 
-router.patch("/", async (req, res) => {
+router.patch("/", authMiddleware, async (req, res) => {
   try {
     const { id, obt, cbt, obrt, close } = req.body;
 
@@ -170,20 +171,38 @@ router.patch("/", async (req, res) => {
   }
 });
 
-router.post("/insertSettings",  async (req, res) => {
+router.post("/insertSettings", authMiddleware, async (req, res) => {
   try {
     const dt = dateTime.create();
     const formatted = dt.format("Y-m-d H:M:S");
-    const { providerId, gameDay, game1, game2, game3, game4, status } = req.body;
+    const { providerId, gameDay, game1, game2, game3, game4, status } =
+      req.body;
 
-    if (!providerId || !gameDay || !game1 || !game2 || !game3 || !game4 || status === undefined) {
+    if (
+      !providerId ||
+      !gameDay ||
+      !game1 ||
+      !game2 ||
+      !game3 ||
+      !game4 ||
+      status === undefined
+    ) {
       return res.status(400).json({
         status: false,
-        message: "'providerId', 'gameDay', 'game1', 'game2', 'game3', 'game4', and 'status' are required fields.",
+        message:
+          "'providerId', 'gameDay', 'game1', 'game2', 'game3', 'game4', and 'status' are required fields.",
       });
     }
 
-    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const daysOfWeek = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
 
     const existingSetting = await starSettings.findOne({ providerId, gameDay });
 
@@ -198,17 +217,19 @@ router.post("/insertSettings",  async (req, res) => {
       let finalArr = [];
       let uniqueDays;
 
-      const providerSettings = await starSettings.find({ providerId }, { gameDay: 1 });
+      const providerSettings = await starSettings.find(
+        { providerId },
+        { gameDay: 1 }
+      );
 
       if (providerSettings.length > 0) {
-
-        const existingGameDays = providerSettings.map(item => item.gameDay);
+        const existingGameDays = providerSettings.map((item) => item.gameDay);
         uniqueDays = [...new Set([...existingGameDays, ...daysOfWeek])];
       } else {
         uniqueDays = daysOfWeek;
       }
 
-      finalArr = uniqueDays.map(day => ({
+      finalArr = uniqueDays.map((day) => ({
         providerId,
         gameDay: day,
         OBT: game1,
@@ -244,7 +265,6 @@ router.post("/insertSettings",  async (req, res) => {
       status: true,
       message: `Successfully inserted timings for ${gameDay}`,
     });
-
   } catch (error) {
     console.error("Error inserting settings:", error);
     return res.status(500).json({
@@ -255,7 +275,7 @@ router.post("/insertSettings",  async (req, res) => {
   }
 });
 
-router.post("/starLineSettingByid/:providerId", async (req, res) => {
+router.post("/:providerId", authMiddleware, async (req, res) => {
   try {
     const { providerId } = req.params;
     const providerInfo = await starSettings.find({ providerId });
@@ -272,7 +292,6 @@ router.post("/starLineSettingByid/:providerId", async (req, res) => {
       message: "Provider info fetched successfully",
       data: providerInfo,
     });
-
   } catch (error) {
     return res.status(500).json({
       status: false,

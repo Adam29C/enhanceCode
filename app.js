@@ -88,9 +88,13 @@ const allUser=require("./routes/admin/allUser");
 const mainGames=require("./routes/admin/games/gamesProvider");
 const gameSettings=require("./routes/admin/games/gamesSetting");
 const mainGameRate=require("./routes/admin/games/mainGamesRate");
-const starLine=require("./routes/admin/starLine/starlineProvider.js");
-const starLineSetting=require("./routes/admin/starLine/starlineSetting.js");
-
+const starLine=require("./routes/admin/starLine/starlineProvider");
+const starLineSetting=require("./routes/admin/starLine/starlineSetting");
+const starGameRate=require("./routes/admin/starLine/starGameRate");
+const starGameProfitLoss=require("./routes/admin/starLine/starGameProfitLoss")
+const starGameResult=require("./routes/admin/starLine/starGameResult")
+const abGameProvider=require("./routes/admin/andarBahar/abGameProvider")
+const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
 dotenv.config();
 
 // Connect To DB
@@ -240,9 +244,13 @@ app.use("/allUser",allUser)
 app.use("/mainGames",mainGames);
 app.use("/mainGameSetting",gameSettings);
 app.use("/mainGameRate",mainGameRate)
-app.use("/starLine",starLine)
-app.use("/starLineSetting",starLineSetting)
-
+app.use("/starGameProvider",starLine)
+app.use("/starGameSetting",starLineSetting)
+app.use("/starGameRate",starGameRate)
+app.use("/starGameProfitLoss",starGameProfitLoss)
+app.use("/starGameResult",starGameResult)
+app.use("/abGameProvider",abGameProvider)
+app.use("/abGameSetting",abGameSetting)
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
 const fund = require("./model/API/FundRequest");
