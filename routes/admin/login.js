@@ -163,39 +163,30 @@ router.post("/loginDashboard", async (req, res) => {
         });
     }
 });
-//
+
 router.get("/getPermission", async (req, res) => {
     try {
-        console.log("inside the get permition")
         const { userId } = req.query;
-
-        // Check if userId is not provided
         if (!userId) {
             return res.status(400).json({
                 success: false,
                 message: "userId is required"
             });
         }
-
-        // Fetch permission for the given userId
         const permission = await admin.findOne({ _id: userId }, { col_view_permission: 1 });
 
-        // Check if the user was found
         if (!permission) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
-
-        // Return successful response
         return res.status(200).json({
             success: true,
             message: "User permissions retrieved successfully",
             data: permission
         });
     } catch (error) {
-        // Handle any errors that occur during the execution
         return res.status(500).json({
             success: false,
             message: "An error occurred while retrieving user permissions",

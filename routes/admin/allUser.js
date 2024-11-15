@@ -19,14 +19,14 @@ const upiPayments = require("../../model/API/upiPayments");
 const userProfiles = require("../../model/API/Profile");
 const walletHistories = require("../../model/wallet_history")
 const { MongoClient } = require("mongodb");
-
+const authMiddleware=require("../helpersModule/athetication")
 const client = new MongoClient(process.env.DB_CONNECT, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
 
 
-router.post("/getAllUsers", session, async function (req, res) {
+router.post("/getAllUsers", authMiddleware, async function (req, res) {
     try {
         const page = parseInt(req.body.page) || 1;
         const limit = parseInt(req.body.limit) || 10;
@@ -86,7 +86,7 @@ router.post("/getAllUsers", session, async function (req, res) {
     }
 });
 
-router.post("/blockUser", session, async (req, res) => {
+router.post("/blockUser", authMiddleware, async (req, res) => {
     try {
         const { id, blockStatus, blockReason } = req.body;
 
@@ -138,7 +138,7 @@ router.post("/blockUser", session, async (req, res) => {
     }
 });
 
-router.get("/getProfile", session, async (req, res) => {
+router.get("/getProfile", authMiddleware, async (req, res) => {
     try {
         const { id } = req.query;
         if (!id) {
@@ -172,7 +172,7 @@ router.get("/getProfile", session, async (req, res) => {
     }
 });
 
-router.post("/deleteUserByAdmin", session, async (req, res) => {
+router.post("/deleteUserByAdmin", authMiddleware, async (req, res) => {
     try {
         const { id } = req.body;
 

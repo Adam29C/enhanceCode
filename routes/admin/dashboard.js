@@ -1,18 +1,17 @@
 const trakpay = require("../../model/onlineTransaction");
 const upi_entries = require("../../model/API/upiPayments");
-const session = require("../helpersModule/session");
 const express = require("express");
 const router = express.Router();
 const mainPage = require("../../model/MainPage");
 const walletTrace = require("../../model/Wallet_Bal_trace");
-const permission = require("../helpersModule/permission");
 const deleteduser = require("../../model/API/Deleted_User");
 const Users = require("../../model/API/Users");
 const moment =require("moment");
 const total = require("../../model/API/FundRequest");
 const dashboard = require("../../model/MainPage");
+const authMiddleware=require("../helpersModule/athetication");
 
-router.get("/getBriefDeposit", async (req, res) => {
+router.get("/getBriefDeposit", authMiddleware,async (req, res) => {
   try {
     const startOfDay = moment().startOf("day").unix();
     const gatewayAmount = await trakpay.aggregate([
@@ -54,7 +53,7 @@ router.get("/getBriefDeposit", async (req, res) => {
   }
 });
 
-router.get("/dashboardCount", async (req, res) => {
+router.get("/dashboardCount", authMiddleware,async (req, res) => {
   try {
     const thirtyDaysAgo = moment().subtract(30, 'days').toDate();
 
@@ -106,11 +105,10 @@ router.get("/dashboardCount", async (req, res) => {
   }
 });
 
-router.post("/getRegisteredUser", async (req, res) => {
+router.post("/getRegisteredUser", authMiddleware,async (req, res) => {
     try {
       const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
-      //const todayDate = moment().format("DD/MM/YYYY"); 
-      const todayDate = "14/11/2023"
+      const todayDate = moment().format("DD/MM/YYYY"); 
       let query = {};
       let userFundArr = {}; 
       let returnJson = {};
@@ -131,8 +129,7 @@ router.post("/getRegisteredUser", async (req, res) => {
           .skip((page - 1) * limit) 
           .limit(parseInt(limit)); 
         const totalUsers = await Users.countDocuments(query);
-  
-      console.log(totalUsers)
+
         returnJson = {
           todayRegistered,
           pagination: {
@@ -158,18 +155,16 @@ router.post("/getRegisteredUser", async (req, res) => {
         });
   
         userFunds.forEach((fund) => {
-          const userId = fund.userId.toString(); // Ensure userId is treated as a string for consistency
+          const userId = fund.userId.toString();
           const reqAmount = fund.reqAmount;
-  
-          // Sum the requested amounts for each user
+
           if (!userFundArr[userId]) {
             userFundArr[userId] = reqAmount;
           } else {
-            userFundArr[userId] += reqAmount; // Accumulate funds if user already exists in the object
+            userFundArr[userId] += reqAmount;
           }
         });
   
-        // Get the total count of users matching the query for pagination
         const totalUsers = await Users.countDocuments(query);
   
         returnJson = {
@@ -184,14 +179,12 @@ router.post("/getRegisteredUser", async (req, res) => {
         };
       }
   
-      // Send the response back to the client
       return res.json({
         success: true,
         message: "Data fetched successfully",
         data: returnJson,
       });
     } catch (error) {
-      console.error("Error in getRegisteredUser route:", error); // Log error for debugging
       return res.status(500).json({
         success: false,
         message: "An error occurred while fetching registered users.",
@@ -200,7 +193,7 @@ router.post("/getRegisteredUser", async (req, res) => {
     }
 });
 
-router.post("/getRegisteredUserLogs",session, async (req, res) => {
+router.post("/getRegisteredUserLogs",authMiddleware, async (req, res) => {
   try {
     const findRegisterLogs = await dashboard.find({});
     return res.status(200).json({
