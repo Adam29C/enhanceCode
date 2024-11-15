@@ -1,9 +1,9 @@
 const router = require("express").Router();
 const dateTime = require("node-datetime");
 const gamesProvider = require("../../../model/games/Games_Provider");
-const session = require("../../helpersModule/session");
+const authMiddleware=require("../../helpersModule/athetication")
 
-router.get("/", session, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const provider = await gamesProvider.find().sort({ _id: 1 });
         return res.status(200).json({
@@ -21,7 +21,7 @@ router.get("/", session, async (req, res) => {
     }
 });
 
-router.post("/insertGame", session, async (req, res) => {
+router.post("/insertGame", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
         const formatted = dt.format("Y-m-d H:M:S");
@@ -59,7 +59,7 @@ router.post("/insertGame", session, async (req, res) => {
     }
 });
 
-router.get("/specificUser", session, async (req, res) => {
+router.get("/specificUser", authMiddleware, async (req, res) => {
     try {
         const { userId } = req.query;
         if (!userId) {
@@ -94,7 +94,7 @@ router.get("/specificUser", session, async (req, res) => {
     }
 });
 
-router.patch("/", session, async (req, res) => {
+router.patch("/", authMiddleware, async (req, res) => {
     try {
         const { gameId, gamename, result, acvtiveStatusEdit, mobile } = req.body;
         if (!gameId || !gamename || !result || !acvtiveStatusEdit || !mobile) {
@@ -145,7 +145,7 @@ router.patch("/", session, async (req, res) => {
     }
 });
 
-router.delete("/", session, async (req, res) => {
+router.delete("/", authMiddleware, async (req, res) => {
     try {
         const { gameId } = req.body;
         if (!gameId) {
