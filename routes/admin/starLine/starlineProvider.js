@@ -4,15 +4,13 @@ const router = express.Router();
 const starlineProvider = require("../../../model/starline/Starline_Provider");
 const moment = require('moment');
 
-router.get("/getStarlineProvider", session, async (req, res) => {
+router.get("/getStarlineProvider", authMiddleware, async (req, res) => {
   try {
     const provider = await starlineProvider.find().sort({ _id: 1 });
-    const userInfo = req.session.details;
     return res.json({
       status: true,
       message: "Starline Provider data fetched successfully.",
       data: provider,
-      userInfo: userInfo
     });
   } catch (e) {
     return res.status(500).json({
@@ -23,7 +21,7 @@ router.get("/getStarlineProvider", session, async (req, res) => {
   }
 });
 
-router.get("/starLineProviderById", async (req, res) => {
+router.get("/starLineProviderById", authMiddleware,async (req, res) => {
   try {
     const { gameId } = req.query;
     if (!gameId) {
@@ -56,7 +54,7 @@ router.get("/starLineProviderById", async (req, res) => {
   }
 });
 
-router.post("/insertStarLineProvider", async (req, res) => {
+router.post("/insertStarLineProvider", authMiddleware,async (req, res) => {
   const { gamename, result } = req.body;
 
   if (!gamename || !result) {
@@ -89,7 +87,7 @@ router.post("/insertStarLineProvider", async (req, res) => {
   }
 });
 
-router.patch("/updateStarLineProvider", async (req, res) => {
+router.patch("/updateStarLineProvider", authMiddleware,async (req, res) => {
   try {
     const { gameId, gamename, result } = req.body;
     if (!gameId) {
@@ -140,7 +138,7 @@ router.patch("/updateStarLineProvider", async (req, res) => {
   }
 });
 
-router.delete("/deleteStarLineProvider", async (req, res) => {
+router.delete("/deleteStarLineProvider", authMiddleware,async (req, res) => {
   try {
     const { gameId } = req.query;
     if (!gameId) {
