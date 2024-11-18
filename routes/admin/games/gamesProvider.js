@@ -30,7 +30,7 @@ router.post("/insertGame", authMiddleware, async (req, res) => {
         if (!gamename || !result || !acvtiveStatus || !mobile) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Missing required fields: gamename, result, activeStatus, mobile",
             });
         }
@@ -45,14 +45,14 @@ router.post("/insertGame", authMiddleware, async (req, res) => {
         await games.save();
         return res.status(201).json({
             statusCode: 201,
-            status: "Success",
+            status: true,
             message: "Game inserted successfully",
             data: games,
         });
     } catch (error) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while inserting the game.",
             error: error.message,
         });
@@ -65,29 +65,29 @@ router.get("/specificUser", authMiddleware, async (req, res) => {
         if (!userId) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "User ID is required.",
             });
         }
         const user = await gamesProvider.findOne({ _id: userId });
         if (!user) {
-            return res.status(404).json({
-                statusCode: 404,
-                status: "Failure",
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
                 message: "User not found.",
             });
         }
 
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "User retrieved successfully.",
             data: user,
         });
     } catch (e) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong. Please try again later.",
             error: e.message,
         });
@@ -100,7 +100,7 @@ router.patch("/", authMiddleware, async (req, res) => {
         if (!gameId || !gamename || !result || !acvtiveStatusEdit || !mobile) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Missing required fields: gameId, gamename, result, activeStatusEdit, mobile",
             });
         }
@@ -122,23 +122,23 @@ router.patch("/", authMiddleware, async (req, res) => {
         );
 
         if (updateResult.matchedCount === 0) {
-            return res.status(404).json({
-                statusCode: 404,
-                status: "Failure",
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
                 message: "Game not found or no changes were made.",
             });
         }
 
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Game provider data updated successfully",
         });
 
     } catch (error) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while updating the game provider data.",
             error: error.message,
         });
@@ -151,7 +151,7 @@ router.delete("/", authMiddleware, async (req, res) => {
         if (!gameId) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Game ID is required.",
             });
         }
@@ -159,23 +159,23 @@ router.delete("/", authMiddleware, async (req, res) => {
         const deletedGame = await gamesProvider.deleteOne({ _id: gameId });
 
         if (deletedGame.deletedCount === 0) {
-            return res.status(404).json({
-                statusCode: 404,
-                status: "Failure",
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
                 message: "User not found.",
             });
         }
 
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Game provider deleted successfully.",
         });
 
     } catch (error) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while deleting the game provider.",
             error: error.message,
         });

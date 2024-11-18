@@ -8,14 +8,14 @@ router.get("/", authMiddleware, async (req, res) => {
         const gameRate = await gameList.find().sort({ _id: 1 });
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Data fetched successfully",
             data: gameRate,
         });
     } catch (e) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "An error occurred while fetching game data",
             error: e.message,
         });
@@ -27,7 +27,7 @@ router.post("/insertGame", authMiddleware, async (req, res) => {
         const { gamename, price } = req.body;
         if (!gamename || !price) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Game name and price are required",
             });
         }
@@ -40,14 +40,14 @@ router.post("/insertGame", authMiddleware, async (req, res) => {
         });
         await games.save();
         return res.status(201).json({
-            status: "Success",
+            status: true,
             message: "Game successfully inserted",
             data: games,
         });
 
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Error inserting game data",
             error: e.message,
         });
@@ -59,26 +59,26 @@ router.get("/specificUser", authMiddleware, async (req, res) => {
         const { userId } = req.query;
         if (!userId) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "User ID is required",
             });
         }
         const user = await gameList.findOne({ _id: userId });
         if (!user) {
-            return res.status(404).json({
-                status: "Failure",
+            return res.status(400).json({
+                status: false,
                 message: "User not found",
             });
         }
         return res.status(200).json({
-            status: "Success",
+            status: true,
             message: "User found",
             data: user,
         });
 
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Error fetching user data",
             error: e.message,
         });
@@ -90,7 +90,7 @@ router.patch("/", authMiddleware, async (req, res) => {
         const { userId, gamename, price } = req.body;
         if (!userId || !gamename || !price) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Missing required fields: userId, gamename, or price.",
             });
         }
@@ -107,18 +107,18 @@ router.patch("/", authMiddleware, async (req, res) => {
             }
         );
         if (result.modifiedCount === 0) {
-            return res.status(404).json({
-                status: "Failure",
+            return res.status(400).json({
+                status: false,
                 message: "Game not found or no changes made.",
             });
         }
         return res.status(200).json({
-            status: "Success",
+            status: true,
             message: "Game details updated successfully.",
         });
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Error updating game details.",
             error: e.message,
         });
@@ -130,25 +130,25 @@ router.delete("/", authMiddleware, async (req, res) => {
         const { userId } = req.body;
         if (!userId) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Missing required field: userId.",
             });
         }
         const result = await gameList.deleteOne({ _id: userId });
         if (result.deletedCount === 0) {
-            return res.status(404).json({
-                status: "Failure",
+            return res.status(400).json({
+                status: false,
                 message: "Game not found or already deleted.",
             });
         }
         return res.status(200).json({
-            status: "Success",
+            status: true,
             message: "Game deleted successfully.",
             data: result,
         });
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Error deleting game.",
             error: e.message,
             stack: process.env.NODE_ENV === "development" ? e.stack : undefined, // Conditionally include stack trace in development mode
