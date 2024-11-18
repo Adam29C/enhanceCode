@@ -21,7 +21,7 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/insertGame", async (req, res) => {
+router.post("/insertGame",authMiddleware, async (req, res) => {
     try {
       const dt = dateTime.create();
       const formatted = dt.format("Y-m-d H:M:S");
