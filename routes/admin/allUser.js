@@ -154,7 +154,7 @@ router.get("/getProfile", authMiddleware, async (req, res) => {
         if (!userProfile) {
             return res.status(404).json({
                 status: false,
-                message: `Profile not found for user with id ${id}.`
+                message: `Profile Not Filled By User.`
             });
         }
 
