@@ -58,7 +58,8 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
                 mobile: user.mobile,
                 deviceName: user.deviceName,
                 deviceId: user.deviceId,
-                CreatedAt: user.CreatedAt
+                CreatedAt: user.CreatedAt,
+                id:user._id
             };
         });
 

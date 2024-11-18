@@ -95,6 +95,7 @@ const starGameProfitLoss=require("./routes/admin/starLine/starGameProfitLoss")
 const starGameResult=require("./routes/admin/starLine/starGameResult")
 const abGameProvider=require("./routes/admin/andarBahar/abGameProvider")
 const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
+const mainGameResult = require("./routes/admin/games/mainGameResult.js")
 dotenv.config();
 
 // Connect To DB
@@ -251,6 +252,7 @@ app.use("/starGameProfitLoss",starGameProfitLoss)
 app.use("/starGameResult",starGameResult)
 app.use("/abGameProvider",abGameProvider)
 app.use("/abGameSetting",abGameSetting)
+app.use("/mainGameResult",mainGameResult);
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
 const fund = require("./model/API/FundRequest");

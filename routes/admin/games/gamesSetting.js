@@ -27,7 +27,7 @@ router.get("/", authMiddleware, async (req, res) => {
         const finalNew = Object.values(finalArr);
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Data fetched successfully",
             data: finalNew,
         });
@@ -35,7 +35,7 @@ router.get("/", authMiddleware, async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while fetching game settings.",
             error: error.message,
         });
@@ -93,20 +93,20 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
             }
             return res.status(200).json({
                 statusCode: 200,
-                status: "Success",
+                status: true,
                 message: `Successfully Inserted Timings For ${gameDay}`,
             });
         } else {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: `Details Already Filled For ${gameDay}`,
             });
         }
     } catch (error) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while inserting game settings.",
             error: error.message,
         });
@@ -130,14 +130,14 @@ router.post("/:providerId", authMiddleware, async (req, res) => {
 
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Data fetched successfully",
             data: result,
         });
     } catch (error) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while processing the request.",
             error: error.message,
         });
@@ -150,7 +150,7 @@ router.patch("/", authMiddleware, async (req, res) => {
         if (!id || !obt || !cbt || !obrt || !cbrt || close === undefined) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Missing required fields in the request body",
             });
         }
@@ -170,21 +170,21 @@ router.patch("/", authMiddleware, async (req, res) => {
             }
         );
         if (result.modifiedCount === 0) {
-            return res.status(404).json({
-                statusCode: 404,
-                status: "Failure",
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
                 message: "Game settings not found or no changes made",
             });
         }
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Game settings updated successfully",
         });
     } catch (e) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while updating game settings",
             error: e.message,
         });
@@ -197,7 +197,7 @@ router.post("/updateAll", authMiddleware, async (req, res) => {
         if (!providerId || !obtTime || !cbtTime || !obrtTime || !cbrtTime || openClose === undefined) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Missing required fields in the request body",
             });
         }
@@ -217,21 +217,21 @@ router.post("/updateAll", authMiddleware, async (req, res) => {
             }
         );
         if (result.modifiedCount === 0) {
-            return res.status(404).json({
-                statusCode: 404,
-                status: "Failure",
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
                 message: "No matching records found to update or no changes made",
             });
         }
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: `${result.modifiedCount} game settings updated successfully`,
         });
     } catch (e) {
         return res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: "Something went wrong while updating game settings",
             error: e.message,
         });
