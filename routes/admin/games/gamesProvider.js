@@ -21,43 +21,54 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/insertGame", authMiddleware, async (req, res) => {
+router.post("/insertGame", async (req, res) => {
     try {
-        const dt = dateTime.create();
-        const formatted = dt.format("Y-m-d H:M:S");
-        const { gamename, result, acvtiveStatus, mobile } = req.body;
+      const dt = dateTime.create();
+      const formatted = dt.format("Y-m-d H:M:S");
 
-        if (!gamename || !result || !acvtiveStatus || !mobile) {
-            return res.status(400).json({
-                statusCode: 400,
-                status: false,
-                message: "Missing required fields: gamename, result, activeStatus, mobile",
-            });
-        }
+      const { gamename, result, activeStatus, mobile } = req.body;
 
-        const games = new gamesProvider({
-            providerName: gamename,
-            providerResult: result,
-            activeStatus: acvtiveStatus,
-            modifiedAt: formatted,
-            mobile: mobile,
+      if (!gamename || !result || activeStatus === undefined || !mobile) {
+        return res.status(400).json({
+          statusCode: 400,
+          status: false,
+          message: "Missing required fields: gamename, result, activeStatus, mobile",
         });
-        await games.save();
-        return res.status(201).json({
-            statusCode: 201,
-            status: true,
-            message: "Game inserted successfully",
-            data: games,
+      }
+  
+      if (typeof activeStatus !== "boolean") {
+        return res.status(400).json({
+          statusCode: 400,
+          status: false,
+          message: "activeStatus must be a boolean value (true or false)",
         });
+      }
+
+      const games = new gamesProvider({
+        providerName: gamename,
+        providerResult: result,
+        activeStatus: activeStatus,
+        modifiedAt: formatted,
+        mobile: mobile,
+      });
+  
+      await games.save();
+
+      return res.status(201).json({
+        statusCode: 201,
+        status: true,
+        message: "Game inserted successfully",
+        data: games,
+      });
     } catch (error) {
-        return res.status(500).json({
-            statusCode: 500,
-            status: false,
-            message: "Something went wrong while inserting the game.",
-            error: error.message,
-        });
+      return res.status(500).json({
+        statusCode: 500,
+        status: false,
+        message: "Something went wrong while inserting the game.",
+        error: error.message,
+      });
     }
-});
+  });
 
 router.get("/specificUser", authMiddleware, async (req, res) => {
     try {

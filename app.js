@@ -95,6 +95,7 @@ const starGameProfitLoss=require("./routes/admin/starLine/starGameProfitLoss")
 const starGameResult=require("./routes/admin/starLine/starGameResult")
 const abGameProvider=require("./routes/admin/andarBahar/abGameProvider")
 const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
+const abGameRate =require("./routes/admin/andarBahar/abGameRate.js")
 const mainGameResult = require("./routes/admin/games/mainGameResult.js")
 dotenv.config();
 
@@ -252,6 +253,7 @@ app.use("/starGameProfitLoss",starGameProfitLoss)
 app.use("/starGameResult",starGameResult)
 app.use("/abGameProvider",abGameProvider)
 app.use("/abGameSetting",abGameSetting)
+app.use("/abGameRate",abGameRate)
 app.use("/mainGameResult",mainGameResult);
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
