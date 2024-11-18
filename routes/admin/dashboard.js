@@ -108,7 +108,8 @@ router.get("/dashboardCount", authMiddleware,async (req, res) => {
 router.post("/getRegisteredUser", authMiddleware,async (req, res) => {
     try {
       const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
-      const todayDate = moment().format("DD/MM/YYYY"); 
+      // const todayDate = moment().format("DD/MM/YYYY"); 
+      const todayDate = "14/11/2024"
       let query = {};
       let userFundArr = {}; 
       let returnJson = {};
