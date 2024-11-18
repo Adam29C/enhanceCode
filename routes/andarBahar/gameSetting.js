@@ -195,35 +195,21 @@ router.patch("/", session, async (req, res) => {
   }
 });
 
-router.post("/:providerId", session, permission, async (req, res) => {
+router.get("/:providerId", async (req, res) => {
   try {
-    const id = req.params.providerId;
-    let findMultiple;
-    findMultiple = await ABgamesSetting.find({ providerId: id });
-    const userInfo = req.session.details;
-    const permissionArray = req.view;
-
-    if (Object.keys(findMultiple).length === 0) {
-      findMultiple = "Empty";
-    }
-
-    const check = permissionArray["abSetting"].showStatus;
-    if (check === 1) {
-      res.render("./andarbahar/abMultiEdit", {
-        data: findMultiple,
-        userInfo: userInfo,
-        permission: permissionArray,
-        title: "AB MultiEdit"
-      });
-    } else {
-      res.render("./dashboard/starterPage", {
-        userInfo: userInfo,
-        permission: permissionArray,
-        title: "Dashboard"
-      });
-    }
+    const id = req.params.providerId; 
+    let ABgamesSettingInfo = await ABgamesSetting.find({ providerId: id }); 
+    res.status(200).json({
+      success: true,
+      message: "Settings fetched successfully.",
+      data: ABgamesSettingInfo
+    });
   } catch (error) {
-    res.json({ message: error });
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while processing the request.",
+      error: error.message
+    });
   }
 });
 

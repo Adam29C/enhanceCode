@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const ABgamesProvider = require("../../../model/AndarBahar/ABProvider");
 const ABgamesSetting = require("../../../model/AndarBahar/ABAddSetting");
+const authMiddleware = require("../../helpersModule/athetication");
+const moment = require('moment');
+
 
 router.get("/", async (req, res) => {
   try {
@@ -76,180 +79,202 @@ router.get("/addSetting", async (req, res) => {
         error: e.message,
       });
     }
-  });
-module.exports = router;
+});
 
 
-// router.get("/addSetting", session, permission, async (req, res) => {
-//   try {
-//     const provider = await ABgamesProvider.find().sort({ _id: 1 });;
-//     const userInfo = req.session.details;
-//     const permissionArray = req.view;
-//     const check = permissionArray["abSetting"].showStatus;
-//     if (check === 1) {
-//       res.render("./andarbahar/ABaddsetting", {
-//         data: provider,
-//         userInfo: userInfo,
-//         permission: permissionArray,
-//         title: "AB Add Settings"
-//       });
-//     } else {
-//       res.render("./dashboard/starterPage", {
-//         userInfo: userInfo,
-//         permission: permissionArray,
-//         title: "Dashboard"
-//       });
-//     }
-//   } catch (e) {
-//     res.json({ message: e });
-//   }
-// });
+router.post("/updateProviderSettings", async (req, res) => {
+  try {
+    const { providerId, obtTime, cbtTime, obrtTime, openClose } = req.body;
+    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
-// router.post("/updateProviderSettings", session, async (req, res) => {
-//   try {
-//     const dt = dateTime.create();
-//     const formatted = dt.format("Y-m-d H:M:S");
-//     let providerId = req.body.providerId;
-//     await ABgamesSetting.updateMany(
-//       { providerId: providerId },
-//       {
-//         $set: {
-//           OBT: req.body.obtTime,
-//           CBT: req.body.cbtTime,
-//           OBRT: req.body.obrtTime,
-//           isClosed: req.body.openClose,
-//           modifiedAt: formatted
-//         }
-//       }
-//     );
-//     res.redirect("/andarbahargamesetting");
-//   } catch (e) {
-//     res.json({
-//       status: 0,
-//       error: e.toString()
-//     });
-//   }
-// });
+    const result = await ABgamesSetting.updateMany(
+      { providerId: providerId },
+      {
+        $set: {
+          OBT: obtTime,
+          CBT: cbtTime,
+          OBRT: obrtTime,
+          isClosed: openClose,
+          modifiedAt: formatted
+        }
+      }
+    );
 
-// router.post("/insertSettings", session, async (req, res) => {
-//   try {
-//     const dt = dateTime.create();
-//     const formatted = dt.format("Y-m-d H:M:S");
-//     const providerId = req.body.gameid;
-//     const gameDay = req.body.gameDay;
-//     const find = await ABgamesSetting.findOne({
-//       providerId: providerId,
-//       gameDay: gameDay
-//     });
-//     let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-//     if (!find) {
-//       if (gameDay === "All") {
-//         let finalArr=[]
-//         let uniqueDays;
-//         const providerSetting = await ABgamesSetting.find({ providerId: providerId }, { gameDay: 1, providerId: 1 });
-//         if (providerSetting.length > 0) {
-//           let daysFromArray1 = providerSetting.map(item => item.gameDay);
-//           let allDays = new Set([...daysFromArray1, ...days]);
-//           uniqueDays = [...allDays].filter(day => !daysFromArray1.includes(day) || !days.includes(day));
-//         } else {
-//           uniqueDays = days
-//         }
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No provider settings found for the given providerId or no changes made"
+      });
+    }
 
-//         for (let day of uniqueDays) {
-//           finalArr.push({
-//             providerId: providerId,
-//             gameDay: day,
-//             OBT: req.body.game1,
-//             CBT: req.body.game2,
-//             OBRT: req.body.game3,
-//             CBRT: req.body.game4,
-//             isClosed: req.body.status,
-//             modifiedAt: formatted
-//           })
-//         }
-//         await ABgamesSetting.insertMany(finalArr)
-//       } else {
-//         const settings = new ABgamesSetting({
-//           providerId: providerId,
-//           gameDay: gameDay,
-//           OBT: req.body.game1,
-//           CBT: req.body.game2,
-//           OBRT: req.body.game3,
-//           CBRT: req.body.game4,
-//           isClosed: req.body.status,
-//           modifiedAt: formatted
-//         });
-//         await settings.save();
-//       }
-//       res.json({
-//         status: 1,
-//         message: "Successfully Inserted Timings For " + gameDay
-//       });
-//     } else {
-//       res.json({
-//         status: 1,
-//         message: "Details Already Filled For " + gameDay
-//       });
-//     }
-//   } catch (e) {
-//     res.status(400).send(e);
-//   }
-// });
+    res.status(200).json({
+      success: true,
+      message: "Provider settings updated successfully"
+    });
 
-// router.patch("/", session, async (req, res) => {
-//   try {
-//     const dt = dateTime.create();
-//     const formatted = dt.format("Y-m-d H:M:S");
-//     await ABgamesSetting.updateOne(
-//       { _id: req.body.id },
-//       {
-//         $set: {
-//           OBT: req.body.obt,
-//           CBT: req.body.cbt,
-//           OBRT: req.body.obrt,
-//           CBRT: req.body.cbrt,
-//           isClosed: req.body.close,
-//           modifiedAt: formatted
-//         }
-//       }
-//     );
-//     res.redirect("/andarbahargamesetting");
-//   } catch (e) {
-//     res.json(e);
-//   }
-// });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating provider settings",
+      error: e.toString()
+    });
+  }
+});
 
-// router.post("/:providerId", session, permission, async (req, res) => {
-//   try {
-//     const id = req.params.providerId;
-//     let findMultiple;
-//     findMultiple = await ABgamesSetting.find({ providerId: id });
-//     const userInfo = req.session.details;
-//     const permissionArray = req.view;
+router.post("/insertSettings", async (req, res) => {
+  try {
+    const { gameid, gameDay, game1, game2, game3, game4, status } = req.body;
+    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
+    const providerId = gameid;
 
-//     if (Object.keys(findMultiple).length === 0) {
-//       findMultiple = "Empty";
-//     }
+    // Check if the settings already exist for the given providerId and gameDay
+    const existingSetting = await ABgamesSetting.findOne({
+      providerId,
+      gameDay
+    });
 
-//     const check = permissionArray["abSetting"].showStatus;
-//     if (check === 1) {
-//       res.render("./andarbahar/abMultiEdit", {
-//         data: findMultiple,
-//         userInfo: userInfo,
-//         permission: permissionArray,
-//         title: "AB MultiEdit"
-//       });
-//     } else {
-//       res.render("./dashboard/starterPage", {
-//         userInfo: userInfo,
-//         permission: permissionArray,
-//         title: "Dashboard"
-//       });
-//     }
-//   } catch (error) {
-//     res.json({ message: error });
-//   }
-// });
+    let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+    if (!existingSetting) {
+      if (gameDay === "All") {
+        let finalArr = [];
+        let uniqueDays;
+
+        // Get the existing game days for the provider
+        const providerSettings = await ABgamesSetting.find({ providerId }, { gameDay: 1, providerId: 1 });
+
+        // Get the unique days that need to be added
+        let existingDays = providerSettings.map(item => item.gameDay);
+        if (providerSettings.length > 0) {
+          // Create a unique list of days that don't exist in the provider's current settings or the default days
+          uniqueDays = [...new Set([...existingDays, ...days])].filter(day => !existingDays.includes(day) || !days.includes(day));
+        } else {
+          // If no provider settings, use all days
+          uniqueDays = days;
+        }
+
+        // Prepare the data to insert for each unique day
+        uniqueDays.forEach(day => {
+          finalArr.push({
+            providerId,
+            gameDay: day,
+            OBT: game1,
+            CBT: game2,
+            OBRT: game3,
+            CBRT: game4,
+            isClosed: status,
+            modifiedAt: formatted
+          });
+        });
+
+        // Insert new records for the unique days
+        await ABgamesSetting.insertMany(finalArr);
+
+      } else {
+        // If gameDay is not "All", create a new setting for that specific day
+        const newSetting = new ABgamesSetting({
+          providerId,
+          gameDay,
+          OBT: game1,
+          CBT: game2,
+          OBRT: game3,
+          CBRT: game4,
+          isClosed: status,
+          modifiedAt: formatted
+        });
+
+        await newSetting.save();
+      }
+
+      res.json({
+        success: true,
+        message: `Successfully inserted timings for ${gameDay}`
+      });
+
+    } else {
+      res.json({
+        success: false,
+        message: `Details already filled for ${gameDay}`
+      });
+    }
+
+  } catch (e) {
+    res.status(400).json({
+      success: false,
+      message: "Error inserting settings",
+      error: e.toString()
+    });
+  }
+});
+
+router.patch("/", async (req, res) => {
+  try {
+    const { id, obt, cbt, obrt, cbrt, close } = req.body;
+    if (!id || !obt || !cbt || !obrt || !cbrt || close === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields in the request body."
+      });
+    }
+    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
+    const result = await ABgamesSetting.updateOne(
+      { _id: id },
+      {
+        $set: {
+          OBT: obt,
+          CBT: cbt,
+          OBRT: obrt,
+          CBRT: cbrt,
+          isClosed: close,
+          modifiedAt: formatted
+        }
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No settings found for the provided ID or no changes were made."
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Settings updated successfully.",
+      data: {
+        _id: id,
+        OBT: obt,
+        CBT: cbt,
+        OBRT: obrt,
+        CBRT: cbrt,
+        isClosed: close,
+        modifiedAt: formatted
+      }
+    });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating settings.",
+      error: e.toString()
+    });
+  }
+});
+
+router.get("/:providerId", async (req, res) => {
+  try {
+    const id = req.params.providerId; 
+    let ABgamesSettingInfo = await ABgamesSetting.find({ providerId: id }); 
+    res.status(200).json({
+      success: true,
+      message: "Settings fetched successfully.",
+      data: ABgamesSettingInfo
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while processing the request.",
+      error: error.message
+    });
+  }
+});
 
 module.exports =router;
