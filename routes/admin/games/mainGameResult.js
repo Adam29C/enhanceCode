@@ -3,7 +3,8 @@ const moment = require('moment');
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gameResult = require("../../../model/games/GameResult");
 const authMiddleware = require("../../helpersModule/athetication")
-
+const express = require("express");
+const router = express.Router();
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
