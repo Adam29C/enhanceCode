@@ -8,6 +8,7 @@ const permission = require("../helpersModule/permission");
 router.get("/", session, permission, async (req, res) => {
   try {
     const id = req.query.userId;
+    console.log("yyyyyyyyyyyyyyyyyyyyyyyy")
     const userInfo = req.session.details;
     const permissionArray = req.view;
     let finalArr = {};

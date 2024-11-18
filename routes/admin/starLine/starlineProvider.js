@@ -23,83 +23,90 @@ router.get("/getStarlineProvider", authMiddleware, async (req, res) => {
 
 router.get("/starLineProviderById", authMiddleware,async (req, res) => {
   try {
-    const { gameId } = req.query;
-    if (!gameId) {
+    const { providerId } = req.query;  
+
+    if (!providerId) {
       return res.status(400).json({
         status: false,
-        message: "'gameId' query parameter is required."
+        message: "'providerId' query parameter is required."
       });
     }
-    const game = await starlineProvider.findOne({ _id: gameId });
 
-    if (!game) {
+    const provider = await starlineProvider.findOne({ _id: providerId });
+
+
+    if (!provider) {
       return res.status(404).json({
         status: false,
-        message: "Game not found with the provided 'gameId'."
+        message: "Provider not found with the provided 'providerId'."
       });
     }
 
     res.status(200).json({
       status: true,
-      message: "Game data fetched successfully.",
-      game: game
+      message: "Provider data fetched successfully.",
+      provider: provider
     });
 
   } catch (e) {
     res.status(500).json({
       status: false,
-      message: "An error occurred while fetching the game data.",
+      message: "An error occurred while fetching the provider data.",
       error: e.message
     });
   }
 });
 
 router.post("/insertStarLineProvider", authMiddleware,async (req, res) => {
-  const { gamename, result } = req.body;
+  const { providerName, result } = req.body;
 
-  if (!gamename || !result) {
+  if (!providerName || !result) {
     return res.status(400).json({
       status: false,
-      message: "'gamename' and 'result' are required fields."
+      message: "'providerName' and 'result' are required fields."
     });
   }
   const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
-  const game = new starlineProvider({
-    providerName: gamename,
+  const provider = new starlineProvider({
+    providerName: providerName,
     providerResult: result,
     modifiedAt: formatted
   });
 
   try {
-    const savedGame = await game.save();
+
+    const savedProvider = await provider.save();
 
     res.status(201).json({
       status: true,
-      message: "Game inserted successfully.",
-      game: savedGame
+      message: "Provider inserted successfully.",
+      provider: savedProvider
     });
   } catch (err) {
     res.status(500).json({
       status: false,
-      message: "An error occurred while inserting the game.",
+      message: "An error occurred while inserting the provider.",
+      error: err.message
     });
   }
 });
 
 router.patch("/updateStarLineProvider", authMiddleware,async (req, res) => {
   try {
-    const { gameId, gamename, result } = req.body;
-    if (!gameId) {
+    const { providerId, gamename, result } = req.body;
+    if (!providerId) {
       return res.status(400).json({
         status: false,
-        message: "'gameId' is required."
+        message: "'providerId' is required."
       });
     }
     const updateFields = {};
+
     if (gamename) {
       updateFields.providerName = gamename;
     }
+
     if (result) {
       updateFields.providerResult = result;
     }
@@ -113,26 +120,30 @@ router.patch("/updateStarLineProvider", authMiddleware,async (req, res) => {
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     updateFields.modifiedAt = formatted;
 
-    const updatedGame = await starlineProvider.updateOne(
-      { _id: gameId },
+    const updatedProvider = await starlineProvider.updateOne(
+      { _id: providerId }, 
       { $set: updateFields }
     );
-    if (updatedGame.matchedCount === 0) {
+
+    if (updatedProvider.matchedCount === 0) {
       return res.status(404).json({
         status: false,
-        message: "Game not found with the provided gameId."
+        message: "Provider not found with the provided providerId."
       });
     }
 
     res.status(200).json({
       status: true,
-      message: "Game updated successfully."
+      message: "Provider updated successfully."
     });
 
   } catch (err) {
+
+    console.error("Error updating provider:", err);
+
     res.status(500).json({
       status: false,
-      message: "An error occurred while updating the game.",
+      message: "An error occurred while updating the provider.",
       error: err.message
     });
   }
@@ -140,34 +151,37 @@ router.patch("/updateStarLineProvider", authMiddleware,async (req, res) => {
 
 router.delete("/deleteStarLineProvider", authMiddleware,async (req, res) => {
   try {
-    const { gameId } = req.query;
-    if (!gameId) {
+    const { providerId } = req.query;
+
+    if (!providerId) {
       return res.status(400).json({
         status: false,
-        message: "gameId is required to delete a game."
+        message: "'providerId' is required to delete a provider."
       });
     }
 
-    const deletedGame = await starlineProvider.deleteOne({ _id: gameId });
+    const deletedProvider = await starlineProvider.deleteOne({ _id: providerId });
 
-    if (deletedGame.deletedCount === 0) {
+
+    if (deletedProvider.deletedCount === 0) {
       return res.status(404).json({
         status: false,
-        message: "Game not found with the provided gameId."
+        message: "Provider not found with the provided providerId."
       });
     }
     res.status(200).json({
       status: true,
-      message: "Game deleted successfully."
+      message: "Provider deleted successfully."
     });
 
   } catch (e) {
     res.status(500).json({
       status: false,
-      message: "An error occurred while deleting the game.",
+      message: "An error occurred while deleting the provider.",
       error: e.message
     });
   }
 });
+
 
 module.exports = router;
