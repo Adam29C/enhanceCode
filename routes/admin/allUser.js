@@ -58,7 +58,8 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
                 mobile: user.mobile,
                 deviceName: user.deviceName,
                 deviceId: user.deviceId,
-                CreatedAt: user.CreatedAt
+                CreatedAt: user.CreatedAt,
+                id:user._id
             };
         });
 
@@ -153,7 +154,7 @@ router.get("/getProfile", authMiddleware, async (req, res) => {
         if (!userProfile) {
             return res.status(404).json({
                 status: false,
-                message: `Profile not found for user with id ${id}.`
+                message: `Profile Not Filled By User.`
             });
         }
 

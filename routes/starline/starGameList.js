@@ -6,6 +6,8 @@ const permission = require("../helpersModule/permission");
 
 router.get("/", session, permission, async (req, res) => {
   try {
+    console.log("yha par hai")
+    return;
     const provider = await stargameList.find().sort({_id : 1});;
     const userInfo = req.session.details;
     const permissionArray = req.view;

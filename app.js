@@ -82,14 +82,21 @@ const manualPayment = require("./routes/API/manualPayment")
 const manual = require("./routes/wallet/manualpayment");
 
 //new route add
-const adminLogin=require("./routes/admin/login.js");
-const dashboard=require("./routes/admin/dashboard.js");
-const allUser=require("./routes/admin/allUser.js");
-const mainGames=require("./routes/admin/games/gamesProvider.js");
-const gameSettings=require("./routes/admin/games/gamesSetting.js");
-const mainGameRate=require("./routes/admin/games/mainGamesRate.js");
-const mainGameResults = require("./routes/admin/games/mainGameResult.js")
-const starLine=require("./routes/admin/starLine/starlineProvider.js");
+const adminLogin = require("./routes/admin/login");
+const dashboard = require("./routes/admin/dashboard");
+const allUser = require("./routes/admin/allUser");
+const mainGames = require("./routes/admin/games/gamesProvider");
+const gameSettings = require("./routes/admin/games/gamesSetting");
+const mainGameRate = require("./routes/admin/games/mainGamesRate");
+const mainGameResult = require("./routes/admin/games/mainGameResult.js")
+const starLine = require("./routes/admin/starLine/starlineProvider");
+const starLineSetting = require("./routes/admin/starLine/starlineSetting");
+const starGameRate = require("./routes/admin/starLine/starGameRate");
+const starGameProfitLoss = require("./routes/admin/starLine/starGameProfitLoss")
+const starGameResult = require("./routes/admin/starLine/starGameResult")
+const abGameProvider = require("./routes/admin/andarBahar/abGameProvider")
+const abGameSetting = require("./routes/admin/andarBahar/abGameSetting")
+const abGameRate = require("./routes/admin/andarBahar/abGameRate.js")
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js")
 dotenv.config();
@@ -235,16 +242,23 @@ app.use("/manualPayment", manualPayment);
 app.use("/manual", manual);
 
 // new Route add
-app.use("/adminLogin",adminLogin);
-app.use("/dashboard",dashboard);
-app.use("/allUser",allUser);
-app.use("/mainGames",mainGames);
-app.use("/mainGameSetting",gameSettings);
-app.use("/mainGameRate",mainGameRate);
-app.use("/mainGameResult",mainGameResults);
-app.use("/starLine",starLine);
-app.use("/cuttingGroups",cuttingGroups);
-app.use("/ocCuttingGroup",ocCutting)
+app.use("/adminLogin", adminLogin);
+app.use("/dashboard", dashboard);
+app.use("/allUser", allUser);
+app.use("/mainGames", mainGames);
+app.use("/mainGameSetting", gameSettings);
+app.use("/mainGameRate", mainGameRate)
+app.use("/mainGameResult", mainGameResult);
+app.use("/starGameProvider", starLine)
+app.use("/starGameSetting", starLineSetting)
+app.use("/starGameRate", starGameRate)
+app.use("/starGameProfitLoss", starGameProfitLoss)
+app.use("/starGameResult", starGameResult)
+app.use("/abGameProvider", abGameProvider)
+app.use("/abGameSetting", abGameSetting)
+app.use("/abGameRate", abGameRate)
+app.use("/cuttingGroups", cuttingGroups);
+app.use("/ocCuttingGroup", ocCutting)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
