@@ -88,9 +88,10 @@ const allUser=require("./routes/admin/allUser.js");
 const mainGames=require("./routes/admin/games/gamesProvider.js");
 const gameSettings=require("./routes/admin/games/gamesSetting.js");
 const mainGameRate=require("./routes/admin/games/mainGamesRate.js");
-const mainGameResult = require("./routes/admin/games/mainGameResult.js")
+const mainGameResults = require("./routes/admin/games/mainGameResult.js")
 const starLine=require("./routes/admin/starLine/starlineProvider.js");
-
+const cuttingGroups = require("./routes/admin/cuttingGroup.js")
+const ocCutting = require("./routes/admin/ocCutting.js")
 dotenv.config();
 
 // Connect To DB
@@ -236,12 +237,14 @@ app.use("/manual", manual);
 // new Route add
 app.use("/adminLogin",adminLogin);
 app.use("/dashboard",dashboard);
-app.use("/allUser",allUser)
+app.use("/allUser",allUser);
 app.use("/mainGames",mainGames);
 app.use("/mainGameSetting",gameSettings);
 app.use("/mainGameRate",mainGameRate);
-app.use("/mainGameResult",mainGameResult);
-app.use("/starLine",starLine)
+app.use("/mainGameResult",mainGameResults);
+app.use("/starLine",starLine);
+app.use("/cuttingGroups",cuttingGroups);
+app.use("/ocCuttingGroup",ocCutting)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");

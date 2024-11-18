@@ -1,3 +1,5 @@
+const express = require("express");
+const router = express.Router();
 const dateTime = require("node-datetime");
 const moment = require('moment');
 const gamesProvider = require("../../../model/games/Games_Provider");
