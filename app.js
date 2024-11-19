@@ -88,8 +88,9 @@ const allUser=require("./routes/admin/allUser");
 const mainGames=require("./routes/admin/games/gamesProvider");
 const gameSettings=require("./routes/admin/games/gamesSetting");
 const mainGameRate=require("./routes/admin/games/mainGamesRate");
-
-
+const mainGameResult = require("./routes/admin/games/mainGameResult.js")
+const starLine = require("./routes/admin/starLine/starlineProvider");
+const starLineSetting = require("./routes/admin/starLine/starlineSetting");
 const starGameRate=require("./routes/admin/starLine/starGameRate");
 const starGameProfitLoss=require("./routes/admin/starLine/starGameProfitLoss")
 const starGameResult=require("./routes/admin/starLine/starGameResult")
@@ -98,9 +99,6 @@ const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
 const abGameRate =require("./routes/admin/andarBahar/abGameRate.js")
 const abProfitLoss =require("./routes/admin/andarBahar/abProfitLoss1.js")
 const abGameResult =require("./routes/admin/andarBahar/abGameResult.js")
-const mainGameResult = require("./routes/admin/games/mainGameResult.js")
-const starLine = require("./routes/admin/starLine/starlineProvider");
-const starLineSetting = require("./routes/admin/starLine/starlineSetting");
 const exportDebit =require("./routes/admin/wallet/exportDebit.js");
 const fundRequestData = require("./routes/admin/wallet/fundRequest.js")
 const invoice=require("./routes/admin/wallet/invoice.js");
@@ -272,6 +270,10 @@ app.use("/abGameResult",abGameResult)
 app.use("/cuttingGroups", cuttingGroups);
 app.use("/ocCuttingGroup", ocCutting);
 app.use("/exportDebit",exportDebit);
+app.use("/fundsRequest",fundRequestData);
+app.use("/invoice",invoice);
+app.use("/reqOn_Off",reqOn_Off);
+app.use("/view_wallet",view_wallet)
 app.use("/creditRequest",creditRequest)
 
 const gameProvi = require("./model/games/Games_Provider");
