@@ -64,12 +64,12 @@ router.get("/getManualPaymentList", async (req, res) => {
         }));
         return res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             data: finalArr,
         });
     } catch (error) {
         return res.status(500).json({
-            statusCode: 500,
+            tatus: false,
             status: "Failure",
             message: "An unexpected error occurred",
             error: error.message,
