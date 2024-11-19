@@ -5,42 +5,53 @@ const gamesProvider = require("../../../model/games/Games_Provider");
 const gamesSetting = require("../../../model/games/AddSetting");
 const authMiddleware = require("../../helpersModule/athetication")
 
-// router.get("/", authMiddleware, async (req, res) => {
-//     try {
-//         const provider = await gamesProvider.find().sort({ _id: 1 });
-//         let finalArr = {};
-//         for (const index in provider) {
-//             const id = provider[index]._id;
-//             const settings = await gamesSetting
-//                 .find({ providerId: id })
-//                 .sort({ _id: 1 });
+router.get("/", authMiddleware, async (req, res) => {
+    try {
+        // Fetch all providers in one query
+        const providers = await gamesProvider.find().sort({ _id: 1 });
 
-//             finalArr[id] = {
-//                 _id: id,
-//                 providerName: provider[index].providerName,
-//                 providerResult: provider[index].providerResult,
-//                 modifiedAt: provider[index].modifiedAt,
-//                 resultStatus: provider[index].resultStatus,
-//                 gameDetails: settings,
-//             };
-//         }
-//         const finalNew = Object.values(finalArr);
-//         return res.status(200).json({
-//             statusCode: 200,
-//             status: true,
-//             message: "Data fetched successfully",
-//             data: finalNew,
-//         });
+        // Extract provider IDs into an array
+        const providerIds = providers.map((provider) => provider._id);
 
-//     } catch (error) {
-//         return res.status(500).json({
-//             statusCode: 500,
-//             status: false,
-//             message: "Something went wrong while fetching game settings.",
-//             error: error.message,
-//         });
-//     }
-// });
+        // Fetch all game settings related to these providers in a single query
+        const settings = await gamesSetting.find({
+            providerId: { $in: providerIds },
+        }).sort({ providerId: 1, _id: 1 });
+
+        // Create a map to group settings by providerId
+        const settingsMap = settings.reduce((acc, setting) => {
+            if (!acc[setting.providerId]) {
+                acc[setting.providerId] = [];
+            }
+            acc[setting.providerId].push(setting);
+            return acc;
+        }, {});
+
+        // Build the final array by merging providers with their game settings
+        const finalData = providers.map((provider) => ({
+            _id: provider._id,
+            providerName: provider.providerName,
+            providerResult: provider.providerResult,
+            modifiedAt: provider.modifiedAt,
+            resultStatus: provider.resultStatus,
+            gameDetails: settingsMap[provider._id] || [],
+        }));
+
+        return res.status(200).json({
+            statusCode: 200,
+            status: true,
+            message: "Data fetched successfully",
+            data: finalData,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            status: false,
+            message: "Something went wrong while fetching game settings.",
+            error: error.message,
+        });
+    }
+});
 
 router.post("/insertSettings", authMiddleware, async (req, res) => {
     try {
