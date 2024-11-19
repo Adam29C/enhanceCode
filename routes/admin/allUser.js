@@ -49,7 +49,6 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
             .sort({ _id: 1 });
 
         const totalRecords = await User.countDocuments(searchQuery);
-
         const tableArray = users.map((user, index) => {
             return {
                 sno: skip + index + 1,
@@ -60,7 +59,7 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
                 deviceId: user.deviceId,
                 CreatedAt: user.CreatedAt,
                 id:user._id,
-                banned:user.user.banned,
+                banned:user.banned,
             };
         });
 
@@ -81,9 +80,10 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
             recordsTotal: totalRecords
         });
     } catch (error) {
+        console.log(error,"ttt")
         res.status(500).json({
             status: false,
-            message: "Error fetching data or request too large. Please try again later."
+            message: "Internal Server Error"
         });
     }
 });
