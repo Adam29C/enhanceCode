@@ -89,7 +89,7 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
 
 router.post("/blockUser", authMiddleware, async (req, res) => {
     try {
-        const { id, blockStatus, blockReason } = req.body;
+        const { id, blockStatus, ression } = req.body;
 
         if (!id || !blockStatus || (blockStatus === undefined) || !blockReason) {
             return res.status(400).json({
@@ -175,7 +175,7 @@ router.get("/getProfile", authMiddleware, async (req, res) => {
 
 router.post("/deleteUserByAdmin", authMiddleware, async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id,ression } = req.body;
 
         if (!id) {
             return res.status(400).json({
