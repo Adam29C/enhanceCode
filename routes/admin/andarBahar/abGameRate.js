@@ -1,74 +1,146 @@
-const express =require("express");
-const router =express.Router();
+const express = require("express");
+const router = express.Router();
 const ABgameList = require("../../../model/AndarBahar/ABGameList");
+const moment = require("moment");
 
 router.get("/", async (req, res) => {
-    try {
-      const provider = await ABgameList.find().sort({ _id: 1 });
-  
-      // Send the data back to the client
-      res.status(200).json({
-        success: true,
-        message: "Games fetched successfully.",
-        data: provider
-      });
-    } catch (e) {
-      // In case of an error, send the error message
-      res.status(500).json({
-        success: false,
-        message: "Error fetching games.",
-        error: e.message
-      });
-    }
-  });
-  
-  router.post("/insertGame", async (req, res) => {
-    const dt = dateTime.create();
-    const formatted = dt.format("Y-m-d H:M:S");
-    const games = new ABgameList({
-      gameName: req.body.gameName,
-      gamePrice: req.body.gamePrice,
-      modifiedAt: formatted
+  try {
+    const provider = await ABgameList.find().sort({ _id: 1 });
+
+    // Send the data back to the client
+    res.status(200).json({
+      success: true,
+      message: "Games fetched successfully.",
+      data: provider,
     });
-    try {
-      await games.save();
-      const provider = await ABgameList.find();
-      res.status(200).send(provider);
-    } catch (e) {
-      res.status(400).send(e);
+  } catch (e) {
+    // In case of an error, send the error message
+    res.status(500).json({
+      success: false,
+      message: "Error fetching games.",
+      error: e.message,
+    });
+  }
+});
+
+router.post("/insertGame", async (req, res) => {
+  try {
+    const { gameName, gamePrice } = req.body;
+
+    if (!gameName || !gamePrice) {
+      return res.status(400).json({
+        statusCode: 400,
+        status: false,
+        message: "Missing required fields: gameName, gamePrice",
+      });
     }
-  });
-  
-//   router.delete("/", session, async (req, res) => {
-//     try {
-//       const savedGames = await ABgameList.deleteOne({ _id: req.body.userId });
-//       res.json(savedGames);
-//     } catch (e) {
-//       res.json(e);
-//     }
-//   });
-  
-//   router.post("/update", session, async (req, res) => {
-//     try {
-//       const dt = dateTime.create();
-//       const formatted = dt.format("Y-m-d H:M:S");
-  
-//       await ABgameList.updateOne(
-//         { _id: req.body.userId },
-//         {
-//           $set: {
-//             gameName: req.body.gameName,
-//             gamePrice: req.body.gamePrice,
-//             modifiedAt: formatted
-//           }
-//         }
-//       );
-  
-//       const provider = await ABgameList.find();
-//       res.status(200).send(provider);
-//     } catch (e) {
-//       res.json(e);
-//     }
-//   });
-  
-module.exports =router;
+
+    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    const games = new ABgameList({
+      gameName,
+      gamePrice,
+      modifiedAt: formatted,
+    });
+
+    await games.save();
+
+    const provider = await ABgameList.find();
+
+    res.status(200).json({
+      statusCode: 200,
+      status: true,
+      message: "Game inserted successfully",
+      data: provider,
+    });
+  } catch (e) {
+    res.status(400).json({
+      statusCode: 400,
+      status: false,
+      message: "Error while inserting the game",
+      error: e.message,
+    });
+  }
+});
+
+router.delete("/", async (req, res) => {
+  try {
+    const { gameRateId } = req.query;
+    if (!gameRateId) {
+      return res.status(400).json({
+        statusCode: 400,
+        status: false,
+        message: "Missing required query parameter: userId",
+      });
+    }
+
+    const result = await ABgameList.deleteOne({ _id: gameRateId });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        statusCode: 404,
+        status: false,
+        message: "No game found with the provided gameRateId",
+      });
+    }
+
+    return res.status(200).json({
+      statusCode: 200,
+      status: true,
+      message: "Game Rate deleted successfully",
+      data: result,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      statusCode: 500,
+      status: false,
+      message: "Something went wrong while deleting the Game Rate.",
+      error: e.message,
+    });
+  }
+});
+
+router.post("/update", async (req, res) => {
+  try {
+    const { gameRateId, gameName, gamePrice } = req.body;
+
+    if (!gameRateId || !gameName || !gamePrice) {
+      return res.status(400).json({
+        statusCode: 400,
+        status: false,
+        message: "Missing required fields: gameRateId, gameName, gamePrice",
+      });
+    }
+
+    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    await ABgameList.updateOne(
+      { _id: gameRateId },
+      {
+        $set: {
+          gameName,
+          gamePrice,
+          modifiedAt: formatted,
+        },
+      }
+    );
+
+    const provider = await ABgameList.find();
+
+    res.status(200).json({
+      statusCode: 200,
+      status: true,
+      message: "Game Rate updated successfully",
+      data: provider,
+    });
+  } catch (e) {
+    res.status(400).json({
+      statusCode: 400,
+      status: false,
+      message: "Error while updating the game",
+      error: e.message,
+    });
+  }
+});
+
+module.exports = router;
