@@ -88,8 +88,8 @@ const allUser=require("./routes/admin/allUser");
 const mainGames=require("./routes/admin/games/gamesProvider");
 const gameSettings=require("./routes/admin/games/gamesSetting");
 const mainGameRate=require("./routes/admin/games/mainGamesRate");
-const starLine=require("./routes/admin/starLine/starlineProvider");
-const starLineSetting=require("./routes/admin/starLine/starlineSetting");
+
+
 const starGameRate=require("./routes/admin/starLine/starGameRate");
 const starGameProfitLoss=require("./routes/admin/starLine/starGameProfitLoss")
 const starGameResult=require("./routes/admin/starLine/starGameResult")
@@ -100,12 +100,9 @@ const abProfitLoss =require("./routes/admin/andarBahar/abProfitLoss1.js")
 const mainGameResult = require("./routes/admin/games/mainGameResult.js")
 const starLine = require("./routes/admin/starLine/starlineProvider");
 const starLineSetting = require("./routes/admin/starLine/starlineSetting");
-const starGameRate = require("./routes/admin/starLine/starGameRate");
-const starGameProfitLoss = require("./routes/admin/starLine/starGameProfitLoss")
-const starGameResult = require("./routes/admin/starLine/starGameResult")
-const abGameProvider = require("./routes/admin/andarBahar/abGameProvider")
-const abGameSetting = require("./routes/admin/andarBahar/abGameSetting")
-const abGameRate = require("./routes/admin/andarBahar/abGameRate.js")
+
+
+
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js")
 dotenv.config();
