@@ -88,25 +88,25 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
     }
 });
 
-router.post("/blockUser", authMiddleware, async (req, res) => {
+router.post("/blockUser",  async (req, res) => {
     try {
-        const { id, blockStatus, ression } = req.body;
+        const { id, blockStatus, blockReason } = req.body;
 
-        if (!id || !blockStatus || (blockStatus === undefined) || !ression) {
+        if (!id || !blockStatus || (blockStatus === undefined) || !blockReason) {
             return res.status(400).json({
                 status: false,
                 message: "Invalid input. 'id', 'blockStatus', and 'ression' are required."
             });
         }
 
-        if (typeof ression !== "boolean") {
+        if (typeof blockReason !== "boolean") {
             return res.status(400).json({
                 status: false,
                 message: "'blockStatus' must be a boolean (true or false)."
             });
         }
 
-        if (typeof ression !== "string" || ression.trim().length === 0) {
+        if (typeof blockReason !== "string" || blockReason.trim().length === 0) {
             return res.status(400).json({
                 status: false,
                 message: "'ression' must be a non-empty string."
@@ -124,7 +124,7 @@ router.post("/blockUser", authMiddleware, async (req, res) => {
 
         await User.updateOne(
             { _id: id },
-            { $set: { banned: blockStatus, ression: ression } }
+            { $set: { banned: blockStatus, blockReason: blockReason } }
         );
 
         return res.status(200).json({
