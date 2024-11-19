@@ -66,7 +66,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
         if (!find) {
             let uniqueDays;
             let finalArr = [];
-            if (gameDay === "All") {
+            if (gameDay.toUpperCase() === "ALL") {
                 const providerSetting = await gamesSetting.find({ providerId: gameid }, { gameDay: 1, providerId: 1 });
 
                 if (providerSetting.length > 0) {
@@ -119,37 +119,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
             statusCode: 500,
             status: false,
             message: "Something went wrong while inserting game settings.",
-            error: error.message,
-        });
-    }
-});
-
-router.post("/:providerId", authMiddleware, async (req, res) => {
-    try {
-        const id = mongoose.Types.ObjectId(req.params.providerId);
-        const result = await gamesProvider.aggregate([
-            { $match: { _id: id } },
-            {
-                $lookup: {
-                    from: "games_settings",
-                    localField: "_id",
-                    foreignField: "providerId",
-                    as: "gameDetails",
-                },
-            },
-        ]);
-
-        return res.status(200).json({
-            statusCode: 200,
-            status: true,
-            message: "Data fetched successfully",
-            data: result,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            statusCode: 500,
-            status: false,
-            message: "Something went wrong while processing the request.",
             error: error.message,
         });
     }
@@ -249,4 +218,34 @@ router.post("/updateAll", authMiddleware, async (req, res) => {
     }
 });
 
+router.post("/:providerId", authMiddleware, async (req, res) => {
+    try {
+        const id = mongoose.Types.ObjectId(req.params.providerId);
+        const result = await gamesProvider.aggregate([
+            { $match: { _id: id } },
+            {
+                $lookup: {
+                    from: "games_settings",
+                    localField: "_id",
+                    foreignField: "providerId",
+                    as: "gameDetails",
+                },
+            },
+        ]);
+
+        return res.status(200).json({
+            statusCode: 200,
+            status: true,
+            message: "Data fetched successfully",
+            data: result,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            status: false,
+            message: "Something went wrong while processing the request.",
+            error: error.message,
+        });
+    }
+});
 module.exports = router;

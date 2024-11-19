@@ -109,14 +109,12 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "Provider settings updated successfully.",
     });
   } catch (e) {
-    console.error("Error updating provider settings:", e);
-
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "An error occurred while updating the provider settings.",
       error: e.message,
@@ -157,13 +155,12 @@ router.patch("/", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "Provider settings updated successfully.",
     });
   } catch (e) {
-    console.error("Error updating provider settings:", e);
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "An error occurred while updating the provider settings.",
       error: e.message,
@@ -213,7 +210,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       });
     }
 
-    if (gameDay === "All") {
+    if (gameDay.toUpperCase() === "ALL") {
       let finalArr = [];
       let uniqueDays;
 
@@ -266,7 +263,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       message: `Successfully inserted timings for ${gameDay}`,
     });
   } catch (error) {
-    console.error("Error inserting settings:", error);
     return res.status(500).json({
       status: false,
       message: "An error occurred while processing the request.",
