@@ -87,10 +87,18 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
       });
     }
 
+    const settingList = await gamesSetting.findOne({ providerId: gameid });
+    if (!settingList) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider Setting Not Present. First Create Provider Setting."
+      });
+    }
+
     const dt = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const updateResult = await starSettings.updateMany(
-      { providerId:gameid },
+      { providerId: gameid },
       {
         $set: {
           OBT: game1,
@@ -199,7 +207,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       "Sunday",
     ];
 
-    const existingSetting = await starSettings.findOne({ providerId:gameid, gameDay });
+    const existingSetting = await starSettings.findOne({ providerId: gameid, gameDay });
 
     if (existingSetting) {
       return res.status(400).json({
@@ -213,7 +221,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       let uniqueDays;
 
       const providerSettings = await starSettings.find(
-        { providerId:gameid },
+        { providerId: gameid },
         { gameDay: 1 }
       );
 
@@ -225,7 +233,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       }
 
       finalArr = uniqueDays.map((day) => ({
-        providerId:gameid,
+        providerId: gameid,
         gameDay: day,
         OBT: game1,
         CBT: game2,
@@ -243,7 +251,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     }
 
     const settings = new starSettings({
-      providerId:gameid,
+      providerId: gameid,
       gameDay,
       OBT: game1,
       CBT: game2,

@@ -181,6 +181,15 @@ router.post("/updateAll", authMiddleware, async (req, res) => {
                 message: "Missing required fields in the request body",
             });
         }
+
+        const settingList = await gamesSetting.findOne({ providerId: gameid });
+        if (!settingList) {
+            return res.status(404).json({
+                success: false,
+                message: "Provider Setting Not Present. First Create Provider Setting."
+            });
+        }
+
         const dt = dateTime.create();
         const formatted = dt.format("Y-m-d H:M:S");
         const result = await gamesSetting.updateMany(

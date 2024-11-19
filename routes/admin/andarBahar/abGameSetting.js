@@ -79,6 +79,14 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
     const { gameid, game1, game2, game3, status } = req.body;
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
+    const settingList=await ABgamesSetting.findOne({providerId:gameid});
+    if(!settingList){
+      return res.status(404).json({
+        success: false,
+        message: "Provider Setting Not Present. First Create Provider Setting."
+      });
+    }
+
     const result = await ABgamesSetting.updateMany(
       { providerId: gameid },
       {
