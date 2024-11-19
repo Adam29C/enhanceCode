@@ -7,7 +7,7 @@ const abgamesResultSchema = new mongoose.Schema({
         },
         providerName: {
             type: String,
-            required: true
+            //required: true
         },
         session:{
             type: String,

@@ -17,7 +17,8 @@ const revertPayments = require("../../model/revertPayment");
 const starlineBids = require("../../model/starline/StarlineBids");
 const upiPayments = require("../../model/API/upiPayments");
 const userProfiles = require("../../model/API/Profile");
-const walletHistories = require("../../model/wallet_history")
+const walletHistories = require("../../model/wallet_history");
+const deletedUser =require("../../model/API/Deleted_User")
 const { MongoClient } = require("mongodb");
 const authMiddleware=require("../helpersModule/athetication")
 const client = new MongoClient(process.env.DB_CONNECT, {
@@ -28,6 +29,7 @@ const client = new MongoClient(process.env.DB_CONNECT, {
 
 router.post("/getAllUsers", authMiddleware, async function (req, res) {
     try {
+        console.log(req.body)
         const page = parseInt(req.body.page) || 1;
         const limit = parseInt(req.body.limit) || 10;
         const skip = (page - 1) * limit;
@@ -88,7 +90,7 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
     }
 });
 
-router.post("/blockUser",  async (req, res) => {
+router.post("/blockUser", authMiddleware,async (req, res) => {
     try {
         const { id, blockStatus, blockReason } = req.body;
 
@@ -177,7 +179,7 @@ router.get("/getProfile", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/deleteUserByAdmin", authMiddleware, async (req, res) => {
+router.post("/deleteUserByAdmin", authMiddleware,async (req, res) => {
     try {
         const { id,ression } = req.body;
 
@@ -219,13 +221,13 @@ router.post("/deleteUserByAdmin", authMiddleware, async (req, res) => {
         await userProfiles.deleteOne(filter);
         await walletHistories.deleteMany(filter);
 
-        await client.connect();
-        const database = client.db("admin");
-        const mappingCollection = database.collection("mapping_tables");
-        await mappingCollection.deleteMany(filter);
-        const messageCollection = database.collection("messages");
-        await messageCollection.deleteMany(filter);
-        await client.close();
+        // await client.connect();
+        // const database = client.db("test");
+        // const mappingCollection = database.collection("mapping_tables");
+        // await mappingCollection.deleteMany(filter);
+        // const messageCollection = database.collection("messages");
+        // await messageCollection.deleteMany(filter);
+        // await client.close();
 
         const user = {
             userId: userData._id,

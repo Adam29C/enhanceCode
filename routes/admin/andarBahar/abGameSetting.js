@@ -6,7 +6,7 @@ const authMiddleware = require("../../helpersModule/athetication");
 const moment = require('moment');
 
 
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
     const { userId } = req.query; // Extracting userId directly from query params
     let finalArr = {};  // This will hold the final processed data
@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/addSetting", async (req, res) => {
+router.get("/addSetting", authMiddleware, async (req, res) => {
     try {
       // Fetch all providers
       const provider = await ABgamesProvider.find().sort({ _id: 1 });
@@ -82,7 +82,7 @@ router.get("/addSetting", async (req, res) => {
 });
 
 
-router.post("/updateProviderSettings", async (req, res) => {
+router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
   try {
     const { providerId, obtTime, cbtTime, obrtTime, openClose } = req.body;
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -121,7 +121,7 @@ router.post("/updateProviderSettings", async (req, res) => {
   }
 });
 
-router.post("/insertSettings", async (req, res) => {
+router.post("/insertSettings", authMiddleware, async (req, res) => {
   try {
     const { gameid, gameDay, game1, game2, game3, game4, status } = req.body;
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -207,7 +207,7 @@ router.post("/insertSettings", async (req, res) => {
   }
 });
 
-router.patch("/", async (req, res) => {
+router.patch("/", authMiddleware, async (req, res) => {
   try {
     const { id, obt, cbt, obrt, cbrt, close } = req.body;
     if (!id || !obt || !cbt || !obrt || !cbrt || close === undefined) {
@@ -259,7 +259,7 @@ router.patch("/", async (req, res) => {
   }
 });
 
-router.get("/:providerId", async (req, res) => {
+router.get("/:providerId", authMiddleware, async (req, res) => {
   try {
     const id = req.params.providerId; 
     let ABgamesSettingInfo = await ABgamesSetting.find({ providerId: id }); 

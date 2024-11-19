@@ -105,7 +105,7 @@ router.get("/specificUser", authMiddleware, async (req, res) => {
     }
 });
 
-router.patch("/", async (req, res) => {
+router.patch("/", authMiddleware,async (req, res) => {
     try {
         const { gameId, gamename, result, acvtiveStatusEdit, mobile } = req.body;
         if (!gameId|| !gamename|| !result) {

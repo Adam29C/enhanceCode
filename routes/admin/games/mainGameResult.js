@@ -175,7 +175,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
 
 router.post("/digits", authMiddleware, async (req, res) => {
     try {
-        const digitArray = req.body;
+        const {digitArray} = req.body;
         if (!Array.isArray(digitArray) || digitArray.length === 0) {
             return res.status(400).json({
                 status: "Failure",

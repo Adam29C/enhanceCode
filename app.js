@@ -264,6 +264,7 @@ app.use("/starGameResult", starGameResult)
 app.use("/abGameProvider", abGameProvider)
 app.use("/abGameSetting", abGameSetting)
 app.use("/abGameRate", abGameRate)
+app.use("/abGameResult",abGameResult)
 app.use("/cuttingGroups", cuttingGroups);
 app.use("/ocCuttingGroup", ocCutting)
 

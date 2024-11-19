@@ -325,7 +325,7 @@ router.get("/pastResult",authMiddleware,  async (req, res) => {
 });
 
 //ye api inhance hui hai but testing karna hai ye payment Revert ki api hai
-router.post("/paymentRevert",authMiddleware, authMiddleware, async (req, res) => {
+router.post("/paymentRevert",authMiddleware, async (req, res) => {
   try {
       const { resultId, providerId, digit, date, family } = req.body;
 

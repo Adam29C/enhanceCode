@@ -11,6 +11,7 @@ const history = require("../../../model/wallet_history");
 const moment = require("moment");
 const messaging = require("../../../firebase");
 const lodash = require('lodash');
+const authMiddleware=require("../../helpersModule/athetication")
 
 // const gcm = require("node-gcm");
 // const sender = new gcm.Sender(
@@ -18,53 +19,30 @@ const lodash = require('lodash');
 // );
 // const sender = new gcm.Sender(process.env.FIREBASE_SENDER_KEY);
 
-
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware, async (req, res) => {
     try {
         const name = req.query.name;
         if (name && typeof name !== "string") {
             return res.status(400).json({ status: false, message: "Invalid 'name' parameter" });
         }
 
-        const dt = dateTime.create();
-        const formattedDate = dt.format("m/d/Y");  
+        const formattedDate = moment().format("M/D/YYYY");
 
-        const providerPromise = ABgamesProvider.find().sort({ _id: 1 });
-        const resultPromise = ABgameResult.find()
-            .sort({ _id: -1 })
-            .where("resultDate")
-            .equals(formattedDate);
+        const provider = await ABgamesProvider.aggregate([
+            { $sort: { _id: 1 } }
+        ]);
 
-        const [provider, result] = await Promise.all([providerPromise, resultPromise]);
+        const result = await ABgameResult.aggregate([
+            { $match: { resultDate: formattedDate } },
+            { $sort: { _id: -1 } }
+        ]);
 
-        // If the 'name' query parameter is 'mohit', just send the results directly
-        if (name === "mohit") {
-            return res.json(result);
-        }
+        return res.json({
+            data: provider,
+            result: result,
+            title: "AB Game Result",
+        });
 
-        // Get session details and permissions
-        const userInfo = req.session.details;
-        const permissionArray = req.view;
-        const checkPermission = permissionArray["abResult"]?.showStatus;
-
-        // Check if the user has permission to view the AB game result
-        if (checkPermission === 1) {
-            // Render the page with the appropriate data
-            return res.render("./andarbahar/ABgameresult", {
-                data: provider,
-                result: result,
-                userInfo: userInfo,
-                permission: permissionArray,
-                title: "AB Game Result",
-            });
-        } else {
-            // If permission is not granted, redirect to a default page (dashboard starter page)
-            return res.render("./dashboard/starterPage", {
-                userInfo: userInfo,
-                permission: permissionArray,
-                title: "Dashboard",
-            });
-        }
     } catch (error) {
         console.error("Error fetching AB game result:", error);
         return res.status(500).json({
@@ -74,674 +52,662 @@ router.get("/", async (req, res) => {
     }
 });
 
-// router.get("/revertPayment", session, permission, async (req, res) => {
-// 	try {
-// 		const userInfo = req.session.details;
-// 		const role = userInfo.role;
-// 		const permissionArray = req.view;
-// 		const dt = dateTime.create();
-// 		const formatted = dt.format("m/d/Y");
-// 		const result = await ABgameResult.find()
-// 			.sort({ _id: -1 })
-// 			.where("resultDate")
-// 			.equals(formatted);
-// 		if (role === 0) {
-// 			res.render("./andarbahar/revert", {
-// 				result: result,
-// 				userInfo: userInfo,
-// 				permission: permissionArray,
-// 				title: "AB Revert Result",
-// 			});
-// 		} else {
-// 			res.render("./dashboard/starterPage", {
-// 				userInfo: userInfo,
-// 				permission: permissionArray,
-// 				title: "Dashboard",
-// 			});
-// 		}
-// 	} catch (e) {
-// 		res.json({
-// 			status: 0,
-// 			message: e,
-// 		});
-// 	}
-// });
+router.get("/revertPayment",authMiddleware, async (req, res) => {
+    try {
+        const formattedDate = moment().format("M/D/YYYY");
 
-// router.delete("/delete", session, async (req, res) => {
-// 	try {
-// 		const dt = dateTime.create();
-// 		const formatted1 = dt.format("m/d/Y I:M:S");
-// 		const resultid = req.body.resultId;
-// 		const providerId = req.body.providerId;
-// 		const dltStatus = req.body.dltPast;
-// 		const dltResult = await ABgameResult.deleteOne({ _id: resultid });
+        const result = await ABgameResult.aggregate([
+            { $match: { resultDate: formattedDate } },
+            { $sort: { _id: -1 } }
+        ]);
 
-// 		if (dltStatus == 0) {
-// 			await ABgamesProvider.updateOne(
-// 				{ _id: providerId },
-// 				{
-// 					$set: {
-// 						providerResult: "**",
-// 						modifiedAt: formatted1,
-// 						resultStatus: 0,
-// 					},
-// 				}
-// 			);
-// 		}
+        if (result.length === 0) {
+            return res.json({
+                status: 0,
+                message: "No results found for the current date.",
+                result: []
+            });
+        }
 
-// 		res.json({
-// 			status: 1,
-// 			message: "Result Deleted Successfully",
-// 			data: dltResult,
-// 		});
-// 	} catch (e) {
-// 		res.json({
-// 			status: 0,
-// 			message: "Server Error Contact Support",
-// 			err: e,
-// 		});
-// 	}
-// });
+        return res.json({
+            status: 1,
+            message: "Results fetched successfully.",
+            result: result,
+            title: "AB Revert Result"
+        });
+    } catch (e) {
+        console.error("Error in revertPayment API:", e);
+        return res.status(500).json({
+            status: 0,
+            message: "An error occurred while processing the request. Please try again later.",
+            error: e.message
+        });
+    }
+});
 
-// router.post("/", session, async (req, res) => {
-// 	try {
-// 		const dt = dateTime.create();
-// 		const formatted1 = dt.format("d/m/Y I:M:S p");
-// 		const str = req.body.providerId;
-// 		const data = str.split("|");
-// 		const id = data[0];
-// 		const name = data[1];
-// 		const date = req.body.resultDate;
-// 		const digit = req.body.winningDigit;
+router.delete("/delete",authMiddleware, async (req, res) => {
+    try {
+        const { resultId, providerId, dltPast } = req.body;
+        const formattedDate = moment().format("M/D/YYYY h:mm:ss A");
 
-// 		const todayDay = dt.format("W");
-// 		const currentTime = dt.format("I:M p");
-// 		const todayDate = dt.format("m/d/Y");
+        const dltResult = await ABgameResult.deleteOne({ _id: resultId });
 
-// 		const findTime = await gameSetting.findOne(
-// 			{ providerId: id, gameDay: todayDay },
-// 			{ OBRT: 1, gameDay: 1 }
-// 		);
+        if (dltPast == 0) {
+            await ABgamesProvider.updateOne(
+                { _id: providerId },
+                {
+                    $set: {
+                        providerResult: "**",
+                        modifiedAt: formattedDate,
+                        resultStatus: 0,
+                    },
+                }
+            );
+        }
 
-// 		let timeCheck = findTime.OBRT;
+        res.json({
+            status: 1,
+            message: "Result Deleted Successfully",
+            data: dltResult,
+        });
+    } catch (e) {
+        console.error("Error deleting result:", e);
+        res.status(500).json({
+            status: 0,
+            message: "Server Error. Contact Support.",
+            error: e.message,
+        });
+    }
+});
 
-// 		var beginningTime = moment(currentTime, "h:mm a");
-// 		var endTime = moment(timeCheck, "h:mm a");
+router.post("/",authMiddleware,async (req, res) => {
+    try {
+        const { providerId, resultDate, winningDigit, session } = req.body;
 
-// 		if (todayDate === date) {
-// 			if (beginningTime >= endTime) {
-// 				const exist = await ABgameResult.findOne({
-// 					providerId: id,
-// 					resultDate: date,
-// 					session: req.body.session,
-// 				});
-// 				if (!exist) {
-// 					const details = new ABgameResult({
-// 						providerId: id,
-// 						providerName: name,
-// 						resultDate: date,
-// 						winningDigit: digit,
-// 						status: 0,
-// 						createdAt: formatted1,
-// 					});
+        if (!providerId || !resultDate || !winningDigit || !session) {
+            return res.status(400).json({
+                status: false,
+                message: "Missing required fields: providerId, resultDate, winningDigit, and session are required."
+            });
+        }
 
-// 					const savedGames = await details.save();
-// 					const update1 = await ABgamesProvider.updateOne(
-// 						{ _id: id },
-// 						{
-// 							$set: {
-// 								providerResult: digit,
-// 								modifiedAt: formatted1,
-// 								resultStatus: 1,
-// 							},
-// 						}
-// 					);
-// 					//resultStatus : 1 i.e; result is declared
+        const todayDay = moment().format("dddd");  // Get the full day name (e.g., "Monday", "Tuesday")
+        const currentTime = moment().format("h:mm a");
+        const todayDate = moment().format("M/D/YYYY");
+        
+        console.log("1");
+        const findTime = await gameSetting.findOne({ providerId: providerId, gameDay: todayDay });
+        if (!findTime) {
+            return res.status(404).json({
+                status: false,
+                message: "Game settings not found for the given providerId and gameDay."
+            });
+        }
+        console.log("2");
+        const timeCheck = findTime.OBRT;
+        const beginningTime = moment(currentTime, "h:mm a");
+        const endTime = moment(timeCheck, "h:mm a");
+        console.log("3");
 
-// 					const Resultid = savedGames._id;
-// 					const listData = {
-// 						providerId: id,
-// 						resultDate: date,
-// 						status: 0,
-// 						winningDigit: digit,
-// 						resultId: Resultid,
-// 						providerName: name,
-// 						time: formatted1,
-// 					};
+        // If todayDate matches the resultDate and time check passes
+        if (todayDate === resultDate) {
+            if (beginningTime >= endTime) {
+                const existingResult = await ABgameResult.findOne({
+                    providerId: providerId,
+                    resultDate: resultDate,
+                    session: session
+                });
+                console.log("4");
+                if (existingResult) {
+                    return res.json({
+                        status: false,
+                        message: "Details already filled for this provider and session.",
+                        data: `Details already filled for: ${providerId}, Session: ${session}, Date: ${resultDate}`
+                    });
+                }
+                
+				console.log("5",findTime);
 
-// 					let token = [];
-// 					noti(req, res, digit, token);
+                const newResult = new ABgameResult({
+                    providerId: providerId,
+                    providerName: findTime.providerName,  // Assuming providerName is also stored in game settings
+                    resultDate: resultDate,
+                    winningDigit: winningDigit,
+                    status: 0,
+                    createdAt: moment().format("D/M/YYYY h:mm:ss a")
+                });
+                console.log("6")
+                const savedResult = await newResult.save();
+				console.log("7");
+                await ABgamesProvider.updateOne(
+                    { _id: providerId },
+                    {
+                        $set: {
+                            providerResult: winningDigit,
+                            modifiedAt: moment().format("D/M/YYYY h:mm:ss a"),
+                            resultStatus: 1
+                        }
+                    }
+                );
+				console.log("8");
+                const notificationData = {
+                    providerId: providerId,
+                    resultDate: resultDate,
+                    status: 0,
+                    winningDigit: winningDigit,
+                    resultId: savedResult._id,
+                    providerName: findTime.providerName,
+                    time: moment().format("D/M/YYYY h:mm:ss a")
+                };
 
-// 					return res.json({
-// 						status: 1,
-// 						message: "Success",
-// 						data: listData,
-// 					});
-// 				} else {
-// 					const data =
-// 						"Details Already Filled For : " +
-// 						name +
-// 						", Session : " +
-// 						req.body.session +
-// 						", Date: " +
-// 						req.body.resultDate;
-// 					return res.json({
-// 						status: 0,
-// 						message: "Success",
-// 						data: data,
-// 					});
-// 				}
-// 			} else {
-// 				const data = "It Is Not Time To Declare The Result Yet";
-// 				return res.json({
-// 					status: 0,
-// 					message: "Success",
-// 					data: data,
-// 				});
-// 			}
-// 		} else {
-// 			const exist = await ABgameResult.findOne({
-// 				providerId: id,
-// 				resultDate: date,
-// 				session: req.body.session,
-// 			});
-// 			if (!exist) {
-// 				const details = new ABgameResult({
-// 					providerId: id,
-// 					providerName: name,
-// 					resultDate: date,
-// 					winningDigit: digit,
-// 					status: 0,
-// 				});
+                noti(req, res, winningDigit, []); // Assuming noti handles the notification logic
 
-// 				const countResult = await ABgameResult.find({
-// 					resultDate: date,
-// 				}).countDocuments();
-// 				const providerCount = await ABgamesProvider.find().countDocuments();
-// 				const pendingCount = providerCount - countResult;
+                return res.json({
+                    status: true,
+                    message: "Result declared successfully.",
+                    data: notificationData
+                });
+            } else {
+                return res.json({
+                    status: false,
+                    message: "It is not time to declare the result yet.",
+                    data: "Result cannot be declared before the specified time."
+                });
+            }
+        } else {
+            const existingResult = await ABgameResult.findOne({
+                providerId: providerId,
+                resultDate: resultDate,
+                session: session
+            });
 
-// 				await details.save();
-// 				res.status(200).json({
-// 					status: 3,
-// 					message: "Result Declared Successfully",
-// 					countResultt: countResult,
-// 					providerCountt: providerCount,
-// 					pendingCountt: pendingCount,
-// 				});
-// 			} else {
-// 				const data =
-// 					"Details Already Filled For : " +
-// 					name +
-// 					", Session : " +
-// 					req.body.session +
-// 					", Date: " +
-// 					req.body.resultDate;
-// 				return res.json({
-// 					status: 0,
-// 					message: "Success",
-// 					data: data,
-// 				});
-// 			}
-// 		}
-// 	} catch (e) {
-// 		res.json(e);
-// 	}
-// });
+            if (existingResult) {
+                return res.json({
+                    status: false,
+                    message: "Details already filled for this provider and session.",
+                    data: `Details already filled for: ${providerId}, Session: ${session}, Date: ${resultDate}`
+                });
+            }
 
-// router.get("/pastResult", session, async (req, res) => {
-// 	try {
-// 		const name = req.query.date;
-// 		const result = await ABgameResult.find({ resultDate: name });
-// 		const countResult = await ABgameResult.find({
-// 			resultDate: name,
-// 		}).countDocuments();
-// 		const providerCount = await ABgamesProvider.find().countDocuments();
-// 		const pendingCount = providerCount - countResult;
-// 		res.json({
-// 			result: result,
-// 			countResult: countResult,
-// 			providerCount: providerCount,
-// 			pendingCount: pendingCount,
-// 		});
-// 	} catch (e) {
-// 		res.json(e);
-// 	}
-// });
+            const newResult = new ABgameResult({
+                providerId: providerId,
+                providerName: findTime.providerName, // Assuming providerName is available in game settings
+                resultDate: resultDate,
+                winningDigit: winningDigit,
+                status: 0
+            });
 
-// router.get("/getWinner", session, async (req, res) => {
-// 	const dt = dateTime.create();
-// 	const formatted = dt.format("m/d/Y");
-// 	const todayResult = await ABgameResult.findOne({ resultDate: formatted });
-// 	if (todayResult) {
-// 		const winDigit = todayResult.winningDigit;
-// 		const winnerList = await ABbids.find({
-// 			bidDigit: winDigit,
-// 			gameDate: formatted,
-// 		});
-// 		res.json(winnerList);
-// 	} else {
-// 		res.json({
-// 			status: 0,
-// 			message: "No Result Found",
-// 		});
-// 	}
-// });
+            const countResult = await ABgameResult.countDocuments({ resultDate: resultDate });
+            const providerCount = await ABgamesProvider.countDocuments();
+            const pendingCount = providerCount - countResult;
 
-// router.post("/paymentRevert", session, async (req, res) => {
-// 	try {
-// 		const id = req.body.resultId;
-// 		const provider = req.body.providerId;
-// 		const digit = req.body.digit;
-// 		const gameDate = req.body.date;
-// 		const userInfo = req.session.details;
-// 		const adminId = userInfo.user_id;
-// 		const adminName = userInfo.username;
-// 		let historyArray = [];
-// 		let historyDataArray = [];
-// 		const dt = dateTime.create();
-// 		const formattedDate = dt.format("d/m/Y");
-// 		const formattedTime = dt.format("I:M:S p");
-// 		let updateResult = "**";
+            await newResult.save();
 
-// 		const winnerList = await ABbids.find({
-// 			providerId: provider,
-// 			gameDate: gameDate,
-// 			bidDigit: digit,
-// 		}).sort({ _id: -1, bidDigit: 1 });
+            return res.json({
+                status: true,
+                message: "Result declared successfully.",
+                countResultt: countResult,
+                providerCountt: providerCount,
+                pendingCountt: pendingCount
+            });
+        }
+    } catch (e) {
+        console.error("Error in result declaration:", e);
+        return res.status(500).json({
+            status: false,
+            message: "Server error. Please contact support.",
+            error: e.message
+        });
+    }
+});
 
-// 		if (Object.keys(winnerList).length > 0) {
-// 			for (index in winnerList) {
-// 				let rowId = winnerList[index]._id;
-// 				let userid = winnerList[index].userId;
-// 				let winAmount = winnerList[index].gameWinPoints;
-// 				let providerId = winnerList[index].providerId;
-// 				let gameTypeid = winnerList[index].gameTypeId;
-// 				let providerName = winnerList[index].providerName;
-// 				let gameName = winnerList[index].gameTypeName;
-// 				let username = winnerList[index].userName;
-// 				let mobileNumber = winnerList[index].mobileNumber;
+router.get("/pastResult",authMiddleware, async (req, res) => {
+    try {
+        const { date } = req.query;
+        
+        // Validate 'date' query parameter
+        if (!date || typeof date !== "string") {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid or missing 'date' query parameter."
+            });
+        }
 
-// 				let user = await mainUser.findOne(
-// 					{ _id: userid },
-// 					{ wallet_balance: 1 }
-// 				);
-// 				let walletBal = user.wallet_balance;
-// 				revertBalance = walletBal - winAmount;
+        // Fetch results for the given date
+        const result = await ABgameResult.find({ resultDate: date });
+        const countResult = await ABgameResult.countDocuments({ resultDate: date });
+        const providerCount = await ABgamesProvider.countDocuments();
+        const pendingCount = providerCount - countResult;
 
-// 				let update = await mainUser.updateOne(
-// 					{ _id: userid },
-// 					{
-// 						$set: {
-// 							wallet_balance: revertBalance,
-// 						},
-// 					}
-// 				);
+        if (result.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No results found for the specified date.",
+                date: date
+            });
+        }
 
-// 				//history
-// 				let arrValue = {
-// 					userId: userid,
-// 					bidId: rowId,
-// 					filterType: 8,
-// 					reqType: "andarBahar",
-// 					previous_amount: walletBal,
-// 					current_amount: revertBalance,
-// 					transaction_amount: winAmount,
-// 					provider_id: providerId,
-// 					username: username,
-// 					description: "Amount Reverted",
-// 					transaction_date: formattedDate,
-// 					transaction_status: "Success",
-// 					win_revert_status: 0,
-// 					transaction_time: formattedTime,
-// 					admin_id: adminId,
-// 					addedBy_name: adminName,
-// 				};
+        return res.json({
+            status: true,
+            message: "Results fetched successfully.",
+            data: {
+                result: result,
+                countResult: countResult,
+                providerCount: providerCount,
+                pendingCount: pendingCount
+            }
+        });
 
-// 				historyDataArray.push(arrValue);
+    } catch (error) {
+        console.error("Error fetching past results:", error);
+        return res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching past results. Please try again later.",
+            error: error.message
+        });
+    }
+});
 
-// 				arrValue = {
-// 					userId: userid,
-// 					providerId: providerId,
-// 					gameTypeId: gameTypeid,
-// 					providerName: providerName,
-// 					username: username,
-// 					mobileNumber: mobileNumber,
-// 					gameTypeName: gameName,
-// 					wallet_bal_before: walletBal,
-// 					wallet_bal_after: revertBalance,
-// 					revert_amount: winAmount,
-// 					date: formattedDate,
-// 					dateTime: formattedTime,
-// 				};
+router.get("/getWinner",authMiddleware,async (req, res) => {
+    try {
+        const formattedDate = moment().format("M/D/YYYY");
 
-// 				historyArray.push(arrValue);
-// 			}
-// 		}
+        const todayResult = await ABgameResult.findOne({ resultDate: formattedDate });
 
-// 		await revertEntries.insertMany(historyArray);
-// 		await history.insertMany(historyDataArray);
-// 		await ABbids.updateMany(
-// 			{ providerId: provider, gameDate: gameDate },
-// 			{
-// 				$set: {
-// 					winStatus: 0,
-// 					gameWinPoints: 0,
-// 				},
-// 			}
-// 		);
+        if (!todayResult) {
+            return res.status(404).json({
+                status: false,
+                message: "No result found for today.",
+                date: formattedDate
+            });
+        }
 
-// 		await ABgamesProvider.updateOne(
-// 			{ _id: provider },
-// 			{
-// 				$set: {
-// 					providerResult: updateResult,
-// 					resultStatus: 0,
-// 				},
-// 			}
-// 		);
+        const winDigit = todayResult.winningDigit;
 
-// 		await ABgameResult.deleteOne({ _id: id });
+        const winnerList = await ABbids.find({
+            bidDigit: winDigit,
+            gameDate: formattedDate
+        });
 
-// 		res.json({
-// 			status: 1,
-// 			message: "Reverted Successfully",
-// 		});
-// 	} catch (e) {
-// 		res.json({
-// 			status: 0,
-// 			message: e,
-// 		});
-// 	}
-// });
+        if (winnerList.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No winners found for today's result.",
+                date: formattedDate,
+                winningDigit: winDigit
+            });
+        }
 
-// router.get("/refundPayment", session, permission, async (req, res) => {
-// 	const userInfo = req.session.details;
-// 	const role = userInfo.role;
-// 	const permissionArray = req.view;
-// 	const provider = await ABgamesProvider.find().sort({ _id: 1 });
-// 	if (role === 0) {
-// 		res.render("./andarbahar/refund", {
-// 			data: provider,
-// 			userInfo: userInfo,
-// 			permission: permissionArray,
-// 			title: "Refund Payment",
-// 		});
-// 	} else {
-// 		res.render("./dashboard/starterPage", {
-// 			userInfo: userInfo,
-// 			permission: permissionArray,
-// 		});
-// 	}
-// });
+        return res.json({
+            status: true,
+            message: "Winners fetched successfully.",
+            data: winnerList
+        });
 
-// router.post("/refundList", session, async (req, res) => {
-// 	try {
-// 		const providerId = req.body.providerId;
-// 		const gameDate = req.body.resultDate;
-// 		const userlist = await ABbids.find({
-// 			providerId: providerId,
-// 			gameDate: gameDate,
-// 			winStatus: 0,
-// 		});
-// 		res.json({
-// 			status: 1,
-// 			data: userlist,
-// 		});
-// 	} catch (error) {
-// 		res.json({
-// 			status: 0,
-// 			message: "Something Went Wrong Contact Support",
-// 			err: error,
-// 		});
-// 	}
-// });
+    } catch (error) {
+        console.error("Error fetching winners:", error);
+        return res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching the winners. Please try again later.",
+            error: error.message
+        });
+    }
+});
 
-// router.post("/refundAll", session, async (req, res) => {
-// 	try {
-// 		const type = req.body.type;
-// 		var providerId = req.body.providerId;
-// 		var resultDate = req.body.resultDate;
-// 		var providerName = req.body.providerName;
-// 		const userInfo = req.session.details;
-// 		const adminId = userInfo.user_id;
-// 		const adminName = userInfo.username;
+router.post("/paymentRevert",authMiddleware,async (req, res) => {
+    try {
+        const { resultId, providerId, digit, date } = req.body;
 
-// 		let tokenArray = [];
-// 		if (type == 1) {
-// 			var userId = req.body.userid;
-// 			var biddingPoints = req.body.biddingPoints;
-// 		}
+        if (!resultId || !providerId || !digit || !date) {
+            return res.status(400).json({
+                status: false,
+                message: "Missing required fields: resultId, providerId, digit, or date."
+            });
+        }
 
-// 		const formatted2 = moment().format("DD/MM/YYYY hh:mm:ss A");
+        const userInfo = req.session?.details;
+        const adminId = userInfo?.user_id;
+        const adminName = userInfo?.username;
 
-// 		if (type == 1) {
-// 			var findUser = await mainUser.findOne(
-// 				{ _id: userId },
-// 				{ wallet_balance: 1 }
-// 			);
-// 			const current_amount = findUser.wallet_balance;
-// 			var singleUserUpdate = await mainUser.findOneAndUpdate(
-// 				{ _id: userId },
-// 				{
-// 					$inc: { wallet_balance: parseInt(biddingPoints) },
-// 					wallet_bal_updated_at: formatted2,
-// 				},
-// 				{
-// 					new: true,
-// 					upsert: true,
-// 				}
-// 			);
+        if (!adminId || !adminName) {
+            return res.status(400).json({
+                status: false,
+                message: "Admin session details are missing."
+            });
+        }
 
-// 			const firebaseId = singleUserUpdate.firebaseId;
-// 			let singleUserBidUpdate = await ABbids.findOne({
-// 				userId: userId,
-// 				providerId: providerId,
-// 				gameDate: resultDate,
-// 				winStatus: 0,
-// 			})
-// 			// var singleUserBidUpdate = await ABbids.findOneAndUpdate(
-// 			// 	{
-// 			// userId: userId,
-// 			// providerId: providerId,
-// 			// gameDate: resultDate,
-// 			// winStatus: 0,
-// 			// 	},
-// 			// 	{
-// 			// 		winStatus: 5,
-// 			// 		updatedAt: formatted2,
-// 			// 	},
-// 			// 	{
-// 			// 		new: true,
-// 			// 		upsert: true,
-// 			// 	}
-// 			// );
+        const formattedDate = moment().format("D/M/YYYY");
+        const formattedTime = moment().format("HH:mm:ss A");
 
-// 			await ABbids.deleteOne({
-// 				userId: userId,
-// 				providerId: providerId,
-// 				gameDate: resultDate,
-// 				winStatus: 0,
-// 			})
+        let historyArray = [];
+        let historyDataArray = [];
+        const updateResult = "**"; 
 
-// 			const dateTime = formatted2.split(" ");
-// 			let arrValue = new history({
-// 				userId: userId,
-// 				bidId: singleUserBidUpdate._id,
-// 				reqType: "andarBahar",
-// 				filterType: 3,
-// 				previous_amount: current_amount,
-// 				current_amount: singleUserUpdate.wallet_balance,
-// 				provider_id: singleUserBidUpdate.providerId,
-// 				transaction_amount: biddingPoints,
-// 				username: singleUserUpdate.name,
-// 				description:
-// 					"Amount Refunded For " + singleUserBidUpdate.providerName + " Game",
-// 				transaction_date: dateTime[0],
-// 				transaction_status: "Success",
-// 				transaction_time: dateTime[1],
-// 				admin_id: adminId,
-// 				addedBy_name: adminName,
-// 			});
+        const winnerList = await ABbids.find({
+            providerId,
+            gameDate: date,
+            bidDigit: digit,
+        }).sort({ _id: -1, bidDigit: 1 });
 
-// 			const save = await arrValue.save();
-// 			tokenArray.push(firebaseId);
-// 			const name = singleUserBidUpdate.providerName;
-// 			// const body =
-// 			// 	"Hello " +
-// 			// 	singleUserUpdate.username +
-// 			// 	", Refund Successfully Done For " +
-// 			// 	name;
-// 			const body = `Hello ${singleUserUpdate.username}, Your Bid Amount ${biddingPoints}/- RS Is Refund Successful In Your Wallet!`;
-// 			sendRefundNotification(tokenArray, name, body);
-// 		} else {
-// 			const userlist = await ABbids.find({
-// 				providerId: providerId,
-// 				gameDate: resultDate,
-// 				winStatus: 0,
-// 			});
-// 			let i = 1;
-// 			if (Object.keys(userlist).length > 0) {
-// 				for (index in userlist) {
-// 					var rowId = userlist[index]._id;
-// 					var userId = userlist[index]["userId"];
-// 					var biddingPoints = userlist[index]["biddingPoints"];
-// 					var findUser = await mainUser.findOne(
-// 						{ _id: userId },
-// 						{ wallet_balance: 1 }
-// 					);
-// 					const current_amount = findUser.wallet_balance;
+        if (winnerList.length > 0) {
 
-// 					var singleUserUpdate = await mainUser.findOneAndUpdate(
-// 						{ _id: userId },
-// 						{
-// 							$inc: { wallet_balance: parseInt(biddingPoints) },
-// 							wallet_bal_updated_at: formatted2,
-// 						},
-// 						{
-// 							new: true,
-// 							upsert: true,
-// 						}
-// 					);
+            for (const winner of winnerList) {
+                const { _id: rowId, userId, gameWinPoints, providerId, gameTypeId, providerName, gameTypeName, userName, mobileNumber } = winner;
 
-// 					const dateTime = formatted2.split(" ");
-// 					let arrValue = new history({
-// 						userId: userId,
-// 						bidId: rowId._id,
-// 						reqType: "andarBahar",
-// 						filterType: 3,
-// 						previous_amount: current_amount,
-// 						current_amount: singleUserUpdate.wallet_balance,
-// 						transaction_amount: biddingPoints,
-// 						username: singleUserUpdate.username,
-// 						description: "Amount Refunded For " + providerName + " Game",
-// 						transaction_date: dateTime[0],
-// 						transaction_status: "Success",
-// 						transaction_time: dateTime[1] + " " + dateTime[2],
-// 						admin_id: adminId,
-// 						addedBy_name: adminName,
-// 					});
+                const user = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
+                const walletBal = user.wallet_balance;
 
-// 					arrValue.save();
+                const revertBalance = walletBal - gameWinPoints;
 
-// 					// await ABbids.updateOne(
-// 					// 	{ _id: rowId },
-// 					// 	{
-// 					// 		$set: {
-// 					// 			winStatus: 5,
-// 					// 			updatedAt: formatted2,
-// 					// 		},
-// 					// 	}
-// 					// );
-// 					await ABbids.deleteOne({ _id: rowId })
-// 					let firebaseId = singleUserUpdate.firebaseId;
-// 					tokenArray.push(firebaseId);
-// 					i++;
-// 				}
+                await mainUser.updateOne({ _id: userId }, { $set: { wallet_balance: revertBalance } });
 
-// 				const body =
-// 					"Hello Khatri User, Your Refund For Date : " +
-// 					resultDate +
-// 					", is Processed Successfully";
-// 				sendRefundNotification(tokenArray, providerName, body);
-// 			}
-// 		}
-// 		res.json({
-// 			status: 1,
-// 			message: "Refund Initiated Successfully",
-// 		});
-// 	} catch (error) {
-// 		res.json({
-// 			status: 0,
-// 			message: "Something Went Wrong Contact Support",
-// 			err: error,
-// 		});
-// 	}
-// });
+                const transactionHistory = {
+                    userId,
+                    bidId: rowId,
+                    filterType: 8,
+                    reqType: "andarBahar",
+                    previous_amount: walletBal,
+                    current_amount: revertBalance,
+                    transaction_amount: gameWinPoints,
+                    provider_id: providerId,
+                    username: userName,
+                    description: "Amount Reverted",
+                    transaction_date: formattedDate,
+                    transaction_status: "Success",
+                    win_revert_status: 0,
+                    transaction_time: formattedTime,
+                    admin_id: adminId,
+                    addedBy_name: adminName,
+                };
+                historyDataArray.push(transactionHistory);
 
-// // async function sendRefundNotification(tokenArray, name, body) {
-// // 	let finalArr = []
-// // 	for (let arr of tokenArray) {
-// // 		if (arr !== "") {
-// // 			finalArr.push(arr)
-// // 		}
-// // 	}
-// // 	let message = {
-// // 		android: {
-// // 			priority: 'high',
-// // 		},
-// // 		data: {
-// // 			title: `Refund Jackpot game (${name})`,
-// // 			body: body,
-// // 			icon: 'ic_launcher',
-// // 			type: 'Notification',
-// // 		},
-// // 		token: finalArr,
-// // 	};
-// // 	try {
-// // 		const response = await messaging.sendMulticast(message);
-// // 		console.log('Successfully sent message:', response);
-// // 		if (response.failureCount > 0) {
-// // 			response.responses.forEach((resp, idx) => {
-// // 				if (!resp.success) {
-// // 					console.error(`Failed to send to ${tokenArr[idx]}: ${resp.error}`);
-// // 				}
-// // 			});
-// // 		}
-// // 	} catch (error) {
-// // 		console.log('Error sending message:', error);
-// // 	}
-// // }
 
-// async function sendRefundNotification(tokenArray, name, body) {
-// 	let finalArr = tokenArray.filter(token => token !== "");
-// 	let tokenChunks = lodash.chunk(finalArr, 500);
-// 	let message = {
-// 		android: {
-// 			priority: 'high',
-// 		},
-// 		data: {
-// 			title: `Refund Jackpot game (${name})`,
-// 			body: body,
-// 			icon: 'ic_launcher',
-// 			type: 'Notification',
-// 		},
-// 	};
-// 	for (let chunk of tokenChunks) {
-// 		message.tokens = chunk;
-// 		try {
-// 			const response = await messaging.sendMulticast(message);
-// 			if (response.failureCount > 0) {
-// 				response.responses.forEach((resp, idx) => {
-// 					if (!resp.success) {
-// 						console.error(`Failed to send to ${chunk[idx]}: ${resp.error}`);
-// 					}
-// 				});
-// 			}
-// 		} catch (error) {
-// 			console.log('Error sending message:', error);
-// 		}
-// 	}
-// }
+                const providerHistory = {
+                    userId,
+                    providerId,
+                    gameTypeId,
+                    providerName,
+                    username: userName,
+                    mobileNumber,
+                    gameTypeName,
+                    wallet_bal_before: walletBal,
+                    wallet_bal_after: revertBalance,
+                    revert_amount: gameWinPoints,
+                    date: formattedDate,
+                    dateTime: formattedTime,
+                };
+                historyArray.push(providerHistory);
+            }
+        }
+
+        await revertEntries.insertMany(historyArray);
+        await history.insertMany(historyDataArray);
+
+        await ABbids.updateMany(
+            { providerId, gameDate: date },
+            { $set: { winStatus: 0, gameWinPoints: 0 } }
+        );
+
+        await ABgamesProvider.updateOne(
+            { _id: providerId },
+            { $set: { providerResult: updateResult, resultStatus: 0 } }
+        );
+
+        await ABgameResult.deleteOne({ _id: resultId });
+
+        return res.json({
+            status: true,
+            message: "Payment reverted successfully."
+        });
+
+    } catch (error) {
+        console.error("Error in payment revert:", error);
+
+        return res.status(500).json({
+            status: false,
+            message: "An error occurred while processing the payment revert. Please try again later.",
+            error: error.message
+        });
+    }
+});
+
+router.get("/refundPayment",authMiddleware, async (req, res) => {
+    try {
+        const provider = await ABgamesProvider.find().sort({ _id: 1 });
+        return res.json({
+            status: true,
+            title: "Refund Payment",
+            data: provider
+        });
+
+    } catch (error) {
+        console.error("Error in refundPayment API:", error);
+        return res.status(500).json({
+            status: false,
+            message: "An error occurred while processing the request. Please try again later.",
+            error: error.message
+        });
+    }
+});
+
+router.post("/refundList",authMiddleware, async (req, res) => {
+    try {
+        const { providerId, resultDate: gameDate } = req.body;
+        const userlist = await ABbids.find({
+            providerId: providerId,
+            gameDate: gameDate,
+            winStatus: 0, 
+        });
+        return res.json({
+            status: true,
+            data: userlist,
+        });
+
+    } catch (error) {
+        console.error("Error in refundList API:", error);
+        return res.json({
+            status: false,
+            message: "Something Went Wrong. Please contact support.",
+            err: error.message,
+        });
+    }
+});
+
+router.post("/refundAll",authMiddleware, async (req, res) => {
+    try {
+        const { type, providerId, resultDate, providerName, userId, biddingPoints } = req.body;
+        const formatted2 = moment().format("DD/MM/YYYY hh:mm:ss A");
+        let tokenArray = [];
+        
+        if (type === 1) {
+            // Single user refund
+            const findUser = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
+            const current_amount = findUser.wallet_balance;
+
+            const updatedUser = await mainUser.findOneAndUpdate(
+                { _id: userId },
+                {
+                    $inc: { wallet_balance: parseInt(biddingPoints) },
+                    wallet_bal_updated_at: formatted2,
+                },
+                { new: true, upsert: true }
+            );
+
+            const firebaseId = updatedUser.firebaseId;
+
+            const userBid = await ABbids.findOne({ 
+                userId: userId, 
+                providerId: providerId, 
+                gameDate: resultDate, 
+                winStatus: 0 
+            });
+
+            await ABbids.deleteOne({
+                userId: userId,
+                providerId: providerId,
+                gameDate: resultDate,
+                winStatus: 0
+            });
+
+            const dateTime = formatted2.split(" ");
+            const historyEntry = new history({
+                userId: userId,
+                bidId: userBid._id,
+                reqType: "andarBahar",
+                filterType: 3,
+                previous_amount: current_amount,
+                current_amount: updatedUser.wallet_balance,
+                provider_id: userBid.providerId,
+                transaction_amount: biddingPoints,
+                username: updatedUser.name,
+                description: `Amount Refunded For ${userBid.providerName} Game`,
+                transaction_date: dateTime[0],
+                transaction_status: "Success",
+                transaction_time: dateTime[1],
+                admin_id: updatedUser.user_id, // Use adminId if applicable, for now using userId.
+                addedBy_name: updatedUser.username, // Use adminName if applicable, for now using username.
+            });
+
+            await historyEntry.save();
+            tokenArray.push(firebaseId);
+            
+            const body = `Hello ${updatedUser.username}, Your Bid Amount ${biddingPoints}/- RS Is Refund Successful In Your Wallet!`;
+            sendRefundNotification(tokenArray, userBid.providerName, body);
+
+        } else {
+            // Bulk refund for all users
+            const userList = await ABbids.find({
+                providerId: providerId,
+                gameDate: resultDate,
+                winStatus: 0,
+            });
+
+            if (userList.length > 0) {
+                for (let index = 0; index < userList.length; index++) {
+                    const userBid = userList[index];
+                    const userId = userBid.userId;
+                    const biddingPoints = userBid.biddingPoints;
+
+                    const findUser = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
+                    const current_amount = findUser.wallet_balance;
+
+                    const updatedUser = await mainUser.findOneAndUpdate(
+                        { _id: userId },
+                        {
+                            $inc: { wallet_balance: parseInt(biddingPoints) },
+                            wallet_bal_updated_at: formatted2,
+                        },
+                        { new: true, upsert: true }
+                    );
+
+                    const dateTime = formatted2.split(" ");
+                    const historyEntry = new history({
+                        userId: userId,
+                        bidId: userBid._id,
+                        reqType: "andarBahar",
+                        filterType: 3,
+                        previous_amount: current_amount,
+                        current_amount: updatedUser.wallet_balance,
+                        transaction_amount: biddingPoints,
+                        username: updatedUser.username,
+                        description: `Amount Refunded For ${providerName} Game`,
+                        transaction_date: dateTime[0],
+                        transaction_status: "Success",
+                        transaction_time: `${dateTime[1]} ${dateTime[2]}`,
+                        admin_id: updatedUser.user_id, // Use adminId if applicable, for now using userId.
+                        addedBy_name: updatedUser.username, // Use adminName if applicable, for now using username.
+                    });
+
+                    await historyEntry.save();
+                    await ABbids.deleteOne({ _id: userBid._id });
+
+                    let firebaseId = updatedUser.firebaseId;
+                    tokenArray.push(firebaseId);
+                }
+
+                const body = `Hello Khatri User, Your Refund For Date : ${resultDate}, is Processed Successfully`;
+                sendRefundNotification(tokenArray, providerName, body);
+            }
+        }
+
+        res.json({
+            status: true,
+            message: "Refund Initiated Successfully",
+        });
+    } catch (error) {
+        console.error("Error in refundAll API:", error);
+        res.json({
+            status: false,
+            message: "Something Went Wrong. Please contact support.",
+            error: error.message,
+        });
+    }
+});
+
+async function sendRefundNotification(tokenArray, name, body) {
+	let finalArr = []
+	for (let arr of tokenArray) {
+		if (arr !== "") {
+			finalArr.push(arr)
+		}
+	}
+	let message = {
+		android: {
+			priority: 'high',
+		},
+		data: {
+			title: `Refund Jackpot game (${name})`,
+			body: body,
+			icon: 'ic_launcher',
+			type: 'Notification',
+		},
+		token: finalArr,
+	};
+	try {
+		const response = await messaging.sendMulticast(message);
+		console.log('Successfully sent message:', response);
+		if (response.failureCount > 0) {
+			response.responses.forEach((resp, idx) => {
+				if (!resp.success) {
+					console.error(`Failed to send to ${tokenArr[idx]}: ${resp.error}`);
+				}
+			});
+		}
+	} catch (error) {
+		console.log('Error sending message:', error);
+	}
+}
+
+async function sendRefundNotification(tokenArray, name, body) {
+	let finalArr = tokenArray.filter(token => token !== "");
+	let tokenChunks = lodash.chunk(finalArr, 500);
+	let message = {
+		android: {
+			priority: 'high',
+		},
+		data: {
+			title: `Refund Jackpot game (${name})`,
+			body: body,
+			icon: 'ic_launcher',
+			type: 'Notification',
+		},
+	};
+	for (let chunk of tokenChunks) {
+		message.tokens = chunk;
+		try {
+			const response = await messaging.sendMulticast(message);
+			if (response.failureCount > 0) {
+				response.responses.forEach((resp, idx) => {
+					if (!resp.success) {
+						console.error(`Failed to send to ${chunk[idx]}: ${resp.error}`);
+					}
+				});
+			}
+		} catch (error) {
+			console.log('Error sending message:', error);
+		}
+	}
+}
 
 module.exports = router;
 
