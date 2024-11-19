@@ -136,6 +136,7 @@
                 url: "/andarbahargameresult/",
                 data: { providerId: providerId, resultDate: resultDate, winningDigit: winningDigit, gameId : 1 },
                 success: function (result) {
+                    console.log(result,"result")  
                     $('#winningDigit').val("");
                     const result1 = result.status;
                     const e = result.data;
