@@ -105,17 +105,16 @@ router.get("/specificUser", authMiddleware, async (req, res) => {
     }
 });
 
-router.patch("/", authMiddleware, async (req, res) => {
+router.patch("/", async (req, res) => {
     try {
         const { gameId, gamename, result, acvtiveStatusEdit, mobile } = req.body;
-        if (!gameId || !gamename || !result || !acvtiveStatusEdit || !mobile) {
+        if (!gameId|| !gamename|| !result) {
             return res.status(400).json({
                 statusCode: 400,
                 status: false,
                 message: "Missing required fields: gameId, gamename, result, activeStatusEdit, mobile",
             });
         }
-
         const dt = dateTime.create();
         const formatted = dt.format("Y-m-d H:M:S");
 
