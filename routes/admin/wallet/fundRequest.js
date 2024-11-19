@@ -42,7 +42,7 @@ router.get("/getManualPaymentList", async (req, res) => {
         if (!status) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Status is required",
             });
         }
@@ -83,7 +83,7 @@ router.patch("/approveManualPayment", async (req, res) => {
         if (!id) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Manual Payment ID is required",
             });
         }
@@ -91,7 +91,7 @@ router.patch("/approveManualPayment", async (req, res) => {
         if (!manualPaymentDetails) {
             return res.status(404).json({
                 statusCode: 404,
-                status: "Failure",
+                status: false,
                 message: "Manual Payment Details Not Found",
             });
         }
@@ -99,7 +99,7 @@ router.patch("/approveManualPayment", async (req, res) => {
         if (!userDetails) {
             return res.status(404).json({
                 statusCode: 404,
-                status: "Failure",
+                status: false,
                 message: "User Details Not Found",
             });
         }
@@ -165,13 +165,13 @@ router.patch("/approveManualPayment", async (req, res) => {
 
         res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Manual Payment successfully approved",
         });
     } catch (error) {
         res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: error.message || "Internal Server Error",
         });
     }
@@ -183,7 +183,7 @@ router.patch("/declineManualPayment", async (req, res) => {
         if (!id) {
             return res.status(400).json({
                 statusCode: 400,
-                status: "Failure",
+                status: false,
                 message: "Manual Payment ID is required",
             });
         }
@@ -191,7 +191,7 @@ router.patch("/declineManualPayment", async (req, res) => {
         if (!manualPaymentDetails) {
             return res.status(404).json({
                 statusCode: 404,
-                status: "Failure",
+                status: false,
                 message: "Manual Payment Details Not Found",
             });
         }
@@ -199,7 +199,7 @@ router.patch("/declineManualPayment", async (req, res) => {
         if (!userDetails) {
             return res.status(404).json({
                 statusCode: 404,
-                status: "Failure",
+                status: false,
                 message: "User Details Not Found",
             });
         }
@@ -212,13 +212,13 @@ router.patch("/declineManualPayment", async (req, res) => {
 
         res.status(200).json({
             statusCode: 200,
-            status: "Success",
+            status: true,
             message: "Manual Payment successfully declined",
         });
     } catch (error) {
         res.status(500).json({
             statusCode: 500,
-            status: "Failure",
+            status: false,
             message: error.message || "Internal Server Error",
         });
     }
