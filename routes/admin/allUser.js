@@ -59,7 +59,8 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
                 deviceName: user.deviceName,
                 deviceId: user.deviceId,
                 CreatedAt: user.CreatedAt,
-                id:user._id
+                id:user._id,
+                banned:user.user.banned,
             };
         });
 
