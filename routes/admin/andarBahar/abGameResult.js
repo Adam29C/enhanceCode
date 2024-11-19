@@ -19,41 +19,59 @@ const lodash = require('lodash');
 // const sender = new gcm.Sender(process.env.FIREBASE_SENDER_KEY);
 
 
-router.get("/", session, permission, async (req, res) => {
-	try {
-		const name = req.query.name;
-		const dt = dateTime.create();
-		const formatted = dt.format("m/d/Y");
-		const provider = await ABgamesProvider.find().sort({ _id: 1 });
-		const result = await ABgameResult.find()
-			.sort({ _id: -1 })
-			.where("resultDate")
-			.equals(formatted);
-		if (name === "mohit") {
-			res.json(result);
-		} else {
-			const userInfo = req.session.details;
-			const permissionArray = req.view;
-			const check = permissionArray["abResult"].showStatus;
-			if (check === 1) {
-				res.render("./andarbahar/ABgameresult", {
-					data: provider,
-					result: result,
-					userInfo: userInfo,
-					permission: permissionArray,
-					title: "AB Game Result",
-				});
-			} else {
-				res.render("./dashboard/starterPage", {
-					userInfo: userInfo,
-					permission: permissionArray,
-					title: "Dashboard",
-				});
-			}
-		}
-	} catch (e) {
-		res.json(e);
-	}
+router.get("/", async (req, res) => {
+    try {
+        const name = req.query.name;
+        if (name && typeof name !== "string") {
+            return res.status(400).json({ status: false, message: "Invalid 'name' parameter" });
+        }
+
+        const dt = dateTime.create();
+        const formattedDate = dt.format("m/d/Y");  
+
+        const providerPromise = ABgamesProvider.find().sort({ _id: 1 });
+        const resultPromise = ABgameResult.find()
+            .sort({ _id: -1 })
+            .where("resultDate")
+            .equals(formattedDate);
+
+        const [provider, result] = await Promise.all([providerPromise, resultPromise]);
+
+        // If the 'name' query parameter is 'mohit', just send the results directly
+        if (name === "mohit") {
+            return res.json(result);
+        }
+
+        // Get session details and permissions
+        const userInfo = req.session.details;
+        const permissionArray = req.view;
+        const checkPermission = permissionArray["abResult"]?.showStatus;
+
+        // Check if the user has permission to view the AB game result
+        if (checkPermission === 1) {
+            // Render the page with the appropriate data
+            return res.render("./andarbahar/ABgameresult", {
+                data: provider,
+                result: result,
+                userInfo: userInfo,
+                permission: permissionArray,
+                title: "AB Game Result",
+            });
+        } else {
+            // If permission is not granted, redirect to a default page (dashboard starter page)
+            return res.render("./dashboard/starterPage", {
+                userInfo: userInfo,
+                permission: permissionArray,
+                title: "Dashboard",
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching AB game result:", error);
+        return res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching the data. Please try again later."
+        });
+    }
 });
 
 // router.get("/revertPayment", session, permission, async (req, res) => {
