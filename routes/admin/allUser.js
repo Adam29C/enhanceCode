@@ -89,7 +89,7 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
     }
 });
 
-router.post("/blockUser",  async (req, res) => {
+router.post("/blockUser", authMiddleware,async (req, res) => {
     try {
         const { id, blockStatus, blockReason } = req.body;
 
@@ -178,7 +178,7 @@ router.get("/getProfile", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/deleteUserByAdmin", async (req, res) => {
+router.post("/deleteUserByAdmin", authMiddleware,async (req, res) => {
     try {
         const { id,ression } = req.body;
 
