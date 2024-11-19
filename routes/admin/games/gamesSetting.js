@@ -157,8 +157,8 @@ router.post("/:providerId", authMiddleware, async (req, res) => {
 
 router.patch("/", authMiddleware, async (req, res) => {
     try {
-        const { id, obt, cbt, obrt, cbrt, status } = req.body;
-        if (!id || !obt || !cbt || !obrt || !cbrt) {
+        const { gameid, game1, game2, game3, game4, status } = req.body;
+        if (!gameid || !game1 || !game2 || !game3 || !game4) {
             return res.status(400).json({
                 statusCode: 400,
                 status: false,
@@ -168,13 +168,13 @@ router.patch("/", authMiddleware, async (req, res) => {
         const dt = dateTime.create();
         const formatted = dt.format("Y-m-d H:M:S");
         const result = await gamesSetting.updateOne(
-            { _id: id },
+            { _id: gameid },
             {
                 $set: {
-                    OBT: obt,
-                    CBT: cbt,
-                    OBRT: obrt,
-                    CBRT: cbrt,
+                    OBT: game1,
+                    CBT: game2,
+                    OBRT: game3,
+                    CBRT: game4,
                     isClosed: status,
                     modifiedAt: formatted,
                 },
@@ -204,8 +204,8 @@ router.patch("/", authMiddleware, async (req, res) => {
 
 router.post("/updateAll", authMiddleware, async (req, res) => {
     try {
-        const { providerId, obtTime, cbtTime, obrtTime, cbrtTime, openClose } = req.body;
-        if (!providerId || !obtTime || !cbtTime || !obrtTime || !cbrtTime || openClose === undefined) {
+        const { gameid, game1, game2, game3, game4, status } = req.body;
+        if (!gameid || !game1 || !game2 || !game3 || !game4) {
             return res.status(400).json({
                 statusCode: 400,
                 status: false,
@@ -215,14 +215,14 @@ router.post("/updateAll", authMiddleware, async (req, res) => {
         const dt = dateTime.create();
         const formatted = dt.format("Y-m-d H:M:S");
         const result = await gamesSetting.updateMany(
-            { providerId: providerId },
+            { providerId: gameid },
             {
                 $set: {
-                    OBT: obtTime,
-                    CBT: cbtTime,
-                    OBRT: obrtTime,
-                    CBRT: cbrtTime,
-                    isClosed: openClose,
+                    OBT: game1,
+                    CBT: game2,
+                    OBRT: game3,
+                    CBRT: game4,
+                    isClosed: status,
                     modifiedAt: formatted,
                 },
             }
