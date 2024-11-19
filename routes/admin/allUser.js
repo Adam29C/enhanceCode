@@ -220,7 +220,7 @@ router.post("/deleteUserByAdmin", authMiddleware, async (req, res) => {
         await walletHistories.deleteMany(filter);
 
         await client.connect();
-        const database = client.db("admin");
+        const database = client.db("test");
         const mappingCollection = database.collection("mapping_tables");
         await mappingCollection.deleteMany(filter);
         const messageCollection = database.collection("messages");
