@@ -134,7 +134,7 @@ router.post("/loginDashboard", async (req, res) => {
         const token = jwt.sign(
             { key: user._id },
             process.env.jsonSecretToken,
-            { expiresIn: "1h" }
+            { expiresIn: "8h" }
         );
 
         req.session.colView = user.col_view_permission;
