@@ -77,7 +77,7 @@ router.post("/insertGame",authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/", async (req, res) => {
+router.delete("/", authMiddleware, async (req, res) => {
   try {
     const providerId = req.body.providerId;
     if (!providerId) {

@@ -4,8 +4,8 @@ const { ObjectId } = require('mongodb');
 const ABList = require("../../../model/AndarBahar/ABProvider");
 const ABtype = require("../../../model/AndarBahar/ABGameList");
 const ABbids = require("../../../model/AndarBahar/ABbids");
-
-router.get("/t", async (req, res) => {
+const authMiddleware=require("../../helpersModule/athetication")
+router.get("/t",authMiddleware, async (req, res) => {
   try {
     const provider = await ABList.find({}, { providerName: 1, _id: 1 }).sort({
       _id: 1,
@@ -35,7 +35,7 @@ router.get("/t", async (req, res) => {
   }
 });
   
-router.post("/getResult1", async (req, res) => {
+router.post("/getResult1",authMiddleware, async (req, res) => {
   const { provider } = req.body;
 
   // Input validation: Check if provider is provided
@@ -107,7 +107,7 @@ router.post("/getResult1", async (req, res) => {
   }
 });
 
-router.post("/getBidData", async (req, res) => {
+router.post("/getBidData",authMiddleware, async (req, res) => {
 	const date = req.body.date;
 	const bidDigit = req.body.bidDigit;
 	const gameId = req.body.id;

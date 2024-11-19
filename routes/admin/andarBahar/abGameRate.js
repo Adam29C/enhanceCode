@@ -2,19 +2,17 @@ const express = require("express");
 const router = express.Router();
 const ABgameList = require("../../../model/AndarBahar/ABGameList");
 const moment = require("moment");
-
-router.get("/", async (req, res) => {
+const authMiddleware=require("../../helpersModule/athetication")
+router.get("/", authMiddleware,async (req, res) => {
   try {
     const provider = await ABgameList.find().sort({ _id: 1 });
-
-    // Send the data back to the client
     res.status(200).json({
       success: true,
       message: "Games fetched successfully.",
       data: provider,
     });
   } catch (e) {
-    // In case of an error, send the error message
+
     res.status(500).json({
       success: false,
       message: "Error fetching games.",
@@ -23,7 +21,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/insertGame", async (req, res) => {
+router.post("/insertGame", authMiddleware, async (req, res) => {
   try {
     const { gameName, gamePrice } = req.body;
 
@@ -63,7 +61,7 @@ router.post("/insertGame", async (req, res) => {
   }
 });
 
-router.delete("/", async (req, res) => {
+router.delete("/", authMiddleware, async (req, res) => {
   try {
     const { gameRateId } = req.query;
     if (!gameRateId) {
@@ -100,7 +98,7 @@ router.delete("/", async (req, res) => {
   }
 });
 
-router.post("/update", async (req, res) => {
+router.post("/update", authMiddleware, async (req, res) => {
   try {
     const { gameRateId, gameName, gamePrice } = req.body;
 
