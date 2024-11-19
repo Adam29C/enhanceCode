@@ -29,6 +29,7 @@ const client = new MongoClient(process.env.DB_CONNECT, {
 
 router.post("/getAllUsers", authMiddleware, async function (req, res) {
     try {
+        console.log(req.body)
         const page = parseInt(req.body.page) || 1;
         const limit = parseInt(req.body.limit) || 10;
         const skip = (page - 1) * limit;
@@ -89,7 +90,7 @@ router.post("/getAllUsers", authMiddleware, async function (req, res) {
     }
 });
 
-router.post("/blockUser",  async (req, res) => {
+router.post("/blockUser", authMiddleware,async (req, res) => {
     try {
         const { id, blockStatus, blockReason } = req.body;
 
@@ -178,7 +179,7 @@ router.get("/getProfile", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/deleteUserByAdmin", async (req, res) => {
+router.post("/deleteUserByAdmin", authMiddleware,async (req, res) => {
     try {
         const { id,ression } = req.body;
 
