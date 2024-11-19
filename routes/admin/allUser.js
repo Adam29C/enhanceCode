@@ -92,24 +92,26 @@ router.post("/blockUser",  async (req, res) => {
     try {
         const { id, blockStatus, blockReason } = req.body;
 
-        if (!id || !blockStatus || (blockStatus === undefined) || !blockReason) {
+        if (!id || blockStatus === undefined || !blockReason) {
             return res.status(400).json({
                 status: false,
-                message: "Invalid input. 'id', 'blockStatus', and 'ression' are required."
+                message: "Invalid input. 'id', 'blockStatus', and 'blockReason' are required."
             });
         }
 
-        if (typeof blockReason !== "boolean") {
+        // Ensure 'blockStatus' is a boolean
+        if (typeof blockStatus !== "boolean") {
             return res.status(400).json({
                 status: false,
                 message: "'blockStatus' must be a boolean (true or false)."
             });
         }
 
+        // Ensure 'blockReason' is a non-empty string
         if (typeof blockReason !== "string" || blockReason.trim().length === 0) {
             return res.status(400).json({
                 status: false,
-                message: "'ression' must be a non-empty string."
+                message: "'blockReason' must be a non-empty string."
             });
         }
 
@@ -139,6 +141,7 @@ router.post("/blockUser",  async (req, res) => {
         });
     }
 });
+
 
 router.get("/getProfile", authMiddleware, async (req, res) => {
     try {
