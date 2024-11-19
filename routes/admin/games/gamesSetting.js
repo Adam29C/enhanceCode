@@ -53,7 +53,6 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-
 router.post("/insertSettings", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
@@ -158,8 +157,8 @@ router.post("/:providerId", authMiddleware, async (req, res) => {
 
 router.patch("/", authMiddleware, async (req, res) => {
     try {
-        const { id, obt, cbt, obrt, cbrt, close } = req.body;
-        if (!id || !obt || !cbt || !obrt || !cbrt || close === undefined) {
+        const { id, obt, cbt, obrt, cbrt, status } = req.body;
+        if (!id || !obt || !cbt || !obrt || !cbrt) {
             return res.status(400).json({
                 statusCode: 400,
                 status: false,
@@ -176,7 +175,7 @@ router.patch("/", authMiddleware, async (req, res) => {
                     CBT: cbt,
                     OBRT: obrt,
                     CBRT: cbrt,
-                    isClosed: close,
+                    isClosed: status,
                     modifiedAt: formatted,
                 },
             }
