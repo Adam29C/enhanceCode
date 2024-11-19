@@ -313,7 +313,7 @@ router.post("/deleteduserAjax", function (req, res) {
 
 router.post("/deleteUserByAdmin", session, async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id,session } = req.body;
 
         if (!ObjectId.isValid(id)) {
             return res.status(400).json({
