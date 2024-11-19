@@ -97,6 +97,7 @@ const abGameProvider=require("./routes/admin/andarBahar/abGameProvider")
 const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
 const abGameRate =require("./routes/admin/andarBahar/abGameRate.js")
 const abProfitLoss =require("./routes/admin/andarBahar/abProfitLoss1.js")
+const abGameResult =require("./routes/admin/andarBahar/abGameResult.js")
 const mainGameResult = require("./routes/admin/games/mainGameResult.js")
 const starLine = require("./routes/admin/starLine/starlineProvider");
 const starLineSetting = require("./routes/admin/starLine/starlineSetting");
