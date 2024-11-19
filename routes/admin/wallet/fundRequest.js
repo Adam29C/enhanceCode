@@ -11,7 +11,7 @@ const dateTime = require("node-datetime");
 const notification = require("../../helpersModule/creditDebitNotification");
 const moment = require("moment");
 
-router.get("/", session, permission, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
         const formatted = dt.format("d/m/Y");
@@ -36,7 +36,7 @@ router.get("/", session, permission, async (req, res) => {
     }
 });
 
-router.get("/getManualPaymentList", async (req, res) => {
+router.get("/getManualPaymentList", authMiddleware,async (req, res) => {
     try {
         const { status } = req.query;
         if (!status) {
@@ -69,15 +69,14 @@ router.get("/getManualPaymentList", async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            tatus: false,
-            status: "Failure",
+            status: false,
             message: "An unexpected error occurred",
             error: error.message,
         });
     }
 });
 
-router.patch("/approveManualPayment", async (req, res) => {
+router.patch("/approveManualPayment", authMiddleware,async (req, res) => {
     try {
         const { id } = req.body;
         if (!id) {
@@ -177,7 +176,7 @@ router.patch("/approveManualPayment", async (req, res) => {
     }
 });
 
-router.patch("/declineManualPayment", async (req, res) => {
+router.patch("/declineManualPayment", authMiddleware,async (req, res) => {
     try {
         const { id } = req.body;
         if (!id) {

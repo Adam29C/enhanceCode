@@ -3,44 +3,44 @@ const dateTime = require("node-datetime");
 const mongoose = require("mongoose");
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gamesSetting = require("../../../model/games/AddSetting");
-const authMiddleware=require("../../helpersModule/athetication")
+const authMiddleware = require("../../helpersModule/athetication")
 
-router.get("/", authMiddleware, async (req, res) => {
-    try {
-        const provider = await gamesProvider.find().sort({ _id: 1 });
-        let finalArr = {};
-        for (const index in provider) {
-            const id = provider[index]._id;
-            const settings = await gamesSetting
-                .find({ providerId: id })
-                .sort({ _id: 1 });
+// router.get("/", authMiddleware, async (req, res) => {
+//     try {
+//         const provider = await gamesProvider.find().sort({ _id: 1 });
+//         let finalArr = {};
+//         for (const index in provider) {
+//             const id = provider[index]._id;
+//             const settings = await gamesSetting
+//                 .find({ providerId: id })
+//                 .sort({ _id: 1 });
 
-            finalArr[id] = {
-                _id: id,
-                providerName: provider[index].providerName,
-                providerResult: provider[index].providerResult,
-                modifiedAt: provider[index].modifiedAt,
-                resultStatus: provider[index].resultStatus,
-                gameDetails: settings,
-            };
-        }
-        const finalNew = Object.values(finalArr);
-        return res.status(200).json({
-            statusCode: 200,
-            status: true,
-            message: "Data fetched successfully",
-            data: finalNew,
-        });
+//             finalArr[id] = {
+//                 _id: id,
+//                 providerName: provider[index].providerName,
+//                 providerResult: provider[index].providerResult,
+//                 modifiedAt: provider[index].modifiedAt,
+//                 resultStatus: provider[index].resultStatus,
+//                 gameDetails: settings,
+//             };
+//         }
+//         const finalNew = Object.values(finalArr);
+//         return res.status(200).json({
+//             statusCode: 200,
+//             status: true,
+//             message: "Data fetched successfully",
+//             data: finalNew,
+//         });
 
-    } catch (error) {
-        return res.status(500).json({
-            statusCode: 500,
-            status: false,
-            message: "Something went wrong while fetching game settings.",
-            error: error.message,
-        });
-    }
-});
+//     } catch (error) {
+//         return res.status(500).json({
+//             statusCode: 500,
+//             status: false,
+//             message: "Something went wrong while fetching game settings.",
+//             error: error.message,
+//         });
+//     }
+// });
 
 router.post("/insertSettings", authMiddleware, async (req, res) => {
     try {
