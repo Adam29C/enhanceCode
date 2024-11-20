@@ -76,17 +76,17 @@ router.get("/addSetting", authMiddleware, async (req, res) => {
 
 router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
   try {
-    const { providerId, obtTime, cbtTime, obrtTime, openClose } = req.body;
+    const { gameid, game1, game2, game3, status } = req.body;
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const result = await ABgamesSetting.updateMany(
-      { providerId: providerId },
+      { providerId: gameid },
       {
         $set: {
-          OBT: obtTime,
-          CBT: cbtTime,
-          OBRT: obrtTime,
-          isClosed: openClose,
+          OBT: game1,
+          CBT: game2,
+          OBRT: game3,
+          isClosed: status,
           modifiedAt: formatted
         }
       }
@@ -115,7 +115,7 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
 
 router.post("/insertSettings", authMiddleware, async (req, res) => {
   try {
-    const { gameid, gameDay, game1, game2, game3, game4, status } = req.body;
+    const { gameid, gameDay, game1, game2, game3, status } = req.body;
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     const providerId = gameid;
 
@@ -146,7 +146,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
             OBT: game1,
             CBT: game2,
             OBRT: game3,
-            CBRT: game4,
             isClosed: status,
             modifiedAt: formatted
           });
@@ -161,7 +160,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
           OBT: game1,
           CBT: game2,
           OBRT: game3,
-          CBRT: game4,
           isClosed: status,
           modifiedAt: formatted
         });
@@ -191,8 +189,8 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
 
 router.patch("/", authMiddleware, async (req, res) => {
   try {
-    const { id, obt, cbt, obrt, cbrt, close } = req.body;
-    if (!id || !obt || !cbt || !obrt || !cbrt || close === undefined) {
+    const { gameid, game1, game2, game3, status } = req.body;
+    if (!gameid || !game1 || !game2 || !game3 || status) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields in the request body."
@@ -200,14 +198,13 @@ router.patch("/", authMiddleware, async (req, res) => {
     }
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     const result = await ABgamesSetting.updateOne(
-      { _id: id },
+      { _id: gameid },
       {
         $set: {
-          OBT: obt,
-          CBT: cbt,
-          OBRT: obrt,
-          CBRT: cbrt,
-          isClosed: close,
+          OBT: game1,
+          CBT: game2,
+          OBRT: game3,
+          isClosed: status,
           modifiedAt: formatted
         }
       }
@@ -223,12 +220,11 @@ router.patch("/", authMiddleware, async (req, res) => {
       success: true,
       message: "Settings updated successfully.",
       data: {
-        _id: id,
-        OBT: obt,
-        CBT: cbt,
-        OBRT: obrt,
-        CBRT: cbrt,
-        isClosed: close,
+        _id: gameid,
+        OBT: game1,
+        CBT: game2,
+        OBRT: game3,
+        isClosed: status,
         modifiedAt: formatted
       }
     });
