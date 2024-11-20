@@ -105,9 +105,9 @@ router.delete("/delete", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
         const formatted1 = dt.format("m/d/Y I:M:S p");
-        const { resultId, providerId, session: sessionType, dltPast: dltStatus } = req.body;
+        const { resultId, providerId, session: sessionType } = req.body;
 
-        if (!resultId || !providerId || !sessionType) {
+        if (!resultId || !providerId || !session) {
             return res.status(400).json({
                 status: "Failure",
                 message: "Missing required fields",
@@ -121,8 +121,6 @@ router.delete("/delete", authMiddleware, async (req, res) => {
                 message: "Result not found or already deleted",
             });
         }
-
-        if (dltStatus === 0) {
             if (sessionType === "Open") {
                 await gamesProvider.updateOne(
                     { _id: providerId },
@@ -159,7 +157,6 @@ router.delete("/delete", authMiddleware, async (req, res) => {
                     }
                 );
             }
-        }
         return res.status(200).json({
             status: true,
             message: "Result deleted successfully",
