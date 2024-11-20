@@ -318,26 +318,26 @@ router.post("/", authMiddleware, async (req, res) => {
                 },
             }
         );
-        sendStatus = 1;
-        if (sendStatus === 1) {
-            let token = [];
-            notification(req, res, finalResult, token);
-            return res.status(201).json({
-                status: true,
-                message: "Result declared successfully.",
-                data: {
-                    providerId: providerId,
-                    session: session,
-                    resultDate: resultDate,
-                    winningDigit: winningDigit,
-                    resultId: savedGames._id,
-                    status: savedGames.status,
-                    digitFamily: sumDigit,
-                    providerName: providerName,
-                    time: savedGames.createdAt,
-                },
-            });
-        }
+        // sendStatus = 1;
+        // if (sendStatus === 1) {
+        //     let token = [];
+        //     notification(req, res, finalResult, token);
+        //     return res.status(201).json({
+        //         status: true,
+        //         message: "Result declared successfully.",
+        //         data: {
+        //             providerId: providerId,
+        //             session: session,
+        //             resultDate: resultDate,
+        //             winningDigit: winningDigit,
+        //             resultId: savedGames._id,
+        //             status: savedGames.status,
+        //             digitFamily: sumDigit,
+        //             providerName: providerName,
+        //             time: savedGames.createdAt,
+        //         },
+        //     });
+        // }
     } catch (error) {
         return res.status(500).json({
             status: "Failure",
