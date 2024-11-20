@@ -89,16 +89,19 @@ const mainGames=require("./routes/admin/games/gamesProvider");
 const gameSettings=require("./routes/admin/games/gamesSetting");
 const mainGameRate=require("./routes/admin/games/mainGamesRate");
 const mainGameResult = require("./routes/admin/games/mainGameResult.js")
+const mainGameWinnerList=require("./routes/admin/games/winnerList.js")
 const starLine = require("./routes/admin/starLine/starlineProvider");
 const starLineSetting = require("./routes/admin/starLine/starlineSetting");
 const starGameRate=require("./routes/admin/starLine/starGameRate");
 const starGameProfitLoss=require("./routes/admin/starLine/starGameProfitLoss")
 const starGameResult=require("./routes/admin/starLine/starGameResult")
+const starLineWinnerList =require("./routes/admin/starLine/starLineWinnerList.js")
 const abGameProvider=require("./routes/admin/andarBahar/abGameProvider")
 const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
 const abGameRate =require("./routes/admin/andarBahar/abGameRate.js")
 const abProfitLoss =require("./routes/admin/andarBahar/abProfitLoss1.js")
 const abGameResult =require("./routes/admin/andarBahar/abGameResult.js")
+const abWinnerList =require("./routes/admin/andarBahar/abWinnerList.js")
 const exportDebit =require("./routes/admin/wallet/exportDebit.js");
 const fundRequestData = require("./routes/admin/wallet/fundRequest.js")
 const invoice=require("./routes/admin/wallet/invoice.js");
@@ -109,7 +112,7 @@ const notification = require("./routes/admin/notification.js")
 const userIdea =require("./routes/admin/userIdia.js")
 
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
-const ocCutting = require("./routes/admin/ocCutting.js")
+const ocCutting = require("./routes/admin/ocCutting.js");
 dotenv.config();
 
 // Connect To DB
@@ -260,15 +263,18 @@ app.use("/mainGames", mainGames);
 app.use("/mainGameSetting", gameSettings);
 app.use("/mainGameRate", mainGameRate)
 app.use("/mainGameResult", mainGameResult);
+app.use("/winnerList",mainGameWinnerList)
 app.use("/starGameProvider", starLine)
 app.use("/starGameSetting", starLineSetting)
 app.use("/starGameRate", starGameRate)
 app.use("/starGameProfitLoss", starGameProfitLoss)
-app.use("/starGameResult", starGameResult)
+app.use("/starGameResult", starGameResult);
+app.use("/starlineWinner",starLineWinnerList)
 app.use("/abGameProvider", abGameProvider)
 app.use("/abGameSetting", abGameSetting)
 app.use("/abGameRate", abGameRate)
 app.use("/abGameResult",abGameResult)
+app.use("/abWinner",abWinnerList)
 app.use("/cuttingGroups", cuttingGroups);
 app.use("/ocCuttingGroup", ocCutting);
 app.use("/exportDebit",exportDebit);
