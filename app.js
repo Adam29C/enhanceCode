@@ -106,6 +106,7 @@ const fundRequestData = require("./routes/admin/wallet/fundRequest.js")
 const invoice=require("./routes/admin/wallet/invoice.js");
 const reqOn_Off=require("./routes/admin/wallet/reqON-OFF.js");
 const view_wallet=require("./routes/admin/wallet/view_wallet.js")
+const creditRequest =require("./routes/admin/creditRequest.js")
 
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js")
@@ -270,7 +271,8 @@ app.use("/abGameRate", abGameRate)
 app.use("/abGameResult",abGameResult)
 app.use("/cuttingGroups", cuttingGroups);
 app.use("/ocCuttingGroup", ocCutting);
-app.use("/exportDebit",exportDebit)
+app.use("/exportDebit",exportDebit);
+app.use("/creditRequest",creditRequest)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");

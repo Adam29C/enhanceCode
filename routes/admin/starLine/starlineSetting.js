@@ -61,6 +61,7 @@ router.get("/addSetting", authMiddleware, async (req, res) => {
       data: provider,
     });
   } catch (e) {
+    console.log(e)
     return res.status(500).json({
       status: false,
       message: "An error occurred while fetching the provider data.",
@@ -71,32 +72,31 @@ router.get("/addSetting", authMiddleware, async (req, res) => {
 
 router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
   try {
-    const { providerId, obtTime, cbtTime, obrtTime, openClose } = req.body;
+    const { gameid, game1, game2, game3, status } = req.body;
 
     if (
-      !providerId ||
-      !obtTime ||
-      !cbtTime ||
-      !obrtTime ||
-      openClose === undefined
+      !gameid ||
+      !game1 ||
+      !game2 ||
+      !game3
     ) {
       return res.status(400).json({
         status: false,
         message:
-          "'providerId', 'obtTime', 'cbtTime', 'obrtTime', and 'openClose' are required fields.",
+          "'providerId', 'game1', 'game2', 'game3', and 'status' are required fields.",
       });
     }
 
     const dt = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const updateResult = await starSettings.updateMany(
-      { providerId },
+      { providerId:gameid },
       {
         $set: {
-          OBT: obtTime,
-          CBT: cbtTime,
-          OBRT: obrtTime,
-          isClosed: openClose,
+          OBT: game1,
+          CBT: game2,
+          OBRT: game3,
+          isClosed: status,
           modifiedAt: dt,
         },
       }
@@ -109,14 +109,12 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "Provider settings updated successfully.",
     });
   } catch (e) {
-    console.error("Error updating provider settings:", e);
-
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "An error occurred while updating the provider settings.",
       error: e.message,
@@ -126,9 +124,8 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
 
 router.patch("/", authMiddleware, async (req, res) => {
   try {
-    const { id, obt, cbt, obrt, close } = req.body;
-
-    if (!id || !obt || !cbt || !obrt || close === undefined) {
+    const { gameid, game1, game2, game3, status } = req.body;
+    if (!gameid || !game1 || !game2 || !game3 || !status) {
       return res.status(400).json({
         status: false,
         message: "'id', 'obt', 'cbt', 'obrt', and 'close' are required fields.",
@@ -138,13 +135,13 @@ router.patch("/", authMiddleware, async (req, res) => {
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const updatedSettings = await starSettings.updateOne(
-      { _id: id },
+      { _id: gameid },
       {
         $set: {
-          OBT: obt,
-          CBT: cbt,
-          OBRT: obrt,
-          isClosed: close,
+          OBT: game1,
+          CBT: game2,
+          OBRT: game3,
+          isClosed: status,
           modifiedAt: formatted,
         },
       }
@@ -157,13 +154,12 @@ router.patch("/", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "Provider settings updated successfully.",
     });
   } catch (e) {
-    console.error("Error updating provider settings:", e);
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "An error occurred while updating the provider settings.",
       error: e.message,
@@ -175,22 +171,21 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
   try {
     const dt = dateTime.create();
     const formatted = dt.format("Y-m-d H:M:S");
-    const { providerId, gameDay, game1, game2, game3, game4, status } =
+    const { gameid, gameDay, game1, game2, game3, status } =
       req.body;
 
     if (
-      !providerId ||
+      !gameid ||
       !gameDay ||
       !game1 ||
       !game2 ||
       !game3 ||
-      !game4 ||
-      status === undefined
+      !status
     ) {
       return res.status(400).json({
         status: false,
         message:
-          "'providerId', 'gameDay', 'game1', 'game2', 'game3', 'game4', and 'status' are required fields.",
+          "'providerId', 'gameDay', 'game1', 'game2', 'game3', and 'status' are required fields.",
       });
     }
 
@@ -204,7 +199,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       "Sunday",
     ];
 
-    const existingSetting = await starSettings.findOne({ providerId, gameDay });
+    const existingSetting = await starSettings.findOne({ providerId:gameid, gameDay });
 
     if (existingSetting) {
       return res.status(400).json({
@@ -213,12 +208,12 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       });
     }
 
-    if (gameDay === "All") {
+    if (gameDay.toUpperCase() === "ALL") {
       let finalArr = [];
       let uniqueDays;
 
       const providerSettings = await starSettings.find(
-        { providerId },
+        { providerId:gameid },
         { gameDay: 1 }
       );
 
@@ -230,12 +225,11 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       }
 
       finalArr = uniqueDays.map((day) => ({
-        providerId,
+        providerId:gameid,
         gameDay: day,
         OBT: game1,
         CBT: game2,
         OBRT: game3,
-        CBRT: game4,
         isClosed: status,
         modifiedAt: formatted,
       }));
@@ -249,12 +243,11 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     }
 
     const settings = new starSettings({
-      providerId,
+      providerId:gameid,
       gameDay,
       OBT: game1,
       CBT: game2,
       OBRT: game3,
-      CBRT: game4,
       isClosed: status,
       modifiedAt: formatted,
     });
@@ -266,7 +259,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
       message: `Successfully inserted timings for ${gameDay}`,
     });
   } catch (error) {
-    console.error("Error inserting settings:", error);
     return res.status(500).json({
       status: false,
       message: "An error occurred while processing the request.",

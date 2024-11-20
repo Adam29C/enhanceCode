@@ -66,7 +66,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
         if (!find) {
             let uniqueDays;
             let finalArr = [];
-            if (gameDay === "All") {
+            if (gameDay.toUpperCase() === "ALL") {
                 const providerSetting = await gamesSetting.find({ providerId: gameid }, { gameDay: 1, providerId: 1 });
 
                 if (providerSetting.length > 0) {
@@ -124,6 +124,100 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     }
 });
 
+router.patch("/", authMiddleware, async (req, res) => {
+    try {
+        const { gameid, game1, game2, game3, game4, status } = req.body;
+        if (!gameid || !game1 || !game2 || !game3 || !game4) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
+                message: "Missing required fields in the request body",
+            });
+        }
+        const dt = dateTime.create();
+        const formatted = dt.format("Y-m-d H:M:S");
+        const result = await gamesSetting.updateOne(
+            { _id: gameid },
+            {
+                $set: {
+                    OBT: game1,
+                    CBT: game2,
+                    OBRT: game3,
+                    CBRT: game4,
+                    isClosed: status,
+                    modifiedAt: formatted,
+                },
+            }
+        );
+        if (result.modifiedCount === 0) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
+                message: "Game settings not found or no changes made",
+            });
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            status: true,
+            message: "Game settings updated successfully",
+        });
+    } catch (e) {
+        return res.status(500).json({
+            statusCode: 500,
+            status: false,
+            message: "Something went wrong while updating game settings",
+            error: e.message,
+        });
+    }
+});
+
+router.post("/updateAll", authMiddleware, async (req, res) => {
+    try {
+        const { gameid, game1, game2, game3, game4, status } = req.body;
+        if (!gameid || !game1 || !game2 || !game3 || !game4) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
+                message: "Missing required fields in the request body",
+            });
+        }
+        const dt = dateTime.create();
+        const formatted = dt.format("Y-m-d H:M:S");
+        const result = await gamesSetting.updateMany(
+            { providerId: gameid },
+            {
+                $set: {
+                    OBT: game1,
+                    CBT: game2,
+                    OBRT: game3,
+                    CBRT: game4,
+                    isClosed: status,
+                    modifiedAt: formatted,
+                },
+            }
+        );
+        if (result.modifiedCount === 0) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
+                message: "No matching records found to update or no changes made",
+            });
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            status: true,
+            message: `${result.modifiedCount} game settings updated successfully`,
+        });
+    } catch (e) {
+        return res.status(500).json({
+            statusCode: 500,
+            status: false,
+            message: "Something went wrong while updating game settings",
+            error: e.message,
+        });
+    }
+});
+
 router.post("/:providerId", authMiddleware, async (req, res) => {
     try {
         const id = mongoose.Types.ObjectId(req.params.providerId);
@@ -154,99 +248,4 @@ router.post("/:providerId", authMiddleware, async (req, res) => {
         });
     }
 });
-
-router.patch("/", authMiddleware, async (req, res) => {
-    try {
-        const { id, obt, cbt, obrt, cbrt, status } = req.body;
-        if (!id || !obt || !cbt || !obrt || !cbrt) {
-            return res.status(400).json({
-                statusCode: 400,
-                status: false,
-                message: "Missing required fields in the request body",
-            });
-        }
-        const dt = dateTime.create();
-        const formatted = dt.format("Y-m-d H:M:S");
-        const result = await gamesSetting.updateOne(
-            { _id: id },
-            {
-                $set: {
-                    OBT: obt,
-                    CBT: cbt,
-                    OBRT: obrt,
-                    CBRT: cbrt,
-                    isClosed: status,
-                    modifiedAt: formatted,
-                },
-            }
-        );
-        if (result.modifiedCount === 0) {
-            return res.status(400).json({
-                statusCode: 400,
-                status: false,
-                message: "Game settings not found or no changes made",
-            });
-        }
-        return res.status(200).json({
-            statusCode: 200,
-            status: true,
-            message: "Game settings updated successfully",
-        });
-    } catch (e) {
-        return res.status(500).json({
-            statusCode: 500,
-            status: false,
-            message: "Something went wrong while updating game settings",
-            error: e.message,
-        });
-    }
-});
-
-router.post("/updateAll", authMiddleware, async (req, res) => {
-    try {
-        const { providerId, obtTime, cbtTime, obrtTime, cbrtTime, openClose } = req.body;
-        if (!providerId || !obtTime || !cbtTime || !obrtTime || !cbrtTime || openClose === undefined) {
-            return res.status(400).json({
-                statusCode: 400,
-                status: false,
-                message: "Missing required fields in the request body",
-            });
-        }
-        const dt = dateTime.create();
-        const formatted = dt.format("Y-m-d H:M:S");
-        const result = await gamesSetting.updateMany(
-            { providerId: providerId },
-            {
-                $set: {
-                    OBT: obtTime,
-                    CBT: cbtTime,
-                    OBRT: obrtTime,
-                    CBRT: cbrtTime,
-                    isClosed: openClose,
-                    modifiedAt: formatted,
-                },
-            }
-        );
-        if (result.modifiedCount === 0) {
-            return res.status(400).json({
-                statusCode: 400,
-                status: false,
-                message: "No matching records found to update or no changes made",
-            });
-        }
-        return res.status(200).json({
-            statusCode: 200,
-            status: true,
-            message: `${result.modifiedCount} game settings updated successfully`,
-        });
-    } catch (e) {
-        return res.status(500).json({
-            statusCode: 500,
-            status: false,
-            message: "Something went wrong while updating game settings",
-            error: e.message,
-        });
-    }
-});
-
 module.exports = router;
