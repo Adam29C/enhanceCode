@@ -5,20 +5,17 @@ const ABgamesSetting = require("../../../model/AndarBahar/ABAddSetting");
 const authMiddleware = require("../../helpersModule/athetication");
 const moment = require('moment');
 
-
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.query; // Extracting userId directly from query params
-    let finalArr = {};  // This will hold the final processed data
+    const { userId } = req.query;
+    let finalArr = {};
     const provider = await ABgamesProvider.find().sort({ _id: 1 });
     let finalNew = [];
 
-    // Loop through each provider and fetch its settings
     for (let index in provider) {
       let id = provider[index]._id;
       const settings = await ABgamesSetting.find({ providerId: id }).sort({ _id: 1 });
-      
-      // Structuring the data for each provider and its settings
+
       finalArr[id] = {
         _id: id,
         providerName: provider[index].providerName,
@@ -29,27 +26,23 @@ router.get("/", authMiddleware, async (req, res) => {
       };
     }
 
-    // Push all the provider data into an array for easier handling
     for (let index2 in finalArr) {
       let data = finalArr[index2];
       finalNew.push(data);
     }
 
-    // If the userId matches a specific value, return the data directly as JSON
     if (userId == 123456) {
       return res.json(finalNew);
     }
 
-    // Default case: return the JSON data
-    res.json({
+    return res.json({
       status: true,
       message: "Game settings fetched successfully",
       data: finalNew,
     });
 
   } catch (e) {
-    // If there's an error, send a JSON response with the error message
-    res.json({
+    return res.json({
       status: false,
       message: "An error occurred",
       error: e.message,
@@ -58,29 +51,28 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 router.get("/addSetting", authMiddleware, async (req, res) => {
-    try {
-      // Fetch all providers
-      const provider = await ABgamesProvider.find().sort({ _id: 1 });
-  
-      // Prepare the response data
-      const responseData = {
-        status: true,
-        message: "Providers fetched successfully",
-        data: provider,
-      };
-  
-      // Send the data as JSON response
-      res.json(responseData);
-    } catch (e) {
-      // Handle errors
-      res.json({
-        status: false,
-        message: "Error fetching providers",
-        error: e.message,
-      });
-    }
-});
+  try {
+    const provider = await ABgamesProvider.find().sort({ _id: 1 });
 
+    const responseData = {
+      status: true,
+      message: "Providers fetched successfully",
+      data: provider,
+    };
+
+    return res.json({
+      status: true,
+      message: "Game settings fetched successfully",
+      data: responseData,
+    });
+  } catch (e) {
+    return res.json({
+      status: false,
+      message: "Error fetching providers",
+      error: e.message,
+    });
+  }
+});
 
 router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
   try {
@@ -107,13 +99,13 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Provider settings updated successfully"
     });
 
   } catch (e) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Error updating provider settings",
       error: e.toString()
@@ -127,7 +119,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     const providerId = gameid;
 
-    // Check if the settings already exist for the given providerId and gameDay
     const existingSetting = await ABgamesSetting.findOne({
       providerId,
       gameDay
@@ -136,24 +127,18 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
     if (!existingSetting) {
-      if (gameDay === "All") {
+      if (gameDay.toUpperCase() === "ALL") {
         let finalArr = [];
         let uniqueDays;
 
-        // Get the existing game days for the provider
         const providerSettings = await ABgamesSetting.find({ providerId }, { gameDay: 1, providerId: 1 });
 
-        // Get the unique days that need to be added
         let existingDays = providerSettings.map(item => item.gameDay);
         if (providerSettings.length > 0) {
-          // Create a unique list of days that don't exist in the provider's current settings or the default days
           uniqueDays = [...new Set([...existingDays, ...days])].filter(day => !existingDays.includes(day) || !days.includes(day));
         } else {
-          // If no provider settings, use all days
           uniqueDays = days;
         }
-
-        // Prepare the data to insert for each unique day
         uniqueDays.forEach(day => {
           finalArr.push({
             providerId,
@@ -167,11 +152,9 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
           });
         });
 
-        // Insert new records for the unique days
         await ABgamesSetting.insertMany(finalArr);
 
       } else {
-        // If gameDay is not "All", create a new setting for that specific day
         const newSetting = new ABgamesSetting({
           providerId,
           gameDay,
@@ -185,21 +168,20 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
 
         await newSetting.save();
       }
-
-      res.json({
+      return res.json({
         success: true,
         message: `Successfully inserted timings for ${gameDay}`
       });
 
     } else {
-      res.json({
+      return res.json({
         success: false,
         message: `Details already filled for ${gameDay}`
       });
     }
 
   } catch (e) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: "Error inserting settings",
       error: e.toString()
@@ -237,7 +219,7 @@ router.patch("/", authMiddleware, async (req, res) => {
         message: "No settings found for the provided ID or no changes were made."
       });
     }
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Settings updated successfully.",
       data: {
@@ -251,7 +233,7 @@ router.patch("/", authMiddleware, async (req, res) => {
       }
     });
   } catch (e) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Error updating settings.",
       error: e.toString()
@@ -261,15 +243,15 @@ router.patch("/", authMiddleware, async (req, res) => {
 
 router.get("/:providerId", authMiddleware, async (req, res) => {
   try {
-    const id = req.params.providerId; 
-    let ABgamesSettingInfo = await ABgamesSetting.find({ providerId: id }); 
-    res.status(200).json({
+    const id = req.params.providerId;
+    let ABgamesSettingInfo = await ABgamesSetting.find({ providerId: id });
+    return res.status(200).json({
       success: true,
       message: "Settings fetched successfully.",
       data: ABgamesSettingInfo
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "An error occurred while processing the request.",
       error: error.message
@@ -277,4 +259,4 @@ router.get("/:providerId", authMiddleware, async (req, res) => {
   }
 });
 
-module.exports =router;
+module.exports = router;
