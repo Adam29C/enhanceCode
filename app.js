@@ -101,6 +101,7 @@ const abGameResult =require("./routes/admin/andarBahar/abGameResult.js")
 const mainGameResult = require("./routes/admin/games/mainGameResult.js")
 const starLine = require("./routes/admin/starLine/starlineProvider");
 const starLineSetting = require("./routes/admin/starLine/starlineSetting");
+const creditRequest =require("./routes/admin/creditRequest.js")
 
 
 
@@ -267,6 +268,7 @@ app.use("/abGameRate", abGameRate)
 app.use("/abGameResult",abGameResult)
 app.use("/cuttingGroups", cuttingGroups);
 app.use("/ocCuttingGroup", ocCutting)
+app.use("/creditRequest",creditRequest)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
