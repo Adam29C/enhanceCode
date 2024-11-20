@@ -107,12 +107,12 @@ router.get("/specificUser", authMiddleware, async (req, res) => {
 
 router.patch("/", authMiddleware,async (req, res) => {
     try {
-        const { gameId, gamename, result, acvtiveStatusEdit, mobile } = req.body;
-        if (!gameId|| !gamename|| !result) {
+        const { gameId, gamename, result, activeStatus, mobile } = req.body;
+        if (!gameId|| !gamename|| !result ) {
             return res.status(400).json({
                 statusCode: 400,
                 status: false,
-                message: "Missing required fields: gameId, gamename, result, activeStatusEdit, mobile",
+                message: "Missing required fields: gameId, gamename, result, activeStatus, mobile",
             });
         }
         const dt = dateTime.create();
@@ -124,13 +124,15 @@ router.patch("/", authMiddleware,async (req, res) => {
                 $set: {
                     providerName: gamename,
                     providerResult: result,
-                    activeStatus: acvtiveStatusEdit,
+                    activeStatus: activeStatus,
                     modifiedAt: formatted,
                     mobile: mobile,
                 },
             }
         );
-
+        
+        const a=await gamesProvider.findOne({_id: gameId})
+        console.log("a",a)
         if (updateResult.matchedCount === 0) {
             return res.status(400).json({
                 statusCode: 400,
