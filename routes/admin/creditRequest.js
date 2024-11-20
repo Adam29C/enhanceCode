@@ -7,7 +7,7 @@ const moment = require("moment");
 const session = require("../helpersModule/session");
 const permission = require("../helpersModule/permission");
 const mongoose = require("mongoose");
-const authMiddleware=require("../../helpersModule/athetication")
+const authMiddleware=require("../../../helpersModule/athetication")
 
 
 router.get("/creditUPI",authMiddleware, async (req, res) => {
