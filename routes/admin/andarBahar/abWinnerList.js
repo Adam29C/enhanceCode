@@ -4,7 +4,7 @@ const abPorvider = require("../../../model/AndarBahar/ABProvider");
 const abGameType = require("../../../model/AndarBahar/ABGameList");
 const authMiddleware = require("../../helpersModule/athetication");
 
-router.get("/abWinner", authMiddleware, async (req, res) => {
+router.get("/abWinnerList", authMiddleware, async (req, res) => {
     try {
         const { digit, provider, date, resultId, resultStatus } = req.body;
 

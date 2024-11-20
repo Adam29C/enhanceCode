@@ -4,7 +4,7 @@ const gameResult = require("../../../model/games/GameResult");
 const mainGameResult = require("../../../model/games/GameResult");
 const authMiddleware = require("../../helpersModule/athetication")
 
-router.post("/mainWinner", authMiddleware, async (req, res) => {
+router.post("/mainWinnerList", authMiddleware, async (req, res) => {
     try {
         const {
             digit,

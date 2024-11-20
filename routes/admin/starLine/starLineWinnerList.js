@@ -2,7 +2,7 @@ const router = require("express").Router();
 const starBIds = require("../../../model/starline/StarlineBids");
 const authMiddleware = require("../../helpersModule/athetication")
 
-router.post("/starWinner", authMiddleware, async (req, res) => {
+router.post("/starLineWinnerList", authMiddleware, async (req, res) => {
     try {
         const { digit, provider, date, resultId, resultStatus, digitFamily } = req.body;
 
