@@ -7,9 +7,10 @@ const moment = require("moment");
 const session = require("../helpersModule/session");
 const permission = require("../helpersModule/permission");
 const mongoose = require("mongoose");
+const authMiddleware=require("../../helpersModule/athetication")
 
 
-router.get("/creditUPI", async (req, res) => {
+router.get("/creditUPI",authMiddleware, async (req, res) => {
     try {
         //const date = moment().format("D/MM/YYYY");
         const date = "06/09/2024";
@@ -54,7 +55,7 @@ router.get("/creditUPI", async (req, res) => {
     }
 });
 
-router.get("/creditUPI_ajax",  async (req, res) => {
+router.get("/creditUPI_ajax",authMiddleware,  async (req, res) => {
     try {
         const requestedDate = req.query.date_cust;
 
