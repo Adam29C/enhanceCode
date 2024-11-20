@@ -131,8 +131,6 @@ router.patch("/", authMiddleware,async (req, res) => {
             }
         );
         
-        const a=await gamesProvider.findOne({_id: gameId})
-        console.log("a",a)
         if (updateResult.matchedCount === 0) {
             return res.status(400).json({
                 statusCode: 400,

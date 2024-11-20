@@ -54,6 +54,68 @@ router.get("/creditUPI", async (req, res) => {
     }
 });
 
+router.get("/creditUPI_ajax",  async (req, res) => {
+    try {
+        const requestedDate = req.query.date_cust;
+
+        if (!requestedDate) {
+            return res.json({
+                status: false,
+                message: "The date parameter 'date_cust' is required.",
+                approvedData: [],
+                total: 0
+            });
+        }
+
+        const formattedDate = moment(requestedDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+
+        const aggregationResult = await UPIlist.aggregate([
+            {
+                $match: {
+                    reqDate: formattedDate,
+                    reqStatus: { $in: ["submitted", "pending"] }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    reqDate: 1,
+                    reqStatus: 1,
+                }
+            },
+            {
+                $group: {
+                    _id: "$reqStatus",
+                    data: { $push: "$$ROOT" },
+                    total: { $sum: 1 }
+                }
+            }
+        ]);
+
+        if (aggregationResult.length > 0) {
+            return res.json({
+                status: true,
+                message: "Data fetched successfully.",
+                approvedData: aggregationResult[0].data,
+                total: aggregationResult[0].total
+            });
+        } else {
+            return res.json({
+                status: true,
+                message: "No data available for the provided date.",
+                approvedData: [],
+                total: 0
+            });
+        }
+    } catch (error) {
+        return res.json({
+            status: false,
+            message: "An unexpected error occurred. Please try again later.",
+            error: error.message
+        });
+    }
+});
+
 
 
 module.exports =router
