@@ -4,8 +4,13 @@ const dateTime = require("node-datetime");
 const moment = require('moment');
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gameResult = require("../../../model/games/GameResult");
+<<<<<<< HEAD
+const authMiddleware = require("../../helpersModule/athetication")
+const gameSetting =require("../../../model/games/AddSetting")
+=======
 const authMiddleware = require("../../helpersModule/athetication");
 const gameDigit=require("../../../model/digits")
+>>>>>>> 7b76768def42a39ee0ab66e421aa0ae45805561c
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
