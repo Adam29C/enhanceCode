@@ -278,7 +278,7 @@ router.post("/", authMiddleware, async (req, res) => {
             session: session,
         });
         if (existingResult) {
-            return res.status(400).json({
+            return res.status(200).json({
                 status: "Failure",
                 message: `Details already filled for: ${providerName}, Session: ${session}, Date: ${resultDate}`,
             });
