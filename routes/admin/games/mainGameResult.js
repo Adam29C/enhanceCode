@@ -6,7 +6,6 @@ const gamesProvider = require("../../../model/games/Games_Provider");
 const gameResult = require("../../../model/games/GameResult");
 const authMiddleware = require("../../helpersModule/athetication")
 const gameSetting =require("../../../model/games/AddSetting")
-const authMiddleware = require("../../helpersModule/athetication");
 const gameDigit=require("../../../model/digits")
 router.get("/", authMiddleware, async (req, res) => {
     try {
