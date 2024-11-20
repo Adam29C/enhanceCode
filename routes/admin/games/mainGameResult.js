@@ -5,6 +5,7 @@ const moment = require('moment');
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gameResult = require("../../../model/games/GameResult");
 const authMiddleware = require("../../helpersModule/athetication")
+const gameSetting =require("../../../model/games/AddSetting")
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
