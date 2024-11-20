@@ -107,7 +107,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
         const formatted1 = dt.format("m/d/Y I:M:S p");
         const { resultId, providerId, session: sessionType } = req.body;
 
-        if (!resultId || !providerId || !sessionType) {
+        if (!resultId || !providerId || !session) {
             return res.status(400).json({
                 status: "Failure",
                 message: "Missing required fields",
