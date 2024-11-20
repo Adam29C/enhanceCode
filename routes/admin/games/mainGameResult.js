@@ -4,7 +4,8 @@ const dateTime = require("node-datetime");
 const moment = require('moment');
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gameResult = require("../../../model/games/GameResult");
-const authMiddleware = require("../../helpersModule/athetication")
+const authMiddleware = require("../../helpersModule/athetication");
+const gameDigit=require("../../../model/digits")
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
@@ -175,7 +176,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
 
 router.post("/digits", authMiddleware, async (req, res) => {
     try {
-        const {digitArray} = req.body;
+        const { digitArray } = req.body;
         if (!Array.isArray(digitArray) || digitArray.length === 0) {
             return res.status(400).json({
                 status: "Failure",
@@ -223,15 +224,14 @@ router.get("/revertPayment", authMiddleware, async (req, res) => {
 
 router.post("/", authMiddleware, async (req, res) => {
     try {
+        const { providerId, providerName, session, resultDate, winningDigit } = req.body
+        if (!providerId || !providerName || !session || !resultDate || !winningDigit) {
+            return res.status(400).json({
+                status: "Failure",
+                message: "all field require in api req",
+            });
+        }
         const dt = dateTime.create();
-        const str = req.body.providerId;
-        const data = str.split("|");
-        const id = data[0];
-        const name = data[1];
-        const session = req.body.session;
-        const resultDate = req.body.resultDate;
-        const winningDigit = req.body.winningDigit;
-
         let sendStatus = 0;
         let savedGames;
         let finalResult;
@@ -242,7 +242,7 @@ router.post("/", authMiddleware, async (req, res) => {
         const currentTime = dt.format("I:M p");
         if (session === "Close") {
             const openResult = await gameResult.findOne({
-                providerId: id,
+                providerId: providerId,
                 resultDate: resultDate,
                 session: "Open",
             });
@@ -250,12 +250,12 @@ router.post("/", authMiddleware, async (req, res) => {
                 return res.status(400).json({
                     status: "Failure",
                     message: "Open result must be declared before declaring Close session.",
-                    data: `Open Result Not Declared For: ${name}, Date: ${resultDate}`,
+                    data: `Open Result Not Declared For: ${providerName}, Date: ${resultDate}`,
                 });
             }
         }
         const findTime = await gameSetting.findOne(
-            { providerId: id, gameDay: todayDay },
+            { providerId: providerId, gameDay: todayDay },
             session === "Open" ? { OBRT: 1 } : { CBRT: 1 }
         );
         if (!findTime) {
@@ -275,14 +275,14 @@ router.post("/", authMiddleware, async (req, res) => {
             });
         }
         const existingResult = await gameResult.findOne({
-            providerId: id,
+            providerId: providerId,
             resultDate: resultDate,
             session: session,
         });
         if (existingResult) {
             return res.status(400).json({
                 status: "Failure",
-                message: `Details already filled for: ${name}, Session: ${session}, Date: ${resultDate}`,
+                message: `Details already filled for: ${providerName}, Session: ${session}, Date: ${resultDate}`,
             });
         }
         const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
@@ -294,8 +294,8 @@ router.post("/", authMiddleware, async (req, res) => {
         }
         const sumDigit = digitFamily.DigitFamily;
         const details = new gameResult({
-            providerId: id,
-            providerName: name,
+            providerId: providerId,
+            providerName: providerName,
             session: session,
             resultDate: resultDate,
             winningDigit: winningDigit,
@@ -311,7 +311,7 @@ router.post("/", authMiddleware, async (req, res) => {
             finalResult = `${sumDigit}-${winningDigit}`;
         }
         await gamesProvider.updateOne(
-            { _id: id },
+            { _id: providerId },
             {
                 $set: {
                     providerResult: finalResult,
@@ -328,14 +328,14 @@ router.post("/", authMiddleware, async (req, res) => {
                 status: true,
                 message: "Result declared successfully.",
                 data: {
-                    providerId: id,
+                    providerId: providerId,
                     session: session,
                     resultDate: resultDate,
                     winningDigit: winningDigit,
                     resultId: savedGames._id,
                     status: savedGames.status,
                     digitFamily: sumDigit,
-                    providerName: name,
+                    providerName: providerName,
                     time: savedGames.createdAt,
                 },
             });
