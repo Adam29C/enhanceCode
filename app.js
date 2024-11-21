@@ -116,7 +116,7 @@ const userIdea =require("./routes/admin/userIdia.js")
 const appSetting = require("./routes/admin/appSetting/howToPlay.js")
 const withdraw = require("./routes/admin/appSetting/withdraw.js")
 const noticeBoard =require("./routes/admin/appSetting/noticeBoard.js")
-
+const profileNote =require("./routes/admin/appSetting/profileNote.js")
 
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js");
@@ -298,6 +298,8 @@ app.use("/userIdea",userIdea)
 app.use("/appSetting",appSetting)
 app.use("/withdraw",withdraw)
 app.use("/noticeBoard",noticeBoard)
+app.use("/profileNote",profileNote)
+
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
 const fund = require("./model/API/FundRequest");
