@@ -88,7 +88,7 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
       });
     }
 
-    const settingList = await gamesSetting.findOne({ providerId: gameid });
+    const settingList = await starSettings.findOne({ providerId: gameid });
     if (!settingList) {
       return res.status(404).json({
         success: false,
