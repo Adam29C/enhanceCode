@@ -1,3 +1,28 @@
+const router = require("express").Router();
+const User = require("../../model/API/Users");
+const kgdg = require("../../model/kgdbuser");
+const deletedUser = require("../../model/API/Deleted_User");
+const profile = require("../../model/API/Profile");
+const session = require("../helpersModule/session");
+const permission = require("../helpersModule/permission");
+const dateTime = require("node-datetime");
+const abBids = require("../../model/AndarBahar/ABbids")
+const chats = require("../../model/chat");
+const foundRequest = require("../../model/API/FundRequest");
+const gameBids = require("../../model/games/gameBids");
+const gatewayPayments = require("../../model/onlineTransaction");
+const ideasUser = require("../../model/UserSuggestion");
+const manualPayments = require("../../model/manualPayment");
+const revertPayments = require("../../model/revertPayment");
+const starlineBids = require("../../model/starline/StarlineBids");
+const upiPayments = require("../../model/API/upiPayments");
+const userProfiles = require("../../model/API/Profile");
+const walletHistories = require("../../model/wallet_history")
+const { MongoClient } = require("mongodb");
+const { ObjectId } = require('mongodb');
+const moment = require("moment");
+const fs = require('fs');
+const path = require('path');
 
 router.post("/deleteduser", async function (req, res) {
     try {
@@ -56,4 +81,7 @@ router.post("/deleteduser", async function (req, res) {
         });
     }
 });
+
+module.exports = router;
+
 

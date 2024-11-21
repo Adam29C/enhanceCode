@@ -1,21 +1,23 @@
 const router = require("express").Router();
 const Useridea = require("../../model/UserSuggestion");
+const moment =require("moment")
 router.get("/userIdea", async (req, res) => {
   try {
-    const userIdia = await Useridea.find({});
-    return res.json.status(200)({
+    const userIdea = await Useridea.find({});
+    return res.status(200).json({
       status: true,
-      data: userIdia,
+      data: userIdea,
     });
   } catch (err) {
-    return res.json.status(500)({
-      status: true,
+    return res.status(500).json({
+      status: false,
       message: "Internal Server Error",
     });
   }
 });
 
-router.post("/userIdea", async (req, res) => {
+
+router.post("/", async (req, res) => {
   try {
     let index = parseInt(req.body.start) + 1;
     const { length, start, order, columns, search } = req.body;
@@ -75,14 +77,14 @@ router.post("/ideas", async (req, res) => {
 		const { userid, username, idea } = req.body;
 		const time = moment().format("DD/MM/YYYY hh:mm a");
 		const timeStamp = moment(time, "DD/MM/YYYY hh:mm a").unix();
-
+    console.log("1")
 		if (idea == "") {
 			return res.json({
 				status: 0,
 				message: "Cannot Submit Empty Suggestion"
 			})
 		}
-
+    console.log("")
 		const ideaData = new Useridea({
 			userid: userid,
 			username: username,
@@ -91,11 +93,13 @@ router.post("/ideas", async (req, res) => {
 			timestamp: timeStamp,
 			approveIdea: false
 		})
+    console.log("2")
 		const saveIdea = await ideaData.save();
 		return res.json({
 			status: 1,
 			message: "Your Idea is Submitted Successfully, We Will Review Your Idea Soon 🥳🥳"
 		})
+    
 	} catch (error) {
 		return res.json({
 			status: 0,
