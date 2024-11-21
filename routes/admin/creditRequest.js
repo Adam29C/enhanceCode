@@ -1,122 +1,56 @@
 const router = require("express").Router();
-const fundReq = require("../../model/API/FundRequest");
 const UPIlist = require("../../model/API/upiPayments");
-const userProfile = require("../../model/API/Profile");
-
 const moment = require("moment");
-const session = require("../helpersModule/session");
-const permission = require("../helpersModule/permission");
-const mongoose = require("mongoose");
 const authMiddleware=require("../helpersModule/athetication")
 
-
-router.get("/creditUPI",authMiddleware, async (req, res) => {
+router.get("/creditUPI", authMiddleware, async (req, res) => {
     try {
-        //const date = moment().format("D/MM/YYYY");
-        const date = "06/09/2024";
-     
-        const result = await UPIlist.aggregate([
-            {
-                $match: {
-                    reqDate: date,
-                    reqStatus: { $in: ["submitted", "pending"] }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    data: { $push: "$$ROOT" }
-                }
-            }
-        ]);
+        const { date_cust, page = 1, limit = 10, search } = req.query;
+        const dt = dateTime.create();
+        const currentDate = dt.format("d/m/Y");
+        const dateToUse = date_cust ? moment(date_cust, "MM/DD/YYYY").format("DD/MM/YYYY") : currentDate;
+        const skip = (page - 1) * limit;
 
-        if (result.length > 0) {
-            return res.json({
-                status: true,
-                message: "Data fetched successfully.",
-                data: result[0].data,
-                total: result[0].total
-            });
-        } else {
-            return res.json({
-                status: true,
-                message: "No records found for the given date and status.",
-                data: [],
-                total: 0
+        const query = {
+            reqDate: dateToUse,
+            $and: [
+                { $or: [{ reqStatus: "submitted" }, { reqStatus: "pending" }] }
+            ]
+        };
+
+        if (search) {
+            const normalizedSearch = search.startsWith("+91") ? search : "+91" + search;
+            query.$and.push({
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { username: { $regex: search, $options: "i" } },
+                    { mobile: { $regex: normalizedSearch, $options: "i" } },
+                    { reqStatus: { $regex: search, $options: "i" } }
+                ]
             });
         }
-    } catch (e) {
+        const report = await UPIlist.find(query)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .exec();
+
+        const totalCount = await UPIlist.countDocuments(query);
+        return res.status(200).json({
+            status: true,
+            message: "Report fetched successfully.",
+            approvedData: report,
+            total: totalCount,
+            page: parseInt(page),
+            totalPages: Math.ceil(totalCount / limit),
+            limit: parseInt(limit),
+        });
+    } catch (error) {
         return res.status(500).json({
             status: false,
-            message: "Internal Server Error. Please try again later.",
-            error: e.message
+            message: "An error occurred while fetching the report. Please contact support.",
+            error: error.message,
         });
     }
 });
-
-router.get("/creditUPI_ajax",authMiddleware,  async (req, res) => {
-    try {
-        const requestedDate = req.query.date_cust;
-
-        if (!requestedDate) {
-            return res.json({
-                status: false,
-                message: "The date parameter 'date_cust' is required.",
-                approvedData: [],
-                total: 0
-            });
-        }
-
-        const formattedDate = moment(requestedDate, "MM/DD/YYYY").format("DD/MM/YYYY");
-
-        const aggregationResult = await UPIlist.aggregate([
-            {
-                $match: {
-                    reqDate: formattedDate,
-                    reqStatus: { $in: ["submitted", "pending"] }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    reqDate: 1,
-                    reqStatus: 1,
-                }
-            },
-            {
-                $group: {
-                    _id: "$reqStatus",
-                    data: { $push: "$$ROOT" },
-                    total: { $sum: 1 }
-                }
-            }
-        ]);
-
-        if (aggregationResult.length > 0) {
-            return res.json({
-                status: true,
-                message: "Data fetched successfully.",
-                approvedData: aggregationResult[0].data,
-                total: aggregationResult[0].total
-            });
-        } else {
-            return res.json({
-                status: true,
-                message: "No data available for the provided date.",
-                approvedData: [],
-                total: 0
-            });
-        }
-    } catch (error) {
-        return res.json({
-            status: false,
-            message: "An unexpected error occurred. Please try again later.",
-            error: error.message
-        });
-    }
-});
-
-
 
 module.exports =router
