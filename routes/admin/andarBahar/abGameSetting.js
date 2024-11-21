@@ -53,17 +53,10 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get("/addSetting", authMiddleware, async (req, res) => {
   try {
     const provider = await ABgamesProvider.find().sort({ _id: 1 });
-
-    const responseData = {
-      status: true,
-      message: "Providers fetched successfully",
-      data: provider,
-    };
-
     return res.json({
       status: true,
       message: "Game settings fetched successfully",
-      data: responseData,
+      data:provider,
     });
   } catch (e) {
     return res.json({
