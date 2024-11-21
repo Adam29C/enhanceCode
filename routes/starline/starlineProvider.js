@@ -1,88 +1,185 @@
-const router = require("express").Router();
-const starlineProvider = require("../../model/starline/Starline_Provider");
-const dateTime = require("node-datetime");
-const session = require("../helpersModule/session");
-const permission = require("../helpersModule/permission");
-
-router.get("/", session, permission, async (req, res) => {
+const express = require("express");
+const authMiddleware = require("../helpersModule/athetication")
+const router = express.Router();
+const starlineProvider = require("../../model/AndarBahar/ABProvider")
+const moment = require('moment');
+router.get("/getStarlineProvider", authMiddleware, async (req, res) => {
   try {
-    const provider = await starlineProvider.find().sort({_id : 1});;
-    const userInfo = req.session.details;
-    const permissionArray = req.view;
+    const provider = await starlineProvider.find().sort({ _id: 1 });
+    return res.json({
+      status: true,
+      message: "Starline Provider data fetched successfully.",
+      data: provider,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      status: false,
+      message: "An error occurred while fetching the data.",
+      error: e.message
+    });
+  }
+});
 
-    const check = permissionArray["starlineProvider"].showStatus;
-    if (check === 1) {
-      res.render("./starline/starLineProvider", {
-        data: provider,
-        userInfo: userInfo,
-        permission: permissionArray,
-        title: "Starline Provider"
-      });
-    } else {
-      res.render("./dashboard/starterPage", {
-        userInfo: userInfo,
-        permission: permissionArray,
-        title: "Dashboard"
+router.get("/starLineProviderById", authMiddleware,async (req, res) => {
+  try {
+    const { providerId } = req.query;  
+
+    if (!providerId) {
+      return res.status(400).json({
+        status: false,
+        message: "'providerId' query parameter is required."
       });
     }
+
+    const provider = await starlineProvider.findOne({ _id: providerId });
+
+
+    if (!provider) {
+      return res.status(404).json({
+        status: false,
+        message: "Provider not found with the provided 'providerId'."
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Provider data fetched successfully.",
+      provider: provider
+    });
+
   } catch (e) {
-    res.json({ message: e });
+    res.status(500).json({
+      status: false,
+      message: "An error occurred while fetching the provider data.",
+      error: e.message
+    });
   }
 });
 
-router.get("/specificUser", session, async (req, res) => {
-  try {
-    const user = await starlineProvider.findOne({ _id: req.query.userId });
-    res.json(user);
-  } catch (e) {
-    res.json({ message: e });
-  }
-});
+router.post("/insertStarLineProvider", authMiddleware,async (req, res) => {
+  const { providerName, result } = req.body;
 
-router.post("/insertGame", session, async (req, res) => {
-  const dt = dateTime.create();
-  const formatted = dt.format("Y-m-d H:M:S");
-  const games = new starlineProvider({
-    providerName: req.body.gamename,
-    providerResult: req.body.result,
+  if (!providerName || !result) {
+    return res.status(400).json({
+      status: false,
+      message: "'providerName' and 'result' are required fields."
+    });
+  }
+  const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
+
+  const provider = new starlineProvider({
+    providerName: providerName,
+    providerResult: result,
     modifiedAt: formatted
   });
-  try {
-    const savedGames = await games.save();
-    res.redirect("/starlineProvider");
-  } catch (e) {
-    res.status(400).send(e);
-  }
-});
 
-router.delete("/", session, async (req, res) => {
   try {
-    const savedGames = await starlineProvider.deleteOne({
-      _id: req.body.userId
+
+    const savedProvider = await provider.save();
+
+    res.status(201).json({
+      status: true,
+      message: "Provider inserted successfully.",
+      provider: savedProvider
     });
-    res.json(savedGames);
-  } catch (e) {
-    res.json(e);
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: "An error occurred while inserting the provider.",
+      error: err.message
+    });
   }
 });
 
-router.patch("/", session, async (req, res) => {
+router.patch("/updateStarLineProvider", authMiddleware,async (req, res) => {
   try {
-    const dt = dateTime.create();
-    const formatted = dt.format("Y-m-d H:M:S");
-    await starlineProvider.updateOne(
-      { _id: req.body.userId },
-      {
-        $set: {
-          providerName: req.body.gamename,
-          providerResult: req.body.result,
-          modifiedAt: formatted
-        }
-      }
+    const { providerId, gamename, result } = req.body;
+    if (!providerId) {
+      return res.status(400).json({
+        status: false,
+        message: "'providerId' is required."
+      });
+    }
+    const updateFields = {};
+
+    if (gamename) {
+      updateFields.providerName = gamename;
+    }
+
+    if (result) {
+      updateFields.providerResult = result;
+    }
+
+    if (!gamename && !result) {
+      return res.status(400).json({
+        status: false,
+        message: "'gamename' or 'result' is required to update."
+      });
+    }
+    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
+    updateFields.modifiedAt = formatted;
+
+    const updatedProvider = await starlineProvider.updateOne(
+      { _id: providerId }, 
+      { $set: updateFields }
     );
-    res.redirect("/starlineProvider");
-  } catch (e) {
-    res.json(e);
+
+    if (updatedProvider.matchedCount === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "Provider not found with the provided providerId."
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Provider updated successfully."
+    });
+
+  } catch (err) {
+
+    console.error("Error updating provider:", err);
+
+    res.status(500).json({
+      status: false,
+      message: "An error occurred while updating the provider.",
+      error: err.message
+    });
   }
 });
+
+router.delete("/deleteStarLineProvider", authMiddleware,async (req, res) => {
+  try {
+    const { providerId } = req.query;
+
+    if (!providerId) {
+      return res.status(400).json({
+        status: false,
+        message: "'providerId' is required to delete a provider."
+      });
+    }
+
+    const deletedProvider = await starlineProvider.deleteOne({ _id: providerId });
+
+
+    if (deletedProvider.deletedCount === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "Provider not found with the provided providerId."
+      });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Provider deleted successfully."
+    });
+
+  } catch (e) {
+    res.status(500).json({
+      status: false,
+      message: "An error occurred while deleting the provider.",
+      error: e.message
+    });
+  }
+});
+
 module.exports = router;
