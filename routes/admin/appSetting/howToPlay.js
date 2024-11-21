@@ -31,7 +31,7 @@ router.post('/updateHtp',authMiddleware,  async (req, res) => {
         // Check if htpId and howtoplay are provided
         if (!htpId || !howtoplay) {
             return res.status(400).json({
-                status: 0,
+                status: true,
                 message: 'htpId and howtoplay are required'
             });
         }
@@ -45,20 +45,20 @@ router.post('/updateHtp',authMiddleware,  async (req, res) => {
 
         if (!updatedData) {
             return res.status(404).json({
-                status: 0,
+                status: false,
                 message: 'Data not found or update failed'
             });
         }
 
         // Return a success response
         res.json({
-            status: 1,
+            status: true,
             message: 'HowToPlay data updated successfully',
             data: updatedData.howtoplay // Return the updated howtoplay data
         });
     } catch (e) {
         res.status(400).send({
-            status: 0,
+            status: false,
             message: 'Something Happened Please Contact the Support',
             error: e.message
         });
