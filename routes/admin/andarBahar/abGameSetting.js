@@ -120,28 +120,38 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     const providerId = gameid;
 
-    const existingSetting = await ABgamesSetting.findOne({
-      providerId,
-      gameDay
-    });
+    // Define the days of the week
+    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    // Check if a setting already exists for the provider and gameDay
+    const existingSetting = await ABgamesSetting.findOne({ providerId, gameDay });
 
+    // If no setting exists for the given provider and gameDay
     if (!existingSetting) {
+
+      // Handle the "ALL" gameDay scenario
       if (gameDay.toUpperCase() === "ALL") {
-        let finalArr = [];
-        let uniqueDays;
+        // Fetch all existing game days for this provider
+        const providerSettings = await ABgamesSetting.find({ providerId }, { gameDay: 1 });
 
-        const providerSettings = await ABgamesSetting.find({ providerId }, { gameDay: 1, providerId: 1 });
+        // Collect the existing days for this provider
+        const existingDays = providerSettings.map(item => item.gameDay);
 
-        let existingDays = providerSettings.map(item => item.gameDay);
-        if (providerSettings.length > 0) {
-          uniqueDays = [...new Set([...existingDays, ...days])].filter(day => !existingDays.includes(day) || !days.includes(day));
-        } else {
-          uniqueDays = days;
+        // Update settings for the already existing game days (if any)
+        for (let day of daysOfWeek) {
+          if (existingDays.includes(day)) {
+            // Update existing game day settings
+            await ABgamesSetting.updateOne(
+              { providerId, gameDay: day },
+              { $set: { OBT: game1, CBT: game2, OBRT: game3, isClosed: status, modifiedAt: formatted } }
+            );
+          }
         }
-        uniqueDays.forEach(day => {
-          finalArr.push({
+
+        // Now insert new settings for the days that do not exist
+        const newSettings = daysOfWeek
+          .filter(day => !existingDays.includes(day)) // Get the days that do not exist
+          .map(day => ({
             providerId,
             gameDay: day,
             OBT: game1,
@@ -149,12 +159,20 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
             OBRT: game3,
             isClosed: status,
             modifiedAt: formatted
-          });
+          }));
+
+        // Insert new settings for the unique days
+        if (newSettings.length > 0) {
+          await ABgamesSetting.insertMany(newSettings);
+        }
+
+        return res.json({
+          success: true,
+          message: "Successfully inserted or updated timings for all days."
         });
 
-        await ABgamesSetting.insertMany(finalArr);
-
       } else {
+        // Handle the case for a specific gameDay (not "ALL")
         const newSetting = new ABgamesSetting({
           providerId,
           gameDay,
@@ -165,14 +183,17 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
           modifiedAt: formatted
         });
 
+        // Save the new setting
         await newSetting.save();
+
+        return res.json({
+          success: true,
+          message: `Successfully inserted timings for ${gameDay}`
+        });
       }
-      return res.json({
-        success: true,
-        message: `Successfully inserted timings for ${gameDay}`
-      });
 
     } else {
+      // If the setting already exists for the given provider and gameDay
       return res.json({
         success: false,
         message: `Details already filled for ${gameDay}`
@@ -180,6 +201,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     }
 
   } catch (e) {
+    console.error(e); // Log the error for debugging purposes
     return res.status(400).json({
       success: false,
       message: "Error inserting settings",
@@ -188,10 +210,11 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
   }
 });
 
+
 router.patch("/", authMiddleware, async (req, res) => {
   try {
     const { gameid, game1, game2, game3, status } = req.body;
-    if (!gameid || !game1 || !game2 || !game3 || status) {
+    if (!gameid || !game1 || !game2 || !game3 || !status) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields in the request body."
