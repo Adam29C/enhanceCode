@@ -107,7 +107,10 @@ const fundRequestData = require("./routes/admin/wallet/fundRequest.js")
 const invoice=require("./routes/admin/wallet/invoice.js");
 const reqOn_Off=require("./routes/admin/wallet/reqON-OFF.js");
 const view_wallet=require("./routes/admin/wallet/view_wallet.js")
-const creditRequest =require("./routes/admin/creditRequest.js")
+const creditRequest =require("./routes/admin/creditRequest.js");
+const approveDebitReq =require("./routes/admin/approveDebitReq.js");
+const pendingDebitReq =require("./routes/admin/pendingDebitReq.js");
+const declineRequest= require("./routes/admin/declineReq.js");
 const notification = require("./routes/admin/notification.js")
 const userIdea =require("./routes/admin/userIdia.js")
 const appSetting = require("./routes/admin/appSetting/howToPlay.js")
@@ -286,7 +289,10 @@ app.use("/fundsRequest",fundRequestData);
 app.use("/invoice",invoice);
 app.use("/reqOn_Off",reqOn_Off);
 app.use("/view_wallet",view_wallet)
-app.use("/creditRequest",creditRequest)
+app.use("/creditRequest",creditRequest);
+app.use("/approveDebit",approveDebitReq);
+app.use("/pendingDebit",pendingDebitReq);
+app.use("/declineReq",declineRequest)
 app.use("/notification",notification)
 app.use("/userIdea",userIdea)
 app.use("/appSetting",appSetting)
