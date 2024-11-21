@@ -119,6 +119,25 @@ router.get("/pendingPaytm", authMiddleware, async (req, res) => {
             reqDate: formatted
         };
 
+        if (req.query.search) {
+            const searchValue = req.query.search;
+
+            const normalizedSearch = searchValue.startsWith('+91') ? searchValue : '+91' + searchValue;
+
+            query = {
+                ...query,
+                $or: [
+                    { fullname: { $regex: searchValue, $options: "i" } },
+                    { username: { $regex: searchValue, $options: "i" } },
+                    { mobile: { $regex: normalizedSearch, $options: "i" } },
+                    { reqStatus: { $regex: searchValue, $options: "i" } },
+                    { withdrawalMode: { $regex: searchValue, $options: "i" } },
+                    { reqAmount: searchValue },
+                    { reqType: { $regex: searchValue, $options: "i" } }
+                ]
+            };
+        }
+
         const pendingCreditList = await fundReq
             .find(query)
             .sort({ _id: -1 })
@@ -144,3 +163,5 @@ router.get("/pendingPaytm", authMiddleware, async (req, res) => {
         });
     }
 });
+
+module.exports = router;

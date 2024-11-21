@@ -5,8 +5,9 @@ const userProfile = require("../../model/API/Profile");
 const dateTime = require("node-datetime");
 const moment = require("moment");
 const mongoose = require("mongoose");
+const authMiddleware = require("../helpersModule/athetication")
 
-router.get("/bank_ajax", session, async (req, res) => {
+router.get("/bank_ajax", authMiddleware, async (req, res) => {
     try {
         const { date_cust, page = 1, limit = 10 } = req.query;
         const dateFormat = moment(date_cust, "MM/DD/YYYY").format("DD/MM/YYYY");
@@ -113,66 +114,76 @@ router.get("/bank_ajax", session, async (req, res) => {
     }
 });
 
-router.get("/bankManual", session, permission, async (req, res) => {
+router.post("/bankManual", authMiddleware, async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+        const { page = 1, limit = 10, search, date } = req.body;
 
-        const date_cust = req.query.date_cust || moment().format("MM/DD/YYYY");
-        const dateFormat = moment(date_cust, "MM/DD/YYYY").format("DD/MM/YYYY");
-
-        const reportList = await fundReq.find({
-            reqDate: dateFormat,
-            reqStatus: "Approved",
-            reqType: "Debit",
-            withdrawalMode: "Bank",
-            fromExport: false,
-            from: 2
-        })
-            .skip(skip)
-            .limit(limit);
-
-        const totalRecords = await fundReq.countDocuments({
-            reqDate: dateFormat,
-            reqStatus: "Approved",
-            reqType: "Debit",
-            withdrawalMode: "Bank",
-            fromExport: false,
-            from: 2
-        });
-
-        let finalArray = [];
-        for (let report of reportList) {
-            let reqTime = moment(report.reqTime);
-            finalArray.push({
-                toAccount: report.toAccount,
-                _id: report._id,
-                userId: report.userId,
-                reqAmount: report.reqAmount,
-                fullname: report.fullname,
-                username: report.username,
-                mobile: report.mobile,
-                reqType: report.reqType,
-                reqStatus: report.reqStatus,
-                reqDate: report.reqDate,
-                reqTime: reqTime.format('DD/MM/YYYY hh:mm A'),
-                withdrawalMode: report.withdrawalMode,
-                UpdatedBy: report.UpdatedBy,
-                reqUpdatedAt: report.reqUpdatedAt,
-                timestamp: report.timestamp,
-                createTime: report.createTime,
-                updatedTime: report.updatedTime,
-                adminId: report.adminId,
-                from: report.from,
-                fromExport: report.fromExport
+        if (page <= 0 || limit <= 0) {
+            return res.status(400).json({
+                status: false,
+                message: "Page and limit must be positive integers.",
             });
         }
 
-        finalArray.sort((a, b) => {
-            return new Date(a.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.reqTime.split(' ').slice(1).join(' ')) -
-                new Date(b.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.reqTime.split(' ').slice(1).join(' '));
-        });
+        const skip = (page - 1) * limit;
+
+        if (!date || !moment(date, "MM/DD/YYYY", true).isValid()) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid date format. Use MM/DD/YYYY.",
+            });
+        }
+
+        const formattedDate = moment(date, "MM/DD/YYYY").format("DD/MM/YYYY");
+
+        const query = {
+            reqStatus: "Approved",
+            reqType: "Debit",
+            withdrawalMode: "Bank",
+            fromExport: false,
+            from: 2,
+            reqDate: formattedDate,
+        };
+
+        if (search) {
+            const normalizedSearch = search.startsWith("+91") ? search : "+91" + search;
+
+            query.$or = [
+                { fullname: { $regex: search, $options: "i" } },
+                { username: { $regex: search, $options: "i" } },
+                { mobile: { $regex: normalizedSearch, $options: "i" } },
+                { reqAmount: parseFloat(search) || -1 },
+                { withdrawalMode: { $regex: search, $options: "i" } },
+            ];
+        }
+
+        const reportList = await fundReq.find(query)
+            .skip(skip)
+            .limit(limit);
+        const totalRecords = await fundReq.countDocuments(query);
+
+        const finalArray = reportList.map((report) => ({
+            toAccount: report.toAccount,
+            _id: report._id,
+            userId: report.userId,
+            reqAmount: report.reqAmount,
+            fullname: report.fullname,
+            username: report.username,
+            mobile: report.mobile,
+            reqType: report.reqType,
+            reqStatus: report.reqStatus,
+            reqDate: report.reqDate,
+            reqTime: moment(report.reqTime).format("DD/MM/YYYY hh:mm A"),
+            withdrawalMode: report.withdrawalMode,
+            UpdatedBy: report.UpdatedBy,
+            reqUpdatedAt: report.reqUpdatedAt,
+            timestamp: report.timestamp,
+            createTime: report.createTime,
+            updatedTime: report.updatedTime,
+            adminId: report.adminId,
+            from: report.from,
+            fromExport: report.fromExport,
+        }));
 
         return res.status(200).json({
             status: true,
@@ -180,7 +191,7 @@ router.get("/bankManual", session, permission, async (req, res) => {
             data: finalArray,
             total: totalRecords,
             totalPages: Math.ceil(totalRecords / limit),
-            currentPage: page
+            currentPage: page,
         });
     } catch (e) {
         return res.status(500).json({
@@ -190,3 +201,5 @@ router.get("/bankManual", session, permission, async (req, res) => {
         });
     }
 });
+
+module.exports = router;
