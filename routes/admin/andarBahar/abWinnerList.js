@@ -4,6 +4,15 @@ const abPorvider = require("../../../model/AndarBahar/ABProvider");
 const abGameType = require("../../../model/AndarBahar/ABGameList");
 const authMiddleware = require("../../helpersModule/athetication");
 
+const user = require('../../model/API/Users');
+const history = require('../../model/wallet_history');
+const abResult = require('../../model/AndarBahar/ABGameResult');
+const ABbids = require('../../model/AndarBahar/ABbids');
+const notification = require('../helpersModule/sendNotification');
+const dateTime = require('node-datetime');
+const Pusher = require('pusher');
+const admins = require("../../model/dashBoard/AdminModel.js");
+
 router.get("/abWinnerList", authMiddleware, async (req, res) => {
     try {
         const { digit, provider, date, resultId, resultStatus } = req.body;
@@ -36,6 +45,119 @@ router.get("/abWinnerList", authMiddleware, async (req, res) => {
             status: false,
             message: "An error occurred. Please contact support.",
             error: error.message
+        });
+    }
+});
+
+router.post('/abWinners', authMiddleware, async (req, res) => {
+    try {
+        const { providerId, windigit, gameDate, gamePrice, resultId,adminId } = req.body;
+        let namefor = '';
+        let historyDataArray = [];
+        let tokenArray = [];
+
+        const resultList = await ABbids.find({ providerId: providerId, bidDigit: windigit, gameDate: gameDate }).sort({ _id: -1 });
+
+        const dt0 = dateTime.create();
+        const todayDate = dt0.format('d/m/Y');
+        let formatted = dt0.format('m/d/Y I:M:S p');
+        let formatted2 = dt0.format('d/m/Y I:M:S p');
+
+        for (let index in resultList) {
+            let bidPoint = resultList[index].biddingPoints;
+            let bal = bidPoint * gamePrice;
+            let userID = resultList[index].userId;
+            let id = resultList[index]._id;
+            let gameName = resultList[index].providerName;
+            let gameType = resultList[index].gameTypeName;
+            namefor = 'Jackpot (' + gameName + ')';
+
+            await ABbids.updateOne(
+                { _id: id },
+                {
+                    $set: {
+                        winStatus: 1,
+                        gameWinPoints: bal,
+                        updatedAt: formatted
+                    }
+                });
+
+            const userBal = await user.findOne({ _id: userID }, {
+                wallet_balance: 1, username: 1,
+                firebaseId: 1
+            });
+
+            const previous_amount = userBal.wallet_balance;
+            const current_amount = previous_amount + bal;
+            const username = userBal.username;
+            const userToken = userBal.firebaseId;
+
+            await user.updateOne(
+                { _id: userID },
+                { $inc: { wallet_balance: bal } },
+                {
+                    $set: {
+                        wallet_bal_updated_at: formatted2
+                    }
+                });
+
+            let time = dt0.format('I:M:S p');
+            let arrValue = {
+                userId: userID,
+                bidId: id,
+                reqType: "andarBahar",
+                previous_amount: previous_amount,
+                current_amount: current_amount,
+                provider_id: providerId,
+                transaction_amount: bal,
+                username: username,
+                description: "Amount Added To Wallet For " + gameName + " : " + gameType + " Jackpot Game Win",
+                transaction_date: todayDate,
+                filterType: 1,
+                transaction_time: time,
+                transaction_status: "Success",
+                win_revert_status: 1,
+                admin_id: adminId,
+                addedBy_name: adminId ? (await admins.findById(adminId)).adminName : null,
+            };
+            historyDataArray.push(arrValue);
+
+            let token = {
+                firebaseId: userToken,
+                amount: bal
+            };
+            tokenArray.push(token);
+        }
+
+        await history.insertMany(historyDataArray);
+
+        await abResult.updateOne(
+            { _id: resultId },
+            { $set: { status: 1 } });
+
+        await ABbids.updateMany(
+            { winStatus: 0, providerId: providerId, gameDate: gameDate },
+            {
+                $set: {
+                    winStatus: 2,
+                    updatedAt: formatted
+                }
+            }
+        );
+
+        let sumDgit = namefor;
+        await notification(req, res, sumDgit, tokenArray);
+
+        res.status(200).send({
+            status: true,
+            message: 'Points Added Successfully'
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            status: false,
+            message: 'Something Bad Happened',
+            error: error
         });
     }
 });
