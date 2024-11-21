@@ -114,6 +114,8 @@ const declineRequest= require("./routes/admin/declineReq.js");
 const notification = require("./routes/admin/notification.js")
 const userIdea =require("./routes/admin/userIdia.js")
 const appSetting = require("./routes/admin/appSetting/howToPlay.js")
+const withdraw = require("./routes/admin/appSetting/withdraw.js")
+
 
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js");
@@ -293,6 +295,7 @@ app.use("/declineReq",declineRequest)
 app.use("/notification",notification)
 app.use("/userIdea",userIdea)
 app.use("/appSetting",appSetting)
+app.use("/withdraw",withdraw)
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
 const fund = require("./model/API/FundRequest");
