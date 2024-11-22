@@ -64,57 +64,105 @@ router.get("/", async (req, res) => {
 
 router.post("/updateAppSet", upload.single("apk"), async (req, res) => {
     try {
-      const file = req.file;
-      const type = req.body.type;
-      const time = moment().format("DD/MM/YYYY HH:mm:ss a");
-      const id = req.body.id;
-      let query = "";
-  
-      if (type == 1) {
-        const status = req.body.status;
-        query = { forceUpdate: status, updatedOn: time };
-        if (file && file.originalname) {
-          query["apkFileName"] = file.originalname;
+        const { type, id, status, appVer } = req.body;
+        const file = req.file;
+        const time = moment().format("DD/MM/YYYY HH:mm:ss a");
+
+        // Validate the required fields
+        if (!type || !id) {
+            return res.status(400).json({
+                status: "Failure",
+                message: "Missing required fields: type or id"
+            });
         }
-      } else if (type == 2) {
-        const status = req.body.status;
-        query = { maintainence: status, updatedOn: time };
-        if (file && file.originalname) {
-          query["apkFileName"] = file.originalname;
+
+        let query = {};
+        
+        // Based on the 'type', set the appropriate fields in the query
+        if (type == 1) { // force update
+            if (status === undefined) {
+                return res.status(400).json({
+                    status: "Failure",
+                    message: "Status is required for force update"
+                });
+            }
+            query = { forceUpdate: status, updatedOn: time };
+        } else if (type == 2) { // maintenance
+            if (status === undefined) {
+                return res.status(400).json({
+                    status: "Failure",
+                    message: "Status is required for maintenance"
+                });
+            }
+            query = { maintainence: status, updatedOn: time };
+        } else if (type == 3) { // app version
+            if (!appVer) {
+                return res.status(400).json({
+                    status: "Failure",
+                    message: "App version is required"
+                });
+            }
+            query = { appVersion: appVer, updatedOn: time };
+        } else {
+            return res.status(400).json({
+                status: "Failure",
+                message: "Invalid type. Valid types are 1, 2, or 3."
+            });
         }
-      } else if (type == 3) {
-        const status = req.body.appVer;
-        query = { appVersion: status, updatedOn: time };
-        if (file && file.filename) {
-          query["apkFileName"] = file.filename;
+
+        // Handle the file upload
+        if (file) {
+            // Validate file type (optional)
+            const allowedExtensions = ['apk'];
+            const fileExtension = path.extname(file.originalname).toLowerCase();
+            if (!allowedExtensions.includes(fileExtension)) {
+                return res.status(400).json({
+                    status: "Failure",
+                    message: "Invalid file type. Only APK files are allowed."
+                });
+            }
+
+            query.apkFileName = file.originalname;
+
+            // Move the file to the target directory
+            const filePath = path.join(__dirname, "../../public/tempDirectory/", file.filename);
+            const destinationDir = path.join(__dirname, "../../public/apk/");
+            await fs.mkdir(destinationDir, { recursive: true });
+
+            // Optionally clean up old files before moving new one
+            const filesInDestination = await fs.readdir(destinationDir);
+            for (const fileInDest of filesInDestination) {
+                await fs.unlink(path.join(destinationDir, fileInDest));
+            }
+
+            const destinationPath = path.join(destinationDir, file.filename);
+            await fs.rename(filePath, destinationPath);
         }
-      }
-  
-      if (file && file.filename) {
-        const filePath = path.join(
-          __dirname,
-          "../../public/tempDirectory/",
-          file.filename
-        );
-        const destinationDir = path.join(__dirname, "../../public/apk/");
-        await fs.mkdir(destinationDir, { recursive: true });
-        const files = await fs.readdir(destinationDir);
-        for (const file of files) {
-          await fs.unlink(path.join(destinationDir, file));
+
+        // Update the version data in the database
+        const updateResult = await version.updateOne({ _id: id }, { $set: query });
+
+        if (updateResult.nModified === 0) {
+            return res.status(404).json({
+                status: "Failure",
+                message: "No matching version settings found to update."
+            });
         }
-        const destinationPath = path.join(destinationDir, file.filename);
-        await fs.rename(filePath, destinationPath);
-      }
-      const user = await version.updateOne({ _id: id }, { $set: query });
-      // res.status(200).json({
-      //   status: 1,
-      //   message: "Updated",
-      //   data: user
-      // });
-      res.redirect("/appSettings/versionSetting");
-    } catch (e) {
-      res.json(e);
+
+        return res.status(200).json({
+            status: "Success",
+            message: "App settings updated successfully.",
+            data: updateResult
+        });
+
+    } catch (error) {
+        console.error("Error updating app settings:", error);
+        return res.status(500).json({
+            status: "Failure",
+            message: "An error occurred while updating the app settings.",
+            error: error.message
+        });
     }
-  })
+});
 
 module.exports =router;
