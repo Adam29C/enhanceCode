@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
         });
 
         res.json({
-          status: 1,
+          status: true,
           message: "Ideas fetched successfully",
           data: {
             tableData,
@@ -58,14 +58,14 @@ router.post("/", async (req, res) => {
       })
       .catch((error) => {
         res.status(400).json({
-          status: 0,
+          status: false,
           message: "Request is too large or failed to fetch data",
           error: error.toString(),
         });
       });
   } catch (error) {
     res.status(500).json({
-      status: 0,
+      status: false,
       message: "Server Error: Could not process the request",
       error: error.toString(),
     });
@@ -80,7 +80,7 @@ router.post("/ideas", async (req, res) => {
     console.log("1")
 		if (idea == "") {
 			return res.json({
-				status: 0,
+				status: false,
 				message: "Cannot Submit Empty Suggestion"
 			})
 		}
@@ -96,13 +96,13 @@ router.post("/ideas", async (req, res) => {
     console.log("2")
 		const saveIdea = await ideaData.save();
 		return res.json({
-			status: 1,
+			status: true,
 			message: "Your Idea is Submitted Successfully, We Will Review Your Idea Soon 🥳🥳"
 		})
     
 	} catch (error) {
 		return res.json({
-			status: 0,
+			status: false,
 			message: `Server Error : ${error.toString()}`
 		})
 	}

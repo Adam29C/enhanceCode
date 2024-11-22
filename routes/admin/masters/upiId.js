@@ -15,14 +15,14 @@ const sendOtp = new SendOtp("1207171791436302472");
 // 	let mobile = userInfo.mobile;
 
 // 	res.json({
-// 		status: 1,
+// 		status: true,
 // 		message: "success",
 
 // 	});
 
 // 	// sendOtp.send(`+91${mobile}`, "DGAMES", function (error, data) {
 // 	// 	res.json({
-// 	// 		status: 1,
+// 	// 		status: true,
 // 	// 		message: "success",
 // 	// 		data: data,
 // 	// 	});
@@ -82,7 +82,7 @@ router.post("/blockUnblock", async (req, res) => {
 
     if (!id || status === undefined) {
       return res.status(400).json({
-        status: 0,
+        status: false,
         message: "Missing required fields: 'id' and 'status'.",
       });
     }
@@ -92,7 +92,7 @@ router.post("/blockUnblock", async (req, res) => {
       !["active", "inactive"].includes(status)
     ) {
       return res.status(400).json({
-        status: 0,
+        status: false,
         message:
           "Invalid status. Status must be a boolean or 'active'/'inactive'.",
       });
@@ -110,19 +110,19 @@ router.post("/blockUnblock", async (req, res) => {
 
     if (!bank) {
       return res.status(404).json({
-        status: 0,
+        status: false,
         message: "Bank not found with the provided ID.",
       });
     }
 
     return res.status(200).json({
-      status: 1,
+      status: true,
       message: "Bank status updated successfully.",
       data: bank,
     });
   } catch (e) {
     return res.status(500).json({
-      status: 0,
+      status: false,
       message: "An error occurred while updating the bank status.",
       error: e.message || "Unknown error",
     });
@@ -145,7 +145,7 @@ router.post("/registerbank",  async (req, res) => {
       // Validate that required fields are provided
       if (!bankName || status === undefined) {
         return res.status(400).json({
-          status: 0,
+          status: false,
           message: "Bank name and status are required.",
         });
       }
@@ -153,7 +153,7 @@ router.post("/registerbank",  async (req, res) => {
       // Validate that status is either 0 (Active) or 1 (Disabled)
       if (![0, 1].includes(status)) {
         return res.status(400).json({
-          status: 0,
+          status: false,
           message: "Invalid status. Please provide 0 for Active or 1 for Disabled.",
         });
       }
@@ -162,7 +162,7 @@ router.post("/registerbank",  async (req, res) => {
       const existingBank = await Bank.findOne({ bankName });
       if (existingBank) {
         return res.status(400).json({
-          status: 0,
+          status: false,
           message: "Bank with this name already exists.",
         });
       }
@@ -176,13 +176,13 @@ router.post("/registerbank",  async (req, res) => {
       const data = await BankDetails.save();
   
       return res.status(201).json({
-        status: 1,
+        status: true,
         message: "Bank registered successfully.",
         data: data,
       });
     } catch (e) {
       return res.status(500).json({
-        status: 0,
+        status: false,
         message: "An error occurred while registering the bank.",
         error: e.message || "Unknown error",
       });
@@ -196,7 +196,7 @@ router.post("/upiAdd", async (req, res) => {
 			const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
 			if (findActiveUpi) {
 				return res.json({
-					status: 0,
+					status: false,
 					message: "Another UPI ID is already active. Please deactivate it first.",
 				});
 			}
@@ -211,7 +211,7 @@ router.post("/upiAdd", async (req, res) => {
 		});
 		const updatedData = await upiDetails.save();
 		res.json({
-			status: 1,
+			status: true,
 			message: "UPI ID ADDED SUCCESSFULLY",
 			data: updatedData,
 		});
@@ -232,7 +232,7 @@ router.post("/disable_upi", async (req, res) => {
 			const findActiveUpi = await  UPI_ID.findOne({ is_Active: true });
 			if (findActiveUpi) {
 				return res.json({
-					status: 0,
+					status: false,
 					message: "Another UPI ID is already active. Please deactivate it first.",
 				});
 			}
@@ -250,13 +250,13 @@ router.post("/disable_upi", async (req, res) => {
 			{ returnOriginal: false }
 		);
 		res.json({
-			status: 1,
+			status: true,
 			message: status ? "UPI ID Activated Successfully" : "UPI ID Deactivated Successfully",
 			data: bank,
 		});
 	} catch (e) {
 		res.json({
-			status: 0,
+			status: false,
 			message: "Server Error Contact Support",
 			err: JSON.stringify(e),
 		});
@@ -268,13 +268,13 @@ router.post("/dlt_upi",  async (req, res) => {
 		const id = req.body.id;
 		const bank = await UPI_ID.deleteOne({ _id: id });
 		res.json({
-			status: 1,
+			status: true,
 			message: "UPI ID Deleted Succesfully",
 			data: bank,
 		});
 	} catch (e) {
 		res.json({
-			status: 0,
+			status: false,
 			message: "Server Error Contact Support",
 			err: JSON.stringify(e),
 		});
@@ -286,13 +286,13 @@ router.post("/dltBank",  async (req, res) => {
 		const id = req.body.id;
 		const bank = await Bank.deleteOne({ _id: id });
 		res.json({
-			status: 1,
+			status: true,
 			message: "Bank Deleted Succesfully",
 			data: bank,
 		});
 	} catch (e) {
 		res.json({
-			status: 0,
+			status: false,
 			message: "Server Error Contact Support",
 			err: JSON.stringify(e),
 		});
@@ -316,7 +316,7 @@ router.post("/modeAdd",  async (req, res) => {
 		await data.save();
 
 		res.json({
-			status: 1,
+			status: true,
 			message: "Added",
 		});
 	} catch (e) {
@@ -337,12 +337,12 @@ router.post("/disable_mode",  async (req, res) => {
 			}
 		);
 		res.json({
-			status: 1,
+			status: true,
 			message: "Add Fund Mode Disabled Succesfully",
 		});
 	} catch (e) {
 		res.json({
-			status: 0,
+			status: false,
 			message: "Server Error Contact Support",
 			err: JSON.stringify(e),
 		});
@@ -354,12 +354,12 @@ router.post("/dlt_mode",  async (req, res) => {
 		const id = req.body.id;
 		await transaction.deleteOne({ _id: id });
 		res.json({
-			status: 1,
+			status: true,
 			message: "Mode Deleted Succesfully",
 		});
 	} catch (e) {
 		res.json({
-			status: 0,
+			status: false,
 			message: "Server Error Contact Support",
 			err: JSON.stringify(e),
 		});
@@ -374,7 +374,7 @@ router.get("/upiList", async (req, res) => {
 			upiLists = upiList
 		}
 		res.json({
-			status: 1,
+			status: true,
 			message: "Mode Deleted Succesfully",
 			data:upiLists
 		});

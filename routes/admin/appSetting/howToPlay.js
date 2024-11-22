@@ -8,13 +8,13 @@ router.get("/htp", authMiddleware, async (req, res) => {
     let finalData = data.length > 0 ? data[0]?.howtoplay : [];
 
     res.json({
-      status: 1,
+      status: true,
       message: "Success",
       data: data,
     });
   } catch (e) {
     res.status(400).send({
-      status: 0,
+      status: false,
       message: "Something Happened Please Contact the Support",
       error: e,
     });
