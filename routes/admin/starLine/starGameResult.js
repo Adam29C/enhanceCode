@@ -392,20 +392,18 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
           await StarlinegameResult.deleteOne({ _id: resultId });
 
           return res.status(200).json({
-              status: 1,
+              status: true,
               message: "Reverted Successfully"
           });
       } else {
           return res.status(404).json({
-              status: 0,
+              status: false,
               message: "No matching winner found for the given criteria."
           });
       }
   } catch (error) {
-      console.error("Error during payment revert:", error);
-
       return res.status(500).json({
-          status: 0,
+          status: false,
           message: "An error occurred while processing the payment revert.",
           error: error.message
       });
@@ -423,7 +421,7 @@ router.get("/refundPayment",authMiddleware, async (req, res) => {
       });
   } catch (error) {
       return res.status(500).json({
-          status: 0,
+          status: false,
           message: "An error occurred while fetching refund payment data.",
           error: error.message
       });
@@ -483,15 +481,12 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
               winStatus: 0,
           });
 
-          // Delete the bid entry
           await starBids.deleteOne({
               userId: userId,
               providerId: providerId,
               gameDate: resultDate,
               winStatus: 0,
           });
-          console.log("1")
-          // Create a history entry for this refund
           const dateTime = formatted2.split(" ");
           const historyEntry = new history({
               userId: userId,
@@ -517,7 +512,6 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
           const body = `Hello ${singleUserUpdate.username}, Refund Successfully Done For ${singleUserBidUpdate.providerName}`;
           sendRefundNotification(tokenArray, providerName, body);
       } else {
-          // Bulk refund (all users)
           const userlist = await starBids.find({
               providerId: providerId,
               gameDate: resultDate,
