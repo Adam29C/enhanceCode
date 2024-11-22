@@ -1,13 +1,12 @@
 const router = require("express").Router();
 const starBIds = require("../../../model/starline/StarlineBids");
 const authMiddleware = require("../../helpersModule/athetication")
-const user = require('../../model/API/Users');
-const history = require('../../model/wallet_history');
-const starResult = require('../../model/starline/GameResult');
-const starBIds = require('../../model/starline/StarlineBids');
-const notification = require('../helpersModule/sendNotification');
+const user = require('../../../model/API/Users');
+const history = require('../../../model/wallet_history');
+const starResult = require('../../../model/starline/GameResult');
+const notification = require('../../helpersModule/sendNotification');
 const dateTime = require('node-datetime');
-const admins = require("../../model/dashBoard/AdminModel.js");
+const admins = require("../../../model/dashBoard/AdminModel.js");
 
 router.post("/starLineWinnerList", authMiddleware, async (req, res) => {
     try {
