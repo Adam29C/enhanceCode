@@ -16,6 +16,7 @@ const authMiddleware = require("../../helpersModule/athetication");
 
 router.get("/", authMiddleware, async (req, res) => {
   const formatted = moment().format("M/D/YYYY");
+  console.log(formatted,"formatted")
   try {
     const provider = await StarlineProvider.find().sort({ _id: 1 });
     const result = await StarlinegameResult.find({
@@ -110,180 +111,130 @@ router.delete("/delete",authMiddleware, async (req, res) => {
 });
 
 //ye api inhance hui hai but testing karna hai ye game result ko add karne baki api hai
-router.post("/",authMiddleware, async (req, res) => {
-  const { providerId, resultDate, winningDigit, session } = req.body;
-
-  if (!providerId || !resultDate || !winningDigit || !session) {
-    return res.status(400).json({
-      status: false,
-      message:
-        "Missing required fields: providerId, resultDate, winningDigit, session",
-    });
-  }
-
+router.post("/", authMiddleware, async (req, res) => {
   try {
-    const [id, name] = providerId.split("|");
-    const formattedTime = moment().format("MM/DD/YYYY hh:mm:ss A");
-    const todayDay = moment().format("W");
-    const todayDate = moment().format("MM/DD/YYYY");
-    const currentTime = moment().format("hh:mm a");
-
-    // Fetch game settings for the provider
-    const findTime = await gameSetting.findOne(
-      { providerId: id, gameDay: todayDay },
-      { OBRT: 1 }
-    );
-
-    if (!findTime) {
-      return res.status(404).json({
-        status: false,
-        message: `Game settings not found for provider ID: ${id}`,
-      });
-    }
-
-    const timeCheck = findTime.OBRT;
-    const beginningTime = moment(currentTime, "hh:mm a");
-    const endTime = moment(timeCheck, "hh:mm a");
-
-    // Check if the result date matches today's date
-    if (todayDate === resultDate) {
-      if (beginningTime >= endTime) {
-        const existingResult = await StarlinegameResult.find({
-          providerId: id,
-          resultDate,
-        });
-
-        if (existingResult.length === 0) {
-          const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
-          if (!digitFamily) {
-            return res.status(404).json({
-              status: false,
-              message: `Digit family not found for winning digit: ${winningDigit}`,
-            });
-          }
-
-          const sumDigit = digitFamily.DigitFamily;
-
-          // Save the game result
-          const gameResult = new StarlinegameResult({
-            providerId: id,
-            providerName: name,
-            session,
-            resultDate,
-            winningDigit,
-            winningDigitFamily: sumDigit,
-            status: 0,
-            createdAt: formattedTime,
-          });
-
-          const savedGame = await gameResult.save();
-          const result = `${winningDigit}-${sumDigit}`;
-
-          // Update the provider with the result
-          await StarlineProvider.updateOne(
-            { _id: id },
-            {
-              $set: {
-                providerResult: result,
-                modifiedAt: formattedTime,
-                resultStatus: 1,
-              },
-            }
-          );
-
-          const responseData = {
-            providerId: id,
-            resultDate,
-            status: 0,
-            winningDigit,
-            digitFamily: sumDigit,
-            resultId: savedGame._id,
-            providerName: name,
-            time: formattedTime,
-          };
-
-          // Send notifications
-          let token = [];
-          noti(req, res, result, token);
-
-          return res.status(200).json({
-            status: true,
-            message: "Result declared successfully",
-            data: responseData,
-          });
-        } else {
+      const { providerId, providerName, session, resultDate, winningDigit } = req.body
+      if (!providerId || !providerName || !session || !resultDate || !winningDigit) {
           return res.status(400).json({
-            status: false,
-            message: `Result for provider ${name}, session ${session}, date ${resultDate} already declared.`,
+              status: "Failure",
+              message: "all field require in api req",
           });
-        }
-      } else {
-        return res.status(400).json({
-          status: false,
-          message: "It is not yet time to declare the result.",
-        });
       }
-    } else {
-      // For dates that are not today, check if the result already exists
-      const existingResult = await StarlinegameResult.find({
-        providerId: id,
-        resultDate,
+      const dt = dateTime.create();
+      let sendStatus = 0;
+      let savedGames;
+      let finalResult;
+
+      const formatted1 = dt.format("m/d/Y I:M:S p");
+      const todayDay = dt.format("W");
+      const todayDate = dt.format("m/d/Y");
+      const currentTime = dt.format("I:M p");
+      if (session === "Close") {
+          const openResult = await StarlinegameResult.findOne({
+              providerId: providerId,
+              resultDate: resultDate,
+              session: "Open",
+          });
+          if (!openResult) {
+              return res.status(400).json({
+                  status: "Failure",
+                  message: "Open result must be declared before declaring Close session.",
+                  data: `Open Result Not Declared For: ${providerName}, Date: ${resultDate}`,
+              });
+          }
+      }
+      const findTime = await gameSetting.findOne(
+          { providerId: providerId, gameDay: todayDay },
+          session === "Open" ? { OBRT: 1 } : { CBRT: 1 }
+      );
+      if (!findTime) {
+          return res.status(400).json({
+              status: "Failure",
+              message: "Time settings not found for the provider and day.",
+          });
+      }
+
+      const timeCheck = session === "Open" ? findTime.OBRT : findTime.CBRT;
+      const beginningTime = moment(currentTime, "h:mm a");
+      const endTime = moment(timeCheck, "h:mm a");
+      if (todayDate === resultDate && beginningTime < endTime) {
+          return res.status(400).json({
+              status: "Failure",
+              message: "It is not time to declare the result yet.",
+          });
+      }
+      const existingResult = await StarlinegameResult.findOne({
+          providerId: providerId,
+          resultDate: resultDate,
+          session: session,
       });
-
-      if (existingResult.length === 0) {
-        const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
-        if (!digitFamily) {
-          return res.status(404).json({
-            status: false,
-            message: `Digit family not found for winning digit: ${winningDigit}`,
+      if (existingResult) {
+          return res.status(200).json({
+              status: "Failure",
+              message: `Details already filled for: ${providerName}, Session: ${session}, Date: ${resultDate}`,
           });
-        }
-
-        const sumDigit = digitFamily.DigitFamily;
-
-        // Save the game result
-        const gameResult = new StarlinegameResult({
-          providerId: id,
-          providerName: name,
-          session,
-          resultDate,
-          winningDigit,
-          winningDigitFamily: sumDigit,
-          status: 0,
-        });
-
-        const savedGame = await gameResult.save();
-
-        // Calculate the count for pending and completed results
-        const countResult = await StarlinegameResult.find({
-          resultDate,
-        }).countDocuments();
-        const providerCount = await StarlineProvider.find().countDocuments();
-        const pendingCount = providerCount - countResult;
-
-        return res.status(200).json({
-          status: true,
-          message: "Result declared successfully",
-          data: {
-            countResult,
-            providerCount,
-            pendingCount,
-          },
-        });
-      } else {
-        return res.status(400).json({
-          status: false,
-          message: `Result for provider ${name}, session ${session}, date ${resultDate} already declared.`,
-        });
       }
-    }
+      const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
+      if (!digitFamily) {
+          return res.status(400).json({
+              status: "Failure",
+              message: "Winning digit family not found.",
+          });
+      }
+      const sumDigit = digitFamily.DigitFamily;
+      const details = new StarlinegameResult({
+          providerId: providerId,
+          providerName: providerName,
+          session: session,
+          resultDate: resultDate,
+          winningDigit: winningDigit,
+          winningDigitFamily: sumDigit,
+          status: "0",
+          createdAt: formatted1,
+      });
+      savedGames = await details.save();
+
+      if (session === "Open") {
+          finalResult = `${winningDigit}-${sumDigit}`;
+      } else {
+          finalResult = `${sumDigit}-${winningDigit}`;
+      }
+      await StarlineProvider.updateOne(
+          { _id: providerId },
+          {
+              $set: {
+                  providerResult: finalResult,
+                  modifiedAt: formatted1,
+                  resultStatus: 1,
+              },
+          }
+      );
+      // sendStatus = 1;
+      // if (sendStatus === 1) {
+      //     let token = [];
+      //     notification(req, res, finalResult, token);
+      //     return res.status(201).json({
+      //         status: true,
+      //         message: "Result declared successfully.",
+      //         data: {
+      //             providerId: providerId,
+      //             session: session,
+      //             resultDate: resultDate,
+      //             winningDigit: winningDigit,
+      //             resultId: savedGames._id,
+      //             status: savedGames.status,
+      //             digitFamily: sumDigit,
+      //             providerName: providerName,
+      //             time: savedGames.createdAt,
+      //         },
+      //     });
+      // }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      status: false,
-      message: "Server error. Please try again later.",
-      error: error.message,
-    });
+      return res.status(500).json({
+          status: "Failure",
+          message: "An error occurred while processing the request.",
+          error: error.message,
+      });
   }
 });
 
