@@ -33,7 +33,7 @@ router.get("/games", authMiddleware, async (req, res) => {
     }
 });
 
-router.get("/gameBidsData", session, async (req, res) => {
+router.get("/gameBidsData", authMiddleware, async (req, res) => {
     try {
         const { providerName, gameType, session: gameSession, date, userName, page = 1, limit = 10 } = req.query;
 
