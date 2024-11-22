@@ -1,9 +1,9 @@
 const router = require("express").Router();
 const authMiddleware = require("../../helpersModule/athetication");
+const moment=require("moment")
 const starProvider = require("../../../model/starline/Starline_Provider");
 const slProviderSetting = require("../../../model/starline/AddSetting")
 const starBids = require("../../../model/starline/StarlineBids");
-const moment=require("moment")
 
 router.get("/", authMiddleware, async (req, res) => {
     try {
@@ -100,7 +100,7 @@ router.post("/userReportStar", authMiddleware, async (req, res) => {
             );
 
             if (!providerData) {
-                return res.status(404).json({ status: 0, message: "Game not found" });
+                return res.status(404).json({ status: false, message: "Game not found" });
             }
 
             const result = await processProvider(providerData, 0);
