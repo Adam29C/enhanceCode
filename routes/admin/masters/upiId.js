@@ -4,7 +4,7 @@ const router = require("express").Router();
 // const permission = require("../helpersModule/permission");
 // const revert = require("../../model/revertPayment");
 // const transaction = require("../../model/transactionON-OFF");
-// const UPI_ID = require("../../model/upi_ids");
+ const UPI_ID = require("../../../model/upi_ids");
 // const dateTime = require("node-datetime");
 // const SendOtp = require("sendotp");
 // // const sendOtp = new SendOtp("290393AuGCyi6j5d5bfd26");
@@ -55,23 +55,32 @@ const router = require("express").Router();
 // 	}
 // });
 
-// router.get("/UPI", session, permission, async (req, res) => {
-// 	try {
-// 		const bank = await UPI_ID.find();
-
-// 		const userInfo = req.session.details;
-// 		const permissionArray = req.view;
-
-// 		res.render("./masters/upi_links", {
-// 			data: bank,
-// 			userInfo: userInfo,
-// 			permission: permissionArray,
-// 			title: "UPI ID",
-// 		});
-// 	} catch (e) {
-// 		res.json({ message: e });
-// 	}
-// });
+router.get("/", async (req, res) => {
+    try {
+      // Fetch all records from the UPI_ID collection
+      const bank = await UPI_ID.find();
+  
+      // If there are no records, return an empty array
+      if (!bank || bank.length === 0) {
+        return res.status(404).json({ message: "No UPI records found" });
+      }
+  
+      // Return the fetched records as a JSON response
+      res.status(200).json({
+        status: true,
+        message: "UPI records fetched successfully",
+        data: bank,  // Send the fetched data
+      });
+    } catch (e) {
+      // If there is an error, return a detailed error message
+      res.status(500).json({
+        status: false,
+        message: "An error occurred while fetching UPI records",
+        error: e.message,
+      });
+    }
+  });
+  
 
 // router.get("/fundMode", session, permission, async (req, res) => {
 // 	try {
