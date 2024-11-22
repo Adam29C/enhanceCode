@@ -10,7 +10,7 @@ router.get("/htp", authMiddleware, async (req, res) => {
     res.json({
       status: 1,
       message: "Success",
-      data: finalData,
+      data: data,
     });
   } catch (e) {
     res.status(400).send({
