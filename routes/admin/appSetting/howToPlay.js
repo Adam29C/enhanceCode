@@ -6,7 +6,7 @@ router.get("/htp", authMiddleware, async (req, res) => {
     const data = await Rules.find({});
 
     let finalData = data.length > 0 ? data[0]?.howtoplay : [];
-    console.log(data, "data");
+
     res.json({
       status: 1,
       message: "Success",
