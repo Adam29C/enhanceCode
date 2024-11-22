@@ -324,6 +324,7 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
 
               // Fetch the user's wallet balance
               const user = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
+              console.log(user,"user")
               const walletBal = user.wallet_balance;
               const revertBalance = walletBal - gameWinPoints;
 
@@ -489,7 +490,7 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
               gameDate: resultDate,
               winStatus: 0,
           });
-
+          console.log("1")
           // Create a history entry for this refund
           const dateTime = formatted2.split(" ");
           const historyEntry = new history({
