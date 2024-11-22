@@ -1,5 +1,5 @@
 const router = require("express").Router();
-// const Bank = require("../../model/bank");
+const Bank = require("../../../model/bank");
 // const session = require("../helpersModule/session");
 // const permission = require("../helpersModule/permission");
 // const revert = require("../../model/revertPayment");
@@ -65,7 +65,7 @@ router.get("/", async (req, res) => {
     res.status(200).json({
       status: true,
       message: "UPI records fetched successfully",
-      data: bank, 
+      data: bank,
     });
   } catch (e) {
     res.status(500).json({
@@ -129,258 +129,261 @@ router.post("/blockUnblock", async (req, res) => {
   }
 });
 
-router.get("/fundMode",  async (req, res) => {
-	try {
-		const list = await transaction.find();
-        
-	} catch (e) {
-		res.json({ message: e });
-	}
+router.get("/fundMode", async (req, res) => {
+  try {
+    const list = await transaction.find();
+  } catch (e) {
+    res.json({ message: e });
+  }
 });
 
-router.post("/registerbank",  async (req, res) => {
-    try {
-      const { bankName, status } = req.body;
-  
-      // Validate that required fields are provided
-      if (!bankName || status === undefined) {
-        return res.status(400).json({
-          status: 0,
-          message: "Bank name and status are required.",
-        });
-      }
-  
-      // Validate that status is either 0 (Active) or 1 (Disabled)
-      if (![0, 1].includes(status)) {
-        return res.status(400).json({
-          status: 0,
-          message: "Invalid status. Please provide 0 for Active or 1 for Disabled.",
-        });
-      }
-  
-      // Check if the bank name already exists in the database
-      const existingBank = await Bank.findOne({ bankName });
-      if (existingBank) {
-        return res.status(400).json({
-          status: 0,
-          message: "Bank with this name already exists.",
-        });
-      }
-  
-      // Create new bank entry
-      const BankDetails = new Bank({
-        bankName,
-        status,
-      });
-  
-      const data = await BankDetails.save();
-  
-      return res.status(201).json({
-        status: 1,
-        message: "Bank registered successfully.",
-        data: data,
-      });
-    } catch (e) {
-      return res.status(500).json({
+router.post("/registerbank", async (req, res) => {
+  try {
+    const { bankName, status } = req.body;
+
+    // Validate that required fields are provided
+    if (!bankName || status === undefined) {
+      return res.status(400).json({
         status: 0,
-        message: "An error occurred while registering the bank.",
-        error: e.message || "Unknown error",
+        message: "Bank name and status are required.",
       });
     }
-  });
-  
+
+    // Validate that status is either 0 (Active) or 1 (Disabled)
+    if (![0, 1].includes(status)) {
+      return res.status(400).json({
+        status: 0,
+        message:
+          "Invalid status. Please provide 0 for Active or 1 for Disabled.",
+      });
+    }
+
+    // Check if the bank name already exists in the database
+    const existingBank = await Bank.findOne({ bankName });
+    if (existingBank) {
+      return res.status(400).json({
+        status: 0,
+        message: "Bank with this name already exists.",
+      });
+    }
+
+    // Create new bank entry
+    const BankDetails = new Bank({
+      bankName,
+      status,
+    });
+
+    const data = await BankDetails.save();
+
+    return res.status(201).json({
+      status: 1,
+      message: "Bank registered successfully.",
+      data: data,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      status: 0,
+      message: "An error occurred while registering the bank.",
+      error: e.message || "Unknown error",
+    });
+  }
+});
+
 router.post("/upiAdd", async (req, res) => {
-	try {
-		let { upiId, status, merchantName } = req.body
-		if (status == "true") {
-			const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
-			if (findActiveUpi) {
-				return res.json({
-					status: 0,
-					message: "Another UPI ID is already active. Please deactivate it first.",
-				});
-			}
-		}
-		const dt = dateTime.create();
-		const reqDate = dt.format("d/m/Y I:M:S");
-		const upiDetails = new UPI_ID({
-			UPI_ID: upiId,
-			is_Active: status,
-			updated_at: reqDate,
-			merchantName: merchantName
-		});
-		const updatedData = await upiDetails.save();
-		res.json({
-			status: 1,
-			message: "UPI ID ADDED SUCCESSFULLY",
-			data: updatedData,
-		});
-	} catch (e) {
-		res.json({ statusCode: 500, status: "failure", message: e.toString() });
-	}
+  try {
+    let { upiId, status, merchantName } = req.body;
+    if (status == "true") {
+      const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+      if (findActiveUpi) {
+        return res.json({
+          status: 0,
+          message:
+            "Another UPI ID is already active. Please deactivate it first.",
+        });
+      }
+    }
+    const dt = dateTime.create();
+    const reqDate = dt.format("d/m/Y I:M:S");
+    const upiDetails = new UPI_ID({
+      UPI_ID: upiId,
+      is_Active: status,
+      updated_at: reqDate,
+      merchantName: merchantName,
+    });
+    const updatedData = await upiDetails.save();
+    res.json({
+      status: 1,
+      message: "UPI ID ADDED SUCCESSFULLY",
+      data: updatedData,
+    });
+  } catch (e) {
+    res.json({ statusCode: 500, status: "failure", message: e.toString() });
+  }
 });
 
 router.post("/disable_upi", async (req, res) => {
-	try {
-		const id = req.body.id;
-		const status = req.body.status;
-		const updateCol = req.body.stat;
-		let query = { is_Active: status };
+  try {
+    const id = req.body.id;
+    const status = req.body.status;
+    const updateCol = req.body.stat;
+    let query = { is_Active: status };
 
-		// Check if any UPI ID is already active only when enabling a new one
-		if (status == "true") {
-			const findActiveUpi = await  UPI_ID.findOne({ is_Active: true });
-			if (findActiveUpi) {
-				return res.json({
-					status: 0,
-					message: "Another UPI ID is already active. Please deactivate it first.",
-				});
-			}
-		}
+    if (status == "true") {
+      const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+      if (findActiveUpi) {
+        return res.json({
+          status: 0,
+          message:
+            "Another UPI ID is already active. Please deactivate it first.",
+        });
+      }
+    }
 
-		if (updateCol == 2) {
-			query = { is_Active_chat: status };
-		}
+    if (updateCol == 2) {
+      query = { is_Active_chat: status };
+    }
 
-		const bank = await UPI_ID.findOneAndUpdate(
-			{ _id: id },
-			{
-				$set: query,
-			},
-			{ returnOriginal: false }
-		);
-		res.json({
-			status: 1,
-			message: status ? "UPI ID Activated Successfully" : "UPI ID Deactivated Successfully",
-			data: bank,
-		});
-	} catch (e) {
-		res.json({
-			status: 0,
-			message: "Server Error Contact Support",
-			err: JSON.stringify(e),
-		});
-	}
+    const bank = await UPI_ID.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: query,
+      },
+      { returnOriginal: false }
+    );
+    res.json({
+      status: 1,
+      message: status
+        ? "UPI ID Activated Successfully"
+        : "UPI ID Deactivated Successfully",
+      data: bank,
+    });
+  } catch (e) {
+    res.json({
+      status: 0,
+      message: "Server Error Contact Support",
+      err: JSON.stringify(e),
+    });
+  }
 });
 
-router.post("/dlt_upi",  async (req, res) => {
-	try {
-		const id = req.body.id;
-		const bank = await UPI_ID.deleteOne({ _id: id });
-		res.json({
-			status: 1,
-			message: "UPI ID Deleted Succesfully",
-			data: bank,
-		});
-	} catch (e) {
-		res.json({
-			status: 0,
-			message: "Server Error Contact Support",
-			err: JSON.stringify(e),
-		});
-	}
+router.post("/dlt_upi", async (req, res) => {
+  try {
+    const id = req.body.id;
+    const bank = await UPI_ID.deleteOne({ _id: id });
+    res.json({
+      status: 1,
+      message: "UPI ID Deleted Succesfully",
+      data: bank,
+    });
+  } catch (e) {
+    res.json({
+      status: 0,
+      message: "Server Error Contact Support",
+      err: JSON.stringify(e),
+    });
+  }
 });
 
-router.post("/dltBank",  async (req, res) => {
-	try {
-		const id = req.body.id;
-		const bank = await Bank.deleteOne({ _id: id });
-		res.json({
-			status: 1,
-			message: "Bank Deleted Succesfully",
-			data: bank,
-		});
-	} catch (e) {
-		res.json({
-			status: 0,
-			message: "Server Error Contact Support",
-			err: JSON.stringify(e),
-		});
-	}
+router.post("/dltBank", async (req, res) => {
+  try {
+    const id = req.body.id;
+    const bank = await Bank.deleteOne({ _id: id });
+    res.json({
+      status: 1,
+      message: "Bank Deleted Succesfully",
+      data: bank,
+    });
+  } catch (e) {
+    res.json({
+      status: 0,
+      message: "Server Error Contact Support",
+      err: JSON.stringify(e),
+    });
+  }
 });
 
-router.post("/modeAdd",  async (req, res) => {
-	try {
-		let { mode, status, urlWeb } = req.body;
+router.post("/modeAdd", async (req, res) => {
+  try {
+    let { mode, status, urlWeb } = req.body;
 
-		if (urlWeb == "") {
-			urlWeb = null;
-		}
+    if (urlWeb == "") {
+      urlWeb = null;
+    }
 
-		const data = new transaction({
-			mode: mode,
-			disabled: status,
-			redirectURL: urlWeb,
-		});
+    const data = new transaction({
+      mode: mode,
+      disabled: status,
+      redirectURL: urlWeb,
+    });
 
-		await data.save();
+    await data.save();
 
-		res.json({
-			status: 1,
-			message: "Added",
-		});
-	} catch (e) {
-		res.json({ status: o, message: e.toString() });
-	}
+    res.json({
+      status: 1,
+      message: "Added",
+    });
+  } catch (e) {
+    res.json({ status: o, message: e.toString() });
+  }
 });
 
-router.post("/disable_mode",  async (req, res) => {
-	try {
-		const id = req.body.id;
-		const status = req.body.status;
-		await transaction.updateOne(
-			{ _id: id },
-			{
-				$set: {
-					disabled: status,
-				},
-			}
-		);
-		res.json({
-			status: 1,
-			message: "Add Fund Mode Disabled Succesfully",
-		});
-	} catch (e) {
-		res.json({
-			status: 0,
-			message: "Server Error Contact Support",
-			err: JSON.stringify(e),
-		});
-	}
+router.post("/disable_mode", async (req, res) => {
+  try {
+    const id = req.body.id;
+    const status = req.body.status;
+    await transaction.updateOne(
+      { _id: id },
+      {
+        $set: {
+          disabled: status,
+        },
+      }
+    );
+    res.json({
+      status: 1,
+      message: "Add Fund Mode Disabled Succesfully",
+    });
+  } catch (e) {
+    res.json({
+      status: 0,
+      message: "Server Error Contact Support",
+      err: JSON.stringify(e),
+    });
+  }
 });
 
-router.post("/dlt_mode",  async (req, res) => {
-	try {
-		const id = req.body.id;
-		await transaction.deleteOne({ _id: id });
-		res.json({
-			status: 1,
-			message: "Mode Deleted Succesfully",
-		});
-	} catch (e) {
-		res.json({
-			status: 0,
-			message: "Server Error Contact Support",
-			err: JSON.stringify(e),
-		});
-	}
+router.post("/dlt_mode", async (req, res) => {
+  try {
+    const id = req.body.id;
+    await transaction.deleteOne({ _id: id });
+    res.json({
+      status: 1,
+      message: "Mode Deleted Succesfully",
+    });
+  } catch (e) {
+    res.json({
+      status: 0,
+      message: "Server Error Contact Support",
+      err: JSON.stringify(e),
+    });
+  }
 });
 
 router.get("/upiList", async (req, res) => {
-	try {
-		const upiList = await UPI_ID.find();
-		let upiLists=[]
-		if(upiList.length>0){
-			upiLists = upiList
-		}
-		res.json({
-			status: 1,
-			message: "Mode Deleted Succesfully",
-			data:upiLists
-		});
-	} catch (e) {
-		res.json({ message: e });
-	}
+  try {
+    const upiList = await UPI_ID.find();
+    let upiLists = [];
+    if (upiList.length > 0) {
+      upiLists = upiList;
+    }
+    res.json({
+      status: 1,
+      message: "Mode Deleted Succesfully",
+      data: upiLists,
+    });
+  } catch (e) {
+    res.json({ message: e });
+  }
 });
 
 module.exports = router;
