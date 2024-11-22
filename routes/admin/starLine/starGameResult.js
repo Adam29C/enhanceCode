@@ -113,15 +113,15 @@ router.delete("/delete",authMiddleware, async (req, res) => {
 //ye api inhance hui hai but testing karna hai ye game result ko add karne baki api hai
 router.post("/", authMiddleware, async (req, res) => {
   try {
-      const { providerId, providerName, session, resultDate, winningDigit } = req.body
+      const { providerId, providerName, session, resultDate, winningDigit } = req.body;
       if (!providerId || !providerName || !session || !resultDate || !winningDigit) {
           return res.status(400).json({
               status: "Failure",
-              message: "all field require in api req",
+              message: "All fields are required in API request.",
           });
       }
+
       const dt = dateTime.create();
-      let sendStatus = 0;
       let savedGames;
       let finalResult;
 
@@ -129,6 +129,7 @@ router.post("/", authMiddleware, async (req, res) => {
       const todayDay = dt.format("W");
       const todayDate = dt.format("m/d/Y");
       const currentTime = dt.format("I:M p");
+
       if (session === "Close") {
           const openResult = await StarlinegameResult.findOne({
               providerId: providerId,
@@ -143,6 +144,7 @@ router.post("/", authMiddleware, async (req, res) => {
               });
           }
       }
+
       const findTime = await gameSetting.findOne(
           { providerId: providerId, gameDay: todayDay },
           session === "Open" ? { OBRT: 1 } : { CBRT: 1 }
@@ -163,6 +165,7 @@ router.post("/", authMiddleware, async (req, res) => {
               message: "It is not time to declare the result yet.",
           });
       }
+
       const existingResult = await StarlinegameResult.findOne({
           providerId: providerId,
           resultDate: resultDate,
@@ -174,6 +177,7 @@ router.post("/", authMiddleware, async (req, res) => {
               message: `Details already filled for: ${providerName}, Session: ${session}, Date: ${resultDate}`,
           });
       }
+
       const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
       if (!digitFamily) {
           return res.status(400).json({
@@ -181,6 +185,7 @@ router.post("/", authMiddleware, async (req, res) => {
               message: "Winning digit family not found.",
           });
       }
+
       const sumDigit = digitFamily.DigitFamily;
       const details = new StarlinegameResult({
           providerId: providerId,
@@ -192,6 +197,7 @@ router.post("/", authMiddleware, async (req, res) => {
           status: "0",
           createdAt: formatted1,
       });
+
       savedGames = await details.save();
 
       if (session === "Open") {
@@ -199,6 +205,7 @@ router.post("/", authMiddleware, async (req, res) => {
       } else {
           finalResult = `${sumDigit}-${winningDigit}`;
       }
+
       await StarlineProvider.updateOne(
           { _id: providerId },
           {
@@ -209,27 +216,29 @@ router.post("/", authMiddleware, async (req, res) => {
               },
           }
       );
-      // sendStatus = 1;
-      // if (sendStatus === 1) {
-      //     let token = [];
-      //     notification(req, res, finalResult, token);
-      //     return res.status(201).json({
-      //         status: true,
-      //         message: "Result declared successfully.",
-      //         data: {
-      //             providerId: providerId,
-      //             session: session,
-      //             resultDate: resultDate,
-      //             winningDigit: winningDigit,
-      //             resultId: savedGames._id,
-      //             status: savedGames.status,
-      //             digitFamily: sumDigit,
-      //             providerName: providerName,
-      //             time: savedGames.createdAt,
-      //         },
-      //     });
-      // }
+
+      // Send notifications if needed (uncomment the notification block if required)
+      // let token = [];
+      // notification(req, res, finalResult, token);
+
+      return res.status(201).json({
+          status: true,
+          message: "Result declared successfully.",
+          data: {
+              providerId: providerId,
+              session: session,
+              resultDate: resultDate,
+              winningDigit: winningDigit,
+              resultId: savedGames._id,
+              status: savedGames.status,
+              digitFamily: sumDigit,
+              providerName: providerName,
+              time: savedGames.createdAt,
+          },
+      });
+
   } catch (error) {
+      console.error("Error occurred:", error);
       return res.status(500).json({
           status: "Failure",
           message: "An error occurred while processing the request.",
@@ -237,6 +246,7 @@ router.post("/", authMiddleware, async (req, res) => {
       });
   }
 });
+
 
 router.get("/pastResult",authMiddleware,  async (req, res) => {
   try {
@@ -314,6 +324,7 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
 
               // Fetch the user's wallet balance
               const user = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
+              console.log(user,"user")
               const walletBal = user.wallet_balance;
               const revertBalance = walletBal - gameWinPoints;
 
@@ -479,7 +490,7 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
               gameDate: resultDate,
               winStatus: 0,
           });
-
+          console.log("1")
           // Create a history entry for this refund
           const dateTime = formatted2.split(" ");
           const historyEntry = new history({
