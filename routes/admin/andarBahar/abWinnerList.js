@@ -4,14 +4,13 @@ const abPorvider = require("../../../model/AndarBahar/ABProvider");
 const abGameType = require("../../../model/AndarBahar/ABGameList");
 const authMiddleware = require("../../helpersModule/athetication");
 
-const user = require('../../model/API/Users');
-const history = require('../../model/wallet_history');
-const abResult = require('../../model/AndarBahar/ABGameResult');
-const ABbids = require('../../model/AndarBahar/ABbids');
-const notification = require('../helpersModule/sendNotification');
+const user = require('../../../model/API/Users');
+const history = require('../../../model/wallet_history');
+const abResult = require('../../../model/AndarBahar/ABGameResult');
+const notification = require('../../helpersModule/sendNotification');
 const dateTime = require('node-datetime');
 const Pusher = require('pusher');
-const admins = require("../../model/dashBoard/AdminModel.js");
+const admins = require("../../../model/dashBoard/AdminModel.js");
 
 router.get("/abWinnerList", authMiddleware, async (req, res) => {
     try {
