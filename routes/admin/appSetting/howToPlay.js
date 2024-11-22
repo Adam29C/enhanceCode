@@ -1,68 +1,94 @@
-const router = require('express').Router();
-const Rules = require('../../../model/appSetting/HowToPlay');
-const authMiddleware = require("../../helpersModule/athetication")
-router.get('/htp',authMiddleware,async (req, res)=>{
-    try {
-        const data = await Rules.find({});
+const router = require("express").Router();
+const Rules = require("../../../model/appSetting/HowToPlay");
+const authMiddleware = require("../../helpersModule/athetication");
+router.get("/htp", authMiddleware, async (req, res) => {
+  try {
+    const data = await Rules.find({});
 
-        let finalData = data.length > 0 ? data[0]?.howtoplay : []
+    let finalData = data.length > 0 ? data[0]?.howtoplay : [];
 
-        res.json({
-                status: 1,
-                message: "Success",
-                data: finalData
-            });
-    }
-    catch (e) {
-        res.status(400).send(
-            {
-                status: 0,
-                message: 'Something Happened Please Contact the Support',
-                error: e
-            });
-    }
+    res.json({
+      status: 1,
+      message: "Success",
+      data: data,
+    });
+  } catch (e) {
+    res.status(400).send({
+      status: 0,
+      message: "Something Happened Please Contact the Support",
+      error: e,
+    });
+  }
 });
 
-router.post('/updateHtp',authMiddleware,  async (req, res) => {
-    try {
-        // Get data from the request body (assuming you are passing this data)
-        const { htpId, howtoplay } = req.body;
+router.post("/updateHtp", authMiddleware, async (req, res) => {
+  try {
+    const { htpId, howtoplay } = req.body;
 
-        // Check if htpId and howtoplay are provided
-        if (!htpId || !howtoplay) {
-            return res.status(400).json({
-                status: true,
-                message: 'htpId and howtoplay are required'
-            });
-        }
+    if (!htpId || !howtoplay || howtoplay.length === 0) {
+      return res.status(400).json({
+        status: false,
+        message: "htpId and howtoplay data are required",
+      });
+    }
 
-        // Find the document by htpId (or any other unique identifier)
-        const updatedData = await Rules.findOneAndUpdate(
-            { _id: htpId }, // Filter by htpId
-            { $set: { howtoplay } }, // Update the howtoplay field
-            { new: true } // Return the updated document
-        );
+    const htpInfo = await Rules.findById(htpId);
+    if (!htpInfo) {
+      return res.status(404).json({
+        status: false,
+        message: "HowToPlay document not found",
+      });
+    }
 
-        if (!updatedData) {
-            return res.status(404).json({
-                status: false,
-                message: 'Data not found or update failed'
-            });
-        }
+    for (let item of howtoplay) {
+      const { _id, title, description, videoUrl } = item;
 
-        // Return a success response
-        res.json({
-            status: true,
-            message: 'HowToPlay data updated successfully',
-            data: updatedData.howtoplay // Return the updated howtoplay data
+      if (!title || !description || !videoUrl) {
+        return res.status(400).json({
+          status: false,
+          message:
+            "Title, description, and videoUrl are required for each howtoplay item.",
         });
-    } catch (e) {
-        res.status(400).send({
+      }
+
+      if (_id) {
+        const existingItem = htpInfo.howtoplay.id(_id);
+        if (existingItem) {
+          existingItem.title = title || existingItem.title;
+          existingItem.description = description || existingItem.description;
+          existingItem.videoUrl = videoUrl || existingItem.videoUrl;
+          existingItem.modified = new Date();
+        } else {
+          return res.status(404).json({
             status: false,
-            message: 'Something Happened Please Contact the Support',
-            error: e.message
+            message: "HowToPlay item not found with provided ID",
+          });
+        }
+      } else {
+        htpInfo.howtoplay.push({
+          title,
+          description,
+          videoUrl,
+          modified: new Date(),
         });
+      }
     }
+
+    await htpInfo.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "HowToPlay data updated successfully",
+      data: htpInfo.howtoplay,
+    });
+  } catch (err) {
+    console.log(err, "err");
+    return res.status(500).json({
+      status: false,
+      message: "An error occurred while updating HowToPlay data",
+      error: err.message,
+    });
+  }
 });
 
-module.exports =router
+module.exports = router;

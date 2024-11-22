@@ -1,0 +1,380 @@
+const router = require("express").Router();
+// const Bank = require("../../model/bank");
+// const session = require("../helpersModule/session");
+// const permission = require("../helpersModule/permission");
+// const revert = require("../../model/revertPayment");
+// const transaction = require("../../model/transactionON-OFF");
+ const UPI_ID = require("../../../model/upi_ids");
+// const dateTime = require("node-datetime");
+// const SendOtp = require("sendotp");
+// // const sendOtp = new SendOtp("290393AuGCyi6j5d5bfd26");
+// const sendOtp = new SendOtp("1207171791436302472");
+
+// router.post("/OTPsend", async (req, res) => {
+// 	const userInfo = req.session.details;
+// 	let mobile = userInfo.mobile;
+	
+// 	res.json({
+// 		status: 1,
+// 		message: "success",
+		
+// 	});
+
+// 	// sendOtp.send(`+91${mobile}`, "DGAMES", function (error, data) {
+// 	// 	res.json({
+// 	// 		status: 1,
+// 	// 		message: "success",
+// 	// 		data: data,
+// 	// 	});
+// 	// });
+// });
+
+// router.get("/", session, permission, async (req, res) => {
+// 	try {
+// 		const bank = await Bank.find();
+// 		const userInfo = req.session.details;
+// 		const permissionArray = req.view;
+
+// 		const check = permissionArray["bank"].showStatus;
+// 		if (check === 1) {
+// 			res.render("./masters/bank", {
+// 				data: bank,
+// 				userInfo: userInfo,
+// 				permission: permissionArray,
+// 				title: "Bank",
+// 			});
+// 		} else {
+// 			res.render("./dashboard/starterPage", {
+// 				userInfo: userInfo,
+// 				permission: permissionArray,
+// 				title: "Dashboard",
+// 			});
+// 		}
+// 	} catch (e) {
+// 		res.json({ message: e });
+// 	}
+// });
+
+router.get("/", async (req, res) => {
+    try {
+      // Fetch all records from the UPI_ID collection
+      const bank = await UPI_ID.find();
+  
+      // If there are no records, return an empty array
+      if (!bank || bank.length === 0) {
+        return res.status(404).json({ message: "No UPI records found" });
+      }
+  
+      // Return the fetched records as a JSON response
+      res.status(200).json({
+        status: true,
+        message: "UPI records fetched successfully",
+        data: bank,  // Send the fetched data
+      });
+    } catch (e) {
+      // If there is an error, return a detailed error message
+      res.status(500).json({
+        status: false,
+        message: "An error occurred while fetching UPI records",
+        error: e.message,
+      });
+    }
+  });
+  
+
+// router.get("/fundMode", session, permission, async (req, res) => {
+// 	try {
+// 		const list = await transaction.find();
+
+// 		const userInfo = req.session.details;
+// 		const permissionArray = req.view;
+
+// 		res.render("./masters/transactionMaintain", {
+// 			data: list,
+// 			userInfo: userInfo,
+// 			permission: permissionArray,
+// 			title: "ON-OFF Fund Mode",
+// 		});
+// 	} catch (e) {
+// 		res.json({ message: e });
+// 	}
+// });
+
+// router.post("/registerbank", session, async (req, res) => {
+// 	// 0 == Active || 1 == Disabled
+// 	try {
+// 		const BankDetails = new Bank({
+// 			bankName: req.body.bankName,
+// 			status: req.body.status,
+// 		});
+// 		const data = await BankDetails.save();
+// 		res.json({
+// 			status: 1,
+// 			message: "Inserted Succfully",
+// 			data: data,
+// 		});
+// 	} catch (e) {
+// 		res.json({ message: e });
+// 	}
+// });
+
+// router.post("/blockUnblock", session, async (req, res) => {
+// 	try {
+// 		const id = req.body.id;
+// 		const status = req.body.status;
+// 		const bank = await Bank.findOneAndUpdate(
+// 			{ _id: id },
+// 			{
+// 				$set: {
+// 					status: status,
+// 				},
+// 			},
+// 			{ returnOriginal: false }
+// 		);
+// 		res.json({
+// 			status: 1,
+// 			message: "Updated Succesfully",
+// 			data: bank,
+// 		});
+// 	} catch (e) {
+// 		res.json({
+// 			status: 0,
+// 			message: "Server Error Contact Support",
+// 			err: JSON.stringify(e),
+// 		});
+// 	}
+// });
+
+// router.post("/upiAdd", session, async (req, res) => {
+// 	try {
+// 		const userInfo = req.session.details;
+// 		let mobile = userInfo.mobile;
+// 		let { bankName, status, merchantName } = req.body
+// 		// Check if any UPI ID is already active only when enabling a new one
+// 		if (status == "true") {
+// 			const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+// 			if (findActiveUpi) {
+// 				return res.json({
+// 					status: 0,
+// 					message: "Another UPI ID is already active. Please deactivate it first.",
+// 				});
+// 			}
+// 		}
+// 		const dt = dateTime.create();
+// 		const reqDate = dt.format("d/m/Y I:M:S");
+// 		const upiDetails = new UPI_ID({
+// 			UPI_ID: bankName,
+// 			is_Active: status,
+// 			updated_at: reqDate,
+// 			merchantName: merchantName
+// 		});
+// 		const updatedData = await upiDetails.save();
+// 		res.json({
+// 			status: 1,
+// 			message: "UPI ID ADDED SUCCESSFULLY",
+// 			data: updatedData,
+// 		});
+// 	} catch (e) {
+// 		res.json({ statusCode: 500, status: "failure", message: e.toString() });
+// 	}
+// });
+
+// //old code
+// // router.post("/disable_upi", session, async (req, res) => {
+// // 	try {
+// // 		const id = req.body.id;
+// // 		const status = req.body.status;
+// // 		const updateCol = req.body.stat;
+
+// // 		let query = {is_Active: status}
+
+// // 		if(updateCol == 2){
+// // 			query = {is_Active_chat: status}
+// // 		}
+
+// // 		const bank = await UPI_ID.findOneAndUpdate(
+// // 			{ _id: id },
+// // 			{
+// // 				$set: query,
+// // 			},
+// // 			{ returnOriginal: false }
+// // 		);
+// // 		res.json({
+// // 			status: 1,
+// // 			message: "UPI ID Disabled Succesfully",
+// // 			data: bank,
+// // 		});
+// // 	} catch (e) {
+// // 		res.json({
+// // 			status: 0,
+// // 			message: "Server Error Contact Support",
+// // 			err: JSON.stringify(e),
+// // 		});
+// // 	}
+// // });
+
+// router.post("/disable_upi", session, async (req, res) => {
+// 	try {
+// 		const id = req.body.id;
+// 		const status = req.body.status;
+// 		const updateCol = req.body.stat;
+// 		let query = { is_Active: status };
+
+// 		// Check if any UPI ID is already active only when enabling a new one
+// 		if (status == "true") {
+// 			const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+// 			if (findActiveUpi) {
+// 				return res.json({
+// 					status: 0,
+// 					message: "Another UPI ID is already active. Please deactivate it first.",
+// 				});
+// 			}
+// 		}
+
+// 		if (updateCol == 2) {
+// 			query = { is_Active_chat: status };
+// 		}
+
+// 		const bank = await UPI_ID.findOneAndUpdate(
+// 			{ _id: id },
+// 			{
+// 				$set: query,
+// 			},
+// 			{ returnOriginal: false }
+// 		);
+// 		res.json({
+// 			status: 1,
+// 			message: status ? "UPI ID Activated Successfully" : "UPI ID Deactivated Successfully",
+// 			data: bank,
+// 		});
+// 	} catch (e) {
+// 		res.json({
+// 			status: 0,
+// 			message: "Server Error Contact Support",
+// 			err: JSON.stringify(e),
+// 		});
+// 	}
+// });
+
+
+// router.post("/dlt_upi", session, async (req, res) => {
+// 	try {
+// 		const id = req.body.id;
+// 		const bank = await UPI_ID.deleteOne({ _id: id });
+// 		res.json({
+// 			status: 1,
+// 			message: "UPI ID Deleted Succesfully",
+// 			data: bank,
+// 		});
+// 	} catch (e) {
+// 		res.json({
+// 			status: 0,
+// 			message: "Server Error Contact Support",
+// 			err: JSON.stringify(e),
+// 		});
+// 	}
+// });
+
+// router.post("/dltBank", session, async (req, res) => {
+// 	try {
+// 		const id = req.body.id;
+// 		const bank = await Bank.deleteOne({ _id: id });
+// 		res.json({
+// 			status: 1,
+// 			message: "Bank Deleted Succesfully",
+// 			data: bank,
+// 		});
+// 	} catch (e) {
+// 		res.json({
+// 			status: 0,
+// 			message: "Server Error Contact Support",
+// 			err: JSON.stringify(e),
+// 		});
+// 	}
+// });
+
+// router.post("/modeAdd", session, async (req, res) => {
+// 	try {
+// 		let { mode, status, urlWeb } = req.body;
+
+// 		if (urlWeb == "") {
+// 			urlWeb = null;
+// 		}
+
+// 		const data = new transaction({
+// 			mode: mode,
+// 			disabled: status,
+// 			redirectURL: urlWeb,
+// 		});
+
+// 		await data.save();
+
+// 		res.json({
+// 			status: 1,
+// 			message: "Added",
+// 		});
+// 	} catch (e) {
+// 		res.json({ status: o, message: e.toString() });
+// 	}
+// });
+
+// router.post("/disable_mode", session, async (req, res) => {
+// 	try {
+// 		const id = req.body.id;
+// 		const status = req.body.status;
+// 		await transaction.updateOne(
+// 			{ _id: id },
+// 			{
+// 				$set: {
+// 					disabled: status,
+// 				},
+// 			}
+// 		);
+// 		res.json({
+// 			status: 1,
+// 			message: "Add Fund Mode Disabled Succesfully",
+// 		});
+// 	} catch (e) {
+// 		res.json({
+// 			status: 0,
+// 			message: "Server Error Contact Support",
+// 			err: JSON.stringify(e),
+// 		});
+// 	}
+// });
+
+// router.post("/dlt_mode", session, async (req, res) => {
+// 	try {
+// 		const id = req.body.id;
+// 		await transaction.deleteOne({ _id: id });
+// 		res.json({
+// 			status: 1,
+// 			message: "Mode Deleted Succesfully",
+// 		});
+// 	} catch (e) {
+// 		res.json({
+// 			status: 0,
+// 			message: "Server Error Contact Support",
+// 			err: JSON.stringify(e),
+// 		});
+// 	}
+// });
+
+// router.get("/upiList", async (req, res) => {
+// 	try {
+// 		const upiList = await UPI_ID.find();
+// 		let upiLists=[]
+// 		if(upiList.length>0){
+// 			upiLists = upiList
+// 		}
+// 		res.json({
+// 			status: 1,
+// 			message: "Mode Deleted Succesfully",
+// 			data:upiLists
+// 		});
+// 	} catch (e) {
+// 		res.json({ message: e });
+// 	}
+// });
+
+module.exports = router;
