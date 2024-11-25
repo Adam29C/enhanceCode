@@ -3,7 +3,7 @@ const Bank = require("../../../model/bank");
 // const session = require("../helpersModule/session");
 // const permission = require("../helpersModule/permission");
 // const revert = require("../../model/revertPayment");
-// const transaction = require("../../model/transactionON-OFF");
+const transaction = require("../../../model/transactionON-OFF");
 const UPI_ID = require("../../../model/upi_ids");
 const dateTime = require("node-datetime");
 const SendOtp = require("sendotp");
@@ -173,7 +173,7 @@ router.post("/disable_upi", async (req, res) => {
     let query = { is_Active: status };
 
     // Check if any UPI ID is already active only when enabling a new one
-    if (status == "true") {
+    if (status == true) {
       const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
       if (findActiveUpi) {
         return res.json({
@@ -365,26 +365,54 @@ router.post("/modeAdd", async (req, res) => {
   try {
     let { mode, status, urlWeb } = req.body;
 
-    if (urlWeb == "") {
+    if (!mode) {
+      return res.json({
+        status: false,
+        message: "Mode is required.",
+      });
+    }
+
+    if (status !== true && status !== false) {
+      return res.json({
+        status: false,
+        message: "Status must be a boolean value.",
+      });
+    }
+
+    if (urlWeb === "") {
       urlWeb = null;
     }
 
+    const existingMode = await transaction.findOne({ mode });
+    if (existingMode) {
+      return res.json({
+        status: false,
+        message: "This mode already exists.",
+      });
+    }
+
     const data = new transaction({
-      mode: mode,
+      mode,
       disabled: status,
       redirectURL: urlWeb,
     });
 
-    await data.save();
+    const savedData = await data.save();
 
     res.json({
       status: true,
-      message: "Added",
+      message: "Mode added successfully",
+      data: savedData, 
     });
   } catch (e) {
-    res.json({ status: flase, message: e.toString() });
+    console.error("Error in modeAdd:", e); 
+    res.json({
+      status: false,
+      message: "An error occurred while adding the mode. Please try again.",
+    });
   }
 });
+
 
 router.post("/disable_mode", async (req, res) => {
   try {
