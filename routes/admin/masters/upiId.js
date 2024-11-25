@@ -9,6 +9,7 @@ const dateTime = require("node-datetime");
 const SendOtp = require("sendotp");
 // const sendOtp = new SendOtp("290393AuGCyi6j5d5bfd26");
 const sendOtp = new SendOtp("1207171791436302472");
+const PaymentModes = require("../../../model/payments/pamentModeModel");
 
 // router.post("/OTPsend", async (req, res) => {
 // 	const userInfo = req.session.details;
@@ -57,7 +58,7 @@ const sendOtp = new SendOtp("1207171791436302472");
 
 router.get("/", async (req, res) => {
   try {
-    const bank = await UPI_ID.find();
+    const bank = await UPI_ID.find({is_Active:true});
     if (!bank || bank.length === 0) {
       return res.status(404).json({ message: "No UPI records found" });
     }
@@ -73,6 +74,38 @@ router.get("/", async (req, res) => {
       message: "An error occurred while fetching UPI records",
       error: e.message,
     });
+  }
+});
+
+router.post("/upiAdd", async (req, res) => {
+  try {
+    let { upiId, status, merchantName } = req.body;
+    if (status == "true") {
+      const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+      if (findActiveUpi) {
+        return res.json({
+          status: 0,
+          message:
+            "Another UPI ID is already active. Please deactivate it first.",
+        });
+      }
+    }
+    const dt = dateTime.create();
+    const reqDate = dt.format("d/m/Y I:M:S");
+    const upiDetails = new UPI_ID({
+      UPI_ID: upiId,
+      is_Active: status,
+      updated_at: reqDate,
+      merchantName: merchantName,
+    });
+    const updatedData = await upiDetails.save();
+    res.json({
+      status: true,
+      message: "UPI ID ADDED SUCCESSFULLY",
+      data: updatedData,
+    });
+  } catch (e) {
+    res.json({ statusCode: 500, status: "failure", message: e.toString() });
   }
 });
 
@@ -125,6 +158,92 @@ router.post("/blockUnblock", async (req, res) => {
       status: flase,
       message: "An error occurred while updating the bank status.",
       error: e.message || "Unknown error",
+    });
+  }
+});
+
+router.post("/disable_upi", async (req, res) => {
+	try {
+		const id = req.body.id;
+		const status = req.body.status;
+		const updateCol = req.body.stat;
+		let query = { is_Active: status };
+
+		// Check if any UPI ID is already active only when enabling a new one
+		if (status == "true") {
+			const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+			if (findActiveUpi) {
+				return res.json({
+					status: 0,
+					message: "Another UPI ID is already active. Please deactivate it first.",
+				});
+			}
+		}
+
+		if (updateCol == 2) {
+			query = { is_Active_chat: status };
+		}
+
+		const bank = await UPI_ID.findOneAndUpdate(
+			{ _id: id },
+			{
+				$set: query,
+			},
+			{ returnOriginal: false }
+		);
+		res.json({
+			status: 1,
+			message: status ? "UPI ID Activated Successfully" : "UPI ID Deactivated Successfully",
+			data: bank,
+		});
+	} catch (e) {
+		res.json({
+			status: 0,
+			message: "Server Error Contact Support",
+			err: JSON.stringify(e),
+		});
+	}
+});
+
+router.patch("/updatePaymentMode", async (req, res) => {
+  try {
+    const { id, status } = req.body;
+    if (!id) {
+      res.status(400).send({
+        statusCode: 400,
+        message: "id required",
+      });
+    }
+    if (status == "active") {
+      const findActiveUpi = await PaymentModes.findOne({ status: "active" });
+      if (findActiveUpi) {
+        return res.json({
+          status: 0,
+          message:
+            "Another Payment mode is already active. Please deactivate it first.",
+        });
+      }
+    }
+    const findMode = await PaymentModes.findOne({ _id: id });
+    if (!findMode) {
+      res.status(404).send({
+        statusCode: 404,
+        message: "Payment mode not found",
+      });
+    }
+    const paymentUpdate = await PaymentModes.updateOne(
+      { _id: findMode._id },
+      { $set: { status: status } }
+    );
+    res.status(200).send({
+      statusCode: 200,
+      message: "Payment mode updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      statusCode: 500,
+      message: "Something went wrong",
+      error: error.message,
     });
   }
 });
@@ -185,83 +304,6 @@ router.post("/registerbank", async (req, res) => {
       status: flase,
       message: "An error occurred while registering the bank.",
       error: e.message || "Unknown error",
-    });
-  }
-});
-
-router.post("/upiAdd", async (req, res) => {
-  try {
-    let { upiId, status, merchantName } = req.body;
-    if (status == "true") {
-      const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
-      if (findActiveUpi) {
-        return res.json({
-          status: 0,
-          message:
-            "Another UPI ID is already active. Please deactivate it first.",
-        });
-      }
-    }
-    const dt = dateTime.create();
-    const reqDate = dt.format("d/m/Y I:M:S");
-    const upiDetails = new UPI_ID({
-      UPI_ID: upiId,
-      is_Active: status,
-      updated_at: reqDate,
-      merchantName: merchantName,
-    });
-    const updatedData = await upiDetails.save();
-    res.json({
-      status: true,
-      message: "UPI ID ADDED SUCCESSFULLY",
-      data: updatedData,
-    });
-  } catch (e) {
-    res.json({ statusCode: 500, status: "failure", message: e.toString() });
-  }
-});
-
-router.post("/disable_upi", async (req, res) => {
-  try {
-    const id = req.body.id;
-    const status = req.body.status;
-    const updateCol = req.body.stat;
-    let query = { is_Active: status };
-
-    if (status == "true") {
-      const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
-      if (findActiveUpi) {
-        return res.json({
-          status: 0,
-          message:
-            "Another UPI ID is already active. Please deactivate it first.",
-        });
-      }
-    }
-
-    if (updateCol == 2) {
-      query = { is_Active_chat: status };
-    }
-
-    const bank = await UPI_ID.findOneAndUpdate(
-      { _id: id },
-      {
-        $set: query,
-      },
-      { returnOriginal: false }
-    );
-    res.json({
-      status: true,
-      message: status
-        ? "UPI ID Activated Successfully"
-        : "UPI ID Deactivated Successfully",
-      data: bank,
-    });
-  } catch (e) {
-    res.json({
-      status: 0,
-      message: "Server Error Contact Support",
-      err: JSON.stringify(e),
     });
   }
 });
