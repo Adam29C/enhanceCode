@@ -453,10 +453,18 @@ router.post("/disable_mode", async (req, res) => {
 router.post("/dlt_mode", async (req, res) => {
   try {
     const id = req.body.id;
+
+    if (!id) {
+      return res.json({
+        status: false,
+        message: "ID is required.",
+      });
+    }
     await transaction.deleteOne({ _id: id });
+
     res.json({
       status: true,
-      message: "Mode Deleted Succesfully",
+      message: "Mode Deleted Successfully",
     });
   } catch (e) {
     res.json({
@@ -466,6 +474,7 @@ router.post("/dlt_mode", async (req, res) => {
     });
   }
 });
+
 
 router.get("/upiList", async (req, res) => {
   try {
