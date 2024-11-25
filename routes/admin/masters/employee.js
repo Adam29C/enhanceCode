@@ -54,7 +54,7 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/updatePassword",authMiddleware, async function (req, res) {
+router.post("/updatePassword", authMiddleware, async function (req, res) {
   try {
     const { password, adminId } = req.body;
 
@@ -105,6 +105,40 @@ router.post("/updatePassword",authMiddleware, async function (req, res) {
   }
 });
 
+router.post("/blockEmployee", async (req, res) => {
+  try {
+    const { adminId, status } = req.body;
+
+    if (!adminId || typeof status === "undefined") {
+      return res.json({
+        status: false,
+        message: "Both adminId and status are required.",
+      });
+    }
+
+    const bannedStatus = status === 1;
+
+    await empInsert.updateOne(
+      { _id: adminId },
+      { $set: { banned: bannedStatus } }
+    );
+
+    let empList = await empInsert.find({ role: 1 });
+
+    return res.json({
+      status: true,
+      message: bannedStatus ? "Blocked Successfully" : "Unblocked Successfully",
+      //response: empList,
+    });
+  } catch (e) {
+    console.log("Error: ", e);
+    return res.json({
+      status: false,
+      message: "Internal Server Error",
+    });
+  }
+});
+
 // router.get("/profileAdmin", session, permission, async (req, res) => {
 // 	try {
 // 		let empList = await empInsert.find({ role: 1 });
@@ -131,24 +165,6 @@ router.post("/updatePassword",authMiddleware, async function (req, res) {
 // 		} else {
 // 			res.redirect("/dashboard");
 // 		}
-// 	} catch (e) {
-// 		res.json({ message: e });
-// 	}
-// });
-
-// router.post("/blockEmployee", session, async (req, res) => {
-// 	try {
-// 		const id = req.body.id;
-// 		const status = req.body.status;
-
-// 		await empInsert.updateOne({ _id: id }, { $set: { banned: status } });
-
-// 		let empList = await empInsert.find({ role: 1 });
-// 		res.json({
-// 			status: 1,
-// 			message: "Blocked Successfully",
-// 			response: empList,
-// 		});
 // 	} catch (e) {
 // 		res.json({ message: e });
 // 	}
