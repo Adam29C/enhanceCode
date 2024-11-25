@@ -63,22 +63,21 @@ router.get("/revertPayment",authMiddleware, async (req, res) => {
 
         if (result.length === 0) {
             return res.json({
-                status: 0,
+                status: false,
                 message: "No results found for the current date.",
                 result: []
             });
         }
 
         return res.json({
-            status: 1,
+            status: true,
             message: "Results fetched successfully.",
             result: result,
             title: "AB Revert Result"
         });
     } catch (e) {
-        console.error("Error in revertPayment API:", e);
         return res.status(500).json({
-            status: 0,
+            status: false,
             message: "An error occurred while processing the request. Please try again later.",
             error: e.message
         });
@@ -106,14 +105,14 @@ router.delete("/delete",authMiddleware, async (req, res) => {
         }
 
         res.json({
-            status: 1,
+            status: true,
             message: "Result Deleted Successfully",
             data: dltResult,
         });
     } catch (e) {
         console.error("Error deleting result:", e);
         res.status(500).json({
-            status: 0,
+            status: false,
             message: "Server Error. Contact Support.",
             error: e.message,
         });
