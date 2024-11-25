@@ -313,7 +313,6 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
               $or: [{ bidDigit: digit }, { bidDigit: family }]
           })
           .sort({ _id: -1, bidDigit: 1 });
-
       if (winnerList.length > 0) {
           let historyArray = [];
           let historyDataArray = [];
@@ -324,7 +323,6 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
 
               // Fetch the user's wallet balance
               const user = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
-              console.log(user,"user")
               const walletBal = user.wallet_balance;
               const revertBalance = walletBal - gameWinPoints;
 

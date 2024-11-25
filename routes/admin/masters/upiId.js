@@ -257,10 +257,21 @@ router.patch("/updatePaymentMode", async (req, res) => {
 router.get("/fundMode", async (req, res) => {
   try {
     const list = await transaction.find();
+
+    res.json({
+      status: true,
+      message: "Fund modes fetched successfully",
+      data: list,
+    });
   } catch (e) {
-    res.json({ message: e });
+    res.json({
+      status: false,
+      message: "An error occurred while fetching fund modes. Please try again.",
+    });
   }
 });
+
+
 
 router.post("/registerbank", async (req, res) => {
   try {
