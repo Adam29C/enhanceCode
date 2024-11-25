@@ -58,9 +58,12 @@ const PaymentModes = require("../../../model/payments/pamentModeModel");
 
 router.get("/", async (req, res) => {
   try {
-    const bank = await UPI_ID.find({is_Active:true});
+    const bank = await UPI_ID.find();
     if (!bank || bank.length === 0) {
-      return res.status(404).json({ message: "No UPI records found" });
+      return res.status(404).json({ 
+        status: false, 
+        message: "No UPI records found" 
+      });
     }
 
     res.status(200).json({
@@ -80,11 +83,11 @@ router.get("/", async (req, res) => {
 router.post("/upiAdd", async (req, res) => {
   try {
     let { upiId, status, merchantName } = req.body;
-    if (status == "true") {
+    if (status === true) {
       const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
       if (findActiveUpi) {
         return res.json({
-          status: 0,
+          status: false,
           message:
             "Another UPI ID is already active. Please deactivate it first.",
         });
@@ -163,46 +166,49 @@ router.post("/blockUnblock", async (req, res) => {
 });
 
 router.post("/disable_upi", async (req, res) => {
-	try {
-		const id = req.body.id;
-		const status = req.body.status;
-		const updateCol = req.body.stat;
-		let query = { is_Active: status };
+  try {
+    const id = req.body.id;
+    const status = req.body.status;
+    const updateCol = req.body.stat;
+    let query = { is_Active: status };
 
-		// Check if any UPI ID is already active only when enabling a new one
-		if (status == "true") {
-			const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
-			if (findActiveUpi) {
-				return res.json({
-					status: 0,
-					message: "Another UPI ID is already active. Please deactivate it first.",
-				});
-			}
-		}
+    // Check if any UPI ID is already active only when enabling a new one
+    if (status == "true") {
+      const findActiveUpi = await UPI_ID.findOne({ is_Active: true });
+      if (findActiveUpi) {
+        return res.json({
+          status: 0,
+          message:
+            "Another UPI ID is already active. Please deactivate it first.",
+        });
+      }
+    }
 
-		if (updateCol == 2) {
-			query = { is_Active_chat: status };
-		}
+    if (updateCol == 2) {
+      query = { is_Active_chat: status };
+    }
 
-		const bank = await UPI_ID.findOneAndUpdate(
-			{ _id: id },
-			{
-				$set: query,
-			},
-			{ returnOriginal: false }
-		);
-		res.json({
-			status: 1,
-			message: status ? "UPI ID Activated Successfully" : "UPI ID Deactivated Successfully",
-			data: bank,
-		});
-	} catch (e) {
-		res.json({
-			status: 0,
-			message: "Server Error Contact Support",
-			err: JSON.stringify(e),
-		});
-	}
+    const bank = await UPI_ID.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: query,
+      },
+      { returnOriginal: false }
+    );
+    res.json({
+      status: 1,
+      message: status
+        ? "UPI ID Activated Successfully"
+        : "UPI ID Deactivated Successfully",
+      data: bank,
+    });
+  } catch (e) {
+    res.json({
+      status: 0,
+      message: "Server Error Contact Support",
+      err: JSON.stringify(e),
+    });
+  }
 });
 
 router.patch("/updatePaymentMode", async (req, res) => {
@@ -312,8 +318,7 @@ router.post("/dlt_upi", async (req, res) => {
   try {
     const id = req.body.id;
 
-       const bank = await UPI_ID.deleteOne({ _id: id });
-
+    const bank = await UPI_ID.deleteOne({ _id: id });
 
     // Respond with success or failure based on delete result
     if (bank.deletedCount === 1) {
