@@ -111,11 +111,11 @@ router.delete("/", authMiddleware, async (req, res) => {
 
 router.patch("/",authMiddleware, async (req, res) => {
     try {
-      const { userId, gamename, result } = req.body;
+      const { providerId, gamename, result } = req.body;
       const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
   
       const updatedGame = await ABProvider.updateOne(
-        { _id: userId },
+        { _id: providerId },
         {
           $set: {
             providerName: gamename,
@@ -124,7 +124,6 @@ router.patch("/",authMiddleware, async (req, res) => {
           },
         }
       );
-  
       if (updatedGame.modifiedCount === 0) {
         return res.json({
           status: false,
