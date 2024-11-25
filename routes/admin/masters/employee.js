@@ -54,7 +54,7 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/updatePassword", async function (req, res) {
+router.post("/updatePassword",authMiddleware, async function (req, res) {
   try {
     const { password, adminId } = req.body;
 
