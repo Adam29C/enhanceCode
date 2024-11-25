@@ -311,16 +311,28 @@ router.post("/registerbank", async (req, res) => {
 router.post("/dlt_upi", async (req, res) => {
   try {
     const id = req.body.id;
-    const bank = await UPI_ID.deleteOne({ _id: id });
-    res.json({
-      status: true,
-      message: "UPI ID Deleted Succesfully",
-      data: bank,
-    });
+
+       const bank = await UPI_ID.deleteOne({ _id: id });
+
+
+    // Respond with success or failure based on delete result
+    if (bank.deletedCount === 1) {
+      res.json({
+        status: true,
+        message: "UPI ID Deleted Successfully",
+        data: bank,
+      });
+    } else {
+      res.json({
+        status: false,
+        message: "UPI ID not found or could not be deleted",
+        data: bank,
+      });
+    }
   } catch (e) {
     res.json({
       status: false,
-      message: "Server Error Contact Support",
+      message: "Server Error, Contact Support",
       err: JSON.stringify(e),
     });
   }
