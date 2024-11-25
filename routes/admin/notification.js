@@ -10,13 +10,13 @@ router.get("/", async (req, res) => {
       .sort({ _id: -1 })
       .limit(100);
     return res.json({
-      status: 1,
+      status: true,
       message: "Notifications Fatch Successfully!!!",
       data: notificationsData,
     });
   } catch (e) {
     return res.json({
-      status: 0,
+      status: false,
       message: "Internal Server Error",
       error: e.toString(),
     });
