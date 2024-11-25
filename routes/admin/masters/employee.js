@@ -5,52 +5,105 @@ const fetch = require("node-fetch");
 const dateTime = require("node-datetime");
 const bcrypt = require("bcryptjs");
 
-router.post("/",authMiddleware, async (req, res) => {
-    try {
-      const { searchQuery, page = 1, limit = 10 } = req.body;
-  
-      let filter = { role: 1 };
-  
-      if (searchQuery) {
-        filter.$or = [
-          { name: { $regex: searchQuery, $options: "i" } },
-          { username: { $regex: searchQuery, $options: "i" } },
-        ];
-  
-        if (searchQuery.toLowerCase() === "true" || searchQuery.toLowerCase() === "false") {
-          filter.loginStatus = searchQuery.toLowerCase() === "true";
-        }
+router.post("/", authMiddleware, async (req, res) => {
+  try {
+    const { searchQuery, page = 1, limit = 10 } = req.body;
+
+    let filter = { role: 1 };
+
+    if (searchQuery) {
+      filter.$or = [
+        { name: { $regex: searchQuery, $options: "i" } },
+        { username: { $regex: searchQuery, $options: "i" } },
+      ];
+
+      if (
+        searchQuery.toLowerCase() === "true" ||
+        searchQuery.toLowerCase() === "false"
+      ) {
+        filter.loginStatus = searchQuery.toLowerCase() === "true";
       }
-  
-      const pageNumber = parseInt(page);
-      const limitNumber = parseInt(limit);
-  
-      const totalCount = await empInsert.countDocuments(filter);
-  
-      const empList = await empInsert
-        .find(filter, { name: 1, username: 1, loginStatus: 1 })
-        .skip((pageNumber - 1) * limitNumber)
-        .limit(limitNumber);
-  
-      return res.status(200).json({
-        status: true,
-        message: "Employee list fetched successfully",
-        data: empList,
-        pagination: {
-          currentPage: pageNumber,
-          totalPages: Math.ceil(totalCount / limitNumber),
-          totalCount: totalCount,
-        },
-      });
-    } catch (e) {
-      res.json({
+    }
+
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+
+    const totalCount = await empInsert.countDocuments(filter);
+
+    const empList = await empInsert
+      .find(filter, { name: 1, username: 1, loginStatus: 1 })
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber);
+
+    return res.status(200).json({
+      status: true,
+      message: "Employee list fetched successfully",
+      data: empList,
+      pagination: {
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalCount / limitNumber),
+        totalCount: totalCount,
+      },
+    });
+  } catch (e) {
+    res.json({
+      status: false,
+      message: "An error occurred while fetching the employee list.",
+      error: e.message,
+    });
+  }
+});
+
+router.post("/updatePassword",authMiddleware, async function (req, res) {
+  try {
+    const { password, adminId } = req.body;
+
+    if (!password || !adminId) {
+      return res.json({
         status: false,
-        message: "An error occurred while fetching the employee list.",
-        error: e.message,
+        message: "Both password and adminId are required.",
       });
     }
-  });
-  
+
+    const admin = await empInsert.findById(adminId);
+    if (!admin) {
+      return res.json({
+        status: false,
+        message: "Admin not found.",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const update = await empInsert.updateOne(
+      { _id: adminId },
+      {
+        $set: {
+          password: hashedPassword,
+        },
+      }
+    );
+
+    if (update.modifiedCount === 0) {
+      return res.json({
+        status: false,
+        message: "Password update failed. No changes made.",
+      });
+    }
+
+    res.json({
+      status: true,
+      message: "Password updated successfully.",
+    });
+  } catch (error) {
+    res.json({
+      status: false,
+      message: "Server error. Please try again later.",
+      error: error.message,
+    });
+  }
+});
 
 // router.get("/profileAdmin", session, permission, async (req, res) => {
 // 	try {
