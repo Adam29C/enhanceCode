@@ -1,7 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../helpersModule/athetication")
 const router = express.Router();
-const starlineProvider = require("../../model/AndarBahar/ABProvider")
+const starlineProvider = require("../../model/starline/Starline_Provider")
 const moment = require('moment');
 router.get("/getStarlineProvider", authMiddleware, async (req, res) => {
   try {
