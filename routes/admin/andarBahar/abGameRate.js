@@ -3,6 +3,7 @@ const router = express.Router();
 const ABgameList = require("../../../model/AndarBahar/ABGameList");
 const moment = require("moment");
 const authMiddleware=require("../../helpersModule/athetication")
+
 router.get("/", authMiddleware,async (req, res) => {
   try {
     const provider = await ABgameList.find().sort({ _id: 1 });
@@ -98,7 +99,7 @@ router.delete("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/update", authMiddleware, async (req, res) => {
+router.put("/update", authMiddleware, async (req, res) => {
   try {
     const { gameRateId, gameName, gamePrice } = req.body;
 
