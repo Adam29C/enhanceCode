@@ -347,47 +347,28 @@ router.post("/blockEmployee",authMiddleware, async (req, res) => {
 // 	}
 // });
 
-// router.get("/editEmp/:id", session, permission, async function (req, res) {
-// 	try {
-// 		const empID = req.params.id;
-// 		const findEmp = await empInsert.findOne({ _id: empID });
-// 		const userInfo = req.session.details;
-// 		const permissionArray = req.view;
-// 		let arrayPer = findEmp.col_view_permission;
-// 		let finalArray = {};
-
-// 		for (index in arrayPer) {
-// 			if (arrayPer[index] != null) {
-// 				let indexValue = arrayPer[index];
-// 				finalArray[indexValue] = {
-// 					value: 1,
-// 				};
-// 			}
-// 		}
-
-// 		const check = permissionArray["manageEmp"].showStatus;
-// 		if (check === 1) {
-// 			res.render("./masters/editEmp", {
-// 				empList: finalArray,
-// 				userInfo: userInfo,
-// 				permission: permissionArray,
-// 				empDetails: findEmp,
-// 				title: "Edit Employee",
-// 			});
-// 		} else {
-// 			res.render("./dashboard/starterPage", {
-// 				userInfo: userInfo,
-// 				permission: permissionArray,
-// 				title: "Dashboard",
-// 			});
-// 		}
-// 	} catch (error) {
-// 		res.json({
-// 			status: 0,
-// 			message: "Something Bad Happend Contact Support",
-// 		});
-// 	}
-// });
+router.get("/empById/:id",async function (req, res) {
+	try {
+		const empID = req.params.id;
+    if(!empID){
+      return res.status(400).json({
+        status:false,
+        message:"empId is required",
+      })  
+    }
+		const findEmp = await empInsert.findOne({ _id: empID },{password:0});
+	  return res.status(200).json({
+      status:true,
+      message:"Employee informition show successfully",
+      data:findEmp
+    })
+	} catch (error) {
+		return res.status(400).json({
+			status: false,
+			message: "Something Bad Happend Contact Support",
+		});
+	}
+});
 
 // router.post("/updateEmployee", session, async function (req, res) {
 // 	try {
