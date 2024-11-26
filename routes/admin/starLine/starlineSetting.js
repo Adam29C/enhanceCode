@@ -5,7 +5,7 @@ const dateTime = require("node-datetime");
 const session = require("../../helpersModule/session");
 const moment = require("moment");
 const authMiddleware = require("../../helpersModule/athetication");
-const gamesSetting =require("../../../model/games/AddSetting");
+const gamesSetting = require("../../../model/games/AddSetting");
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
@@ -71,62 +71,73 @@ router.get("/addSetting", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
+router.post("/updateProviderSettings", authMiddleware,async (req, res) => {
   try {
     const { gameid, game1, game2, game3, status } = req.body;
 
-    if (
-      !gameid ||
-      !game1 ||
-      !game2 ||
-      !game3
-    ) {
+    if (!gameid || !game1 || !game2 || !game3 || status === undefined) {
       return res.status(400).json({
-        status: false,
-        message:
-          "'providerId', 'game1', 'game2', 'game3', and 'status' are required fields.",
+        success: false,
+        message: "Missing required fields: gameid, game1, game2, game3, or status.",
       });
     }
 
-    const settingList = await starSettings.findOne({ providerId: gameid });
-    if (!settingList) {
-      return res.status(404).json({
-        status: false,
-        message: "Provider Setting Not Present. First Create Provider Setting."
-      });
-    }
+    const formattedDate = moment().format("YYYY-MM-DD HH:mm:ss");
+    const daysOfWeek = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
 
-    const dt = moment().format("YYYY-MM-DD HH:mm:ss");
+    const settingList = await starSettings.find({ providerId: gameid });
+    const existingDays = new Set(settingList.map((item) => item.gameDay));
 
-    const updateResult = await starSettings.updateMany(
-      { providerId: gameid },
-      {
-        $set: {
-          OBT: game1,
-          CBT: game2,
-          OBRT: game3,
-          isClosed: status,
-          modifiedAt: dt,
-        },
-      }
-    );
+    const updatePromises = daysOfWeek
+      .filter((day) => existingDays.has(day))
+      .map((day) =>
+        starSettings.updateOne(
+          { providerId: gameid, gameDay: day },
+          {
+            $set: {
+              OBT: game1,
+              CBT: game2,
+              OBRT: game3,
+              isClosed: status,
+              modifiedAt: formattedDate,
+            },
+          }
+        )
+      );
 
-    if (updateResult.modifiedCount === 0) {
-      return res.status(404).json({
-        status: false,
-        message: "No settings found for the provided providerId.",
-      });
-    }
+    const newSettings = daysOfWeek
+      .filter((day) => !existingDays.has(day))
+      .map((day) => ({
+        providerId: gameid,
+        gameDay: day,
+        OBT: game1,
+        CBT: game2,
+        OBRT: game3,
+        isClosed: status,
+        modifiedAt: formattedDate,
+      }));
+
+    const insertPromise = newSettings.length > 0 ? starSettings.insertMany(newSettings) : null;
+
+    await Promise.all([...updatePromises, insertPromise]);
 
     return res.status(200).json({
-      status: true,
+      success: true,
       message: "Provider settings updated successfully.",
     });
-  } catch (e) {
+  } catch (error) {
     return res.status(500).json({
-      status: false,
-      message: "An error occurred while updating the provider settings.",
-      error: e.message,
+      success: false,
+      message: "An error occurred while updating provider settings.",
+      error: error.message,
     });
   }
 });
