@@ -31,7 +31,7 @@ router.get("/andarBahar", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/userReportAB", session, async (req, res) => {
+router.post("/userReportAB", authMiddleware, async (req, res) => {
     try {
         const { userId, gameId, startDate, endDate } = req.body;
 
