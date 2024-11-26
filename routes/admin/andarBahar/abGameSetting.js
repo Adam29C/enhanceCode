@@ -56,7 +56,7 @@ router.get("/addSetting", authMiddleware, async (req, res) => {
     return res.json({
       status: true,
       message: "Game settings fetched successfully",
-      data:provider,
+      data: provider,
     });
   } catch (e) {
     return res.json({
@@ -67,49 +67,74 @@ router.get("/addSetting", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
+router.post("/updateProviderSettings", authMiddleware,async (req, res) => {
   try {
     const { gameid, game1, game2, game3, status } = req.body;
-    const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
-    const settingList=await ABgamesSetting.findOne({providerId:gameid});
-    if(!settingList){
-      return res.status(404).json({
+    if (!gameid || !game1 || !game2 || !game3 || status === undefined) {
+      return res.status(400).json({
         success: false,
-        message: "Provider Setting Not Present. First Create Provider Setting."
+        message: "Missing required fields: gameid, game1, game2, game3, or status.",
       });
     }
 
-    const result = await ABgamesSetting.updateMany(
-      { providerId: gameid },
-      {
-        $set: {
-          OBT: game1,
-          CBT: game2,
-          OBRT: game3,
-          isClosed: status,
-          modifiedAt: formatted
-        }
-      }
-    );
+    const formattedDate = moment().format("YYYY-MM-DD HH:mm:ss");
+    const daysOfWeek = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
 
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No provider settings found for the given providerId or no changes made"
-      });
-    }
+    const settingList = await ABgamesSetting.find({ providerId: gameid });
+    const existingDays = new Set(settingList.map((item) => item.gameDay));
+
+    const updatePromises = daysOfWeek
+      .filter((day) => existingDays.has(day))
+      .map((day) =>
+        ABgamesSetting.updateOne(
+          { providerId: gameid, gameDay: day },
+          {
+            $set: {
+              OBT: game1,
+              CBT: game2,
+              OBRT: game3,
+              isClosed: status,
+              modifiedAt: formattedDate,
+            },
+          }
+        )
+      );
+
+    const newSettings = daysOfWeek
+      .filter((day) => !existingDays.has(day))
+      .map((day) => ({
+        providerId: gameid,
+        gameDay: day,
+        OBT: game1,
+        CBT: game2,
+        OBRT: game3,
+        isClosed: status,
+        modifiedAt: formattedDate,
+      }));
+
+    const insertPromise = newSettings.length > 0 ? ABgamesSetting.insertMany(newSettings) : null;
+
+    await Promise.all([...updatePromises, insertPromise]);
 
     return res.status(200).json({
       success: true,
-      message: "Provider settings updated successfully"
+      message: "Provider settings updated successfully.",
     });
-
-  } catch (e) {
+  } catch (error) {
+    console.error("Error updating provider settings:", error);
     return res.status(500).json({
       success: false,
-      message: "Error updating provider settings",
-      error: e.toString()
+      message: "An error occurred while updating provider settings.",
+      error: error.message,
     });
   }
 });
@@ -120,27 +145,18 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
     const providerId = gameid;
 
-    // Define the days of the week
     const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    // Check if a setting already exists for the provider and gameDay
     const existingSetting = await ABgamesSetting.findOne({ providerId, gameDay });
 
-    // If no setting exists for the given provider and gameDay
     if (!existingSetting) {
-
-      // Handle the "ALL" gameDay scenario
       if (gameDay.toUpperCase() === "ALL") {
-        // Fetch all existing game days for this provider
         const providerSettings = await ABgamesSetting.find({ providerId }, { gameDay: 1 });
 
-        // Collect the existing days for this provider
         const existingDays = providerSettings.map(item => item.gameDay);
 
-        // Update settings for the already existing game days (if any)
         for (let day of daysOfWeek) {
           if (existingDays.includes(day)) {
-            // Update existing game day settings
             await ABgamesSetting.updateOne(
               { providerId, gameDay: day },
               { $set: { OBT: game1, CBT: game2, OBRT: game3, isClosed: status, modifiedAt: formatted } }
@@ -148,9 +164,8 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
           }
         }
 
-        // Now insert new settings for the days that do not exist
         const newSettings = daysOfWeek
-          .filter(day => !existingDays.includes(day)) // Get the days that do not exist
+          .filter(day => !existingDays.includes(day))
           .map(day => ({
             providerId,
             gameDay: day,
@@ -161,7 +176,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
             modifiedAt: formatted
           }));
 
-        // Insert new settings for the unique days
         if (newSettings.length > 0) {
           await ABgamesSetting.insertMany(newSettings);
         }
@@ -172,7 +186,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
         });
 
       } else {
-        // Handle the case for a specific gameDay (not "ALL")
         const newSetting = new ABgamesSetting({
           providerId,
           gameDay,
@@ -183,7 +196,6 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
           modifiedAt: formatted
         });
 
-        // Save the new setting
         await newSetting.save();
 
         return res.json({
