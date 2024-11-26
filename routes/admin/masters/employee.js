@@ -220,5 +220,70 @@ router.post("/deleteEmp",authMiddleware, async (req, res) => {
   }
 });
 
+router.post("/createEmployee",authMiddleware, async function (req, res) {
+  try {
+    const { name, username, mobileNumber, designation, password, permission, loginPermission, loginFor } = req.body;
+    console.log(req.body,"admin")
+    if (!name || !username || !mobileNumber || !designation || !password || !permission || (loginFor !== 0 && loginFor !== 1)) {
+      return res.status(400).json({
+        status: false,
+        message: "name, username, mobileNumber, designation, password, permission, loginFor fields are required and loginFor must be 0 (false) or 1 (true)",
+      });
+    }
+
+    let checkEmp = await empInsert.findOne({
+      username: username.toLowerCase().replace(/\s/g, ""),
+    });
+
+    if (checkEmp) {
+      return res.status(400).json({
+        status: false,
+        message: "USERNAME ALREADY EXISTS",
+      });
+    }
+
+    let checkMobile = await empInsert.findOne({
+      mobile: mobileNumber,
+    });
+
+    if (checkMobile) {
+      return res.status(400).json({
+        status: false,
+        message: "USER ALREADY REGISTERED WITH THIS MOBILE NUMBER",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const emp_data = new empInsert({
+      name,
+      password: hashedPassword,
+      username: username.toLowerCase().replace(/\s/g, ""),
+      designation,
+      user_counter: 0,
+      role: "1",
+      banned: 1,
+      loginStatus: "Offline",
+      last_login: "null",
+      col_view_permission: permission,
+      loginFor,
+    });
+
+    await emp_data.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Registered Successfully",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: "Server Error",
+      error: error.message || "An unexpected error occurred",
+    });
+  }
+});
 
 module.exports = router;
