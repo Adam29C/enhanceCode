@@ -3,6 +3,7 @@ const userInfo = require("../../../model/API/Users");
 const fundReport = require("../../../model/API/FundRequest");
 const bids = require("../../../model/games/gameBids");
 const moment = require("moment");
+const authMiddleware = require("../../helpersModule/athetication");
 
 router.post("/dailyData", authMiddleware, async (req, res) => {
     try {

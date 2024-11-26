@@ -316,7 +316,7 @@ app.use("/notification",notification)
 app.use("/userIdea",userIdea)
 app.use("/appSetting",appSetting)
 app.use("/withdraw",withdraw)
-aap.use("/mainSalesReport",mainSalesReport);
+app.use("/mainSalesReport",mainSalesReport);
 app.use("/starSalesReport",starSalesReport);
 app.use("/abSalesReport",abSalesReport);
 app.use("/abTotalBid",abTotalBid);

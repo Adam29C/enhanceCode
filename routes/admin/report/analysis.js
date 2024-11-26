@@ -6,8 +6,6 @@ const provider = require("../../../model/games/Games_Provider");
 const bids = require("../../../model/games/gameBids");
 const starBids = require("../../../model/starline/StarlineBids");
 const abBids = require("../../../model/AndarBahar/ABbids");
-const session = require("../../helpersModule/session");
-const analysisCol = require("../../../model/games/Analysis");
 const moment = require("moment");
 const fundsreq = require('../../../model/API/FundRequest')
 
@@ -36,7 +34,7 @@ router.get("/analysis", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/analysisReport", session, async (req, res) => {
+router.post("/analysisReport", authMiddleware, async (req, res) => {
     try {
         const { userId, start, length, columns, search, order } = req.body;
 
