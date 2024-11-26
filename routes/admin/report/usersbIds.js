@@ -1,8 +1,8 @@
 const router = require("express").Router();
-const abBids = require("../../model/AndarBahar/ABbids");
-const gameBids = require("../../model/games/gameBids");
+const abBids = require("../../../model/AndarBahar/ABbids");
+const gameBids = require("../../../model/games/gameBids");
 const authMiddleware = require("../../helpersModule/athetication");
-const starBids = require("../../model/starline/StarlineBids");
+const starBids = require("../../../model/starline/StarlineBids");
 
 router.post("/getUserBidData", authMiddleware, async (req, res) => {
     try {

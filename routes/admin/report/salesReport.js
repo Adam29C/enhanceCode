@@ -30,7 +30,7 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/userReport", session, async (req, res) => {
+router.post("/userReport", authMiddleware, async (req, res) => {
     try {
         const { userId, gameId, startDate, endDate } = req.body;
 

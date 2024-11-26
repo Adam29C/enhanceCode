@@ -77,3 +77,4 @@ router.get("/gameBidsData", authMiddleware, async (req, res) => {
     }
 });
 
+module.exports = router;
