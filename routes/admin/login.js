@@ -92,7 +92,7 @@ router.post("/loginDashboard", async (req, res) => {
         const { error } = loginValidationadmin(req.body);
         if (error) {
             return res.status(400).json({
-                success: false,
+                status: false,
                 message: error.details[0].message
             });
         }
@@ -103,14 +103,14 @@ router.post("/loginDashboard", async (req, res) => {
         const user = await admin.findOne({ username });
         if (!user) {
             return res.status(404).json({
-                success: false,
+                status: false,
                 message: "User not found"
             });
         }
 
         if (user.banned === 0) {
             return res.status(403).json({
-                success: false,
+                status: false,
                 message: "You are banned by admin. Contact admin to unblock."
             });
         }
@@ -118,13 +118,13 @@ router.post("/loginDashboard", async (req, res) => {
         const validPass = await bcrypt.compare(password, user.password);
         if (!validPass) {
             return res.status(401).json({
-                success: false,
+                status: false,
                 message: "Invalid username or password"
             });
         }
         if (user.loginFor !== 0 && user.loginFor !== 1) {
             return res.status(403).json({
-                success: false,
+                status: false,
                 message: "You are not allowed to login"
             });
         }
@@ -150,14 +150,14 @@ router.post("/loginDashboard", async (req, res) => {
         req.session.token = token;
 
         return res.status(200).json({
-            success: true,
+            status: true,
             message: "Login successful",
             token,
             user: req.session.details,
         });
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            status: false,
             message: "An error occurred during login",
             error: error.message
         });
@@ -169,7 +169,7 @@ router.get("/getPermission", async (req, res) => {
         const { userId } = req.query;
         if (!userId) {
             return res.status(400).json({
-                success: false,
+                status: false,
                 message: "userId is required"
             });
         }
@@ -177,18 +177,18 @@ router.get("/getPermission", async (req, res) => {
 
         if (!permission) {
             return res.status(404).json({
-                success: false,
+                status: false,
                 message: "User not found"
             });
         }
         return res.status(200).json({
-            success: true,
+            status: true,
             message: "User permissions retrieved successfully",
             data: permission
         });
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            status: false,
             message: "An error occurred while retrieving user permissions",
             error: error.message
         });

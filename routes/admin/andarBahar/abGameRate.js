@@ -8,14 +8,14 @@ router.get("/", authMiddleware,async (req, res) => {
   try {
     const provider = await ABgameList.find().sort({ _id: 1 });
     res.status(200).json({
-      success: true,
+      status: true,
       message: "Games fetched successfully.",
       data: provider,
     });
   } catch (e) {
 
     res.status(500).json({
-      success: false,
+      status: false,
       message: "Error fetching games.",
       error: e.message,
     });
