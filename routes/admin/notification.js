@@ -2,7 +2,7 @@ const router = require("express").Router();
 const notification = require("../../model/notification");
 const sendnotification = require("../helpersModule/sendNotification");
 const moment = require('moment');
-const authMiddleware = require("../../helpersModule/athetication");
+const authMiddleware = require("../helpersModule/athetication");
 
 router.get("/",authMiddleware, async (req, res) => {
   try {
