@@ -92,13 +92,13 @@ router.get("/dashboardCount", authMiddleware,async (req, res) => {
     };
 
     return res.status(200).json({
-      success: true,
+      status: true,
       message: "Dashboard data fetched successfully",
       data: responseData,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
+      status: false,
       message: "An error occurred while loading the dashboard.",
       error: error.message,
     });
@@ -181,13 +181,13 @@ router.post("/getRegisteredUser", authMiddleware,async (req, res) => {
       }
   
       return res.json({
-        success: true,
+        status: true,
         message: "Data fetched successfully",
         data: returnJson,
       });
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        status: false,
         message: "An error occurred while fetching registered users.",
         error: error.message,
       });
@@ -198,13 +198,13 @@ router.post("/getRegisteredUserLogs",authMiddleware, async (req, res) => {
   try {
     const findRegisterLogs = await dashboard.find({});
     return res.status(200).json({
-      success:true,
+      status:true,
       message:"Registered UserLogs Shown Successfully",
       data:findRegisterLogs
     })
   }catch(err){
     return res.status(500).json({
-      success: false,
+      status: false,
       message: "Internal server Error",
       error: err.message,
     });

@@ -7,9 +7,9 @@ const bank = require("../../../model/bank");
 const dateTime = require("node-datetime");
 const notification = require("../../helpersModule/creditDebitNotification");
 const moment = require("moment");
-const authMiddleware=require("../../helpersModule/athetication");
+const authMiddleware = require("../../helpersModule/athetication");
 
-router.post("/", authMiddleware,async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
     try {
         const { page = 1, perPage = 50, search } = req.body;
         const skip = (page - 1) * perPage;
@@ -61,7 +61,7 @@ router.post("/", authMiddleware,async (req, res) => {
     }
 });
 
-router.post("/newHistroy", authMiddleware,async (req, res) => {
+router.post("/newHistroy", authMiddleware, async (req, res) => {
     try {
         const { page = 1, limit = 10, id, search } = req.body;
         const skip = (page - 1) * limit;
@@ -113,7 +113,7 @@ router.post("/newHistroy", authMiddleware,async (req, res) => {
     }
 });
 
-router.post("/newCredit", authMiddleware,async (req, res) => {
+router.post("/newCredit", authMiddleware, async (req, res) => {
     try {
         const page = parseInt(req.body.page) || 1;
         const limit = parseInt(req.body.limit) || 10;
@@ -167,7 +167,7 @@ router.post("/newCredit", authMiddleware,async (req, res) => {
     }
 });
 
-router.get("/getProfile", authMiddleware,async (req, res) => {
+router.get("/getProfile", authMiddleware, async (req, res) => {
     try {
         const { userId } = req.query;
         if (!userId) {

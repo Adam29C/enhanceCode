@@ -185,7 +185,7 @@ router.post("/updateAll", authMiddleware, async (req, res) => {
         const settingList = await gamesSetting.findOne({ providerId: gameid });
         if (!settingList) {
             return res.status(404).json({
-                success: false,
+                status: false,
                 message: "Provider Setting Not Present. First Create Provider Setting."
             });
         }

@@ -134,7 +134,6 @@ router.post("/updateProviderSettings", authMiddleware,async (req, res) => {
       message: "Provider settings updated successfully.",
     });
   } catch (error) {
-    console.error("Error updating provider settings:", error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while updating provider settings.",
