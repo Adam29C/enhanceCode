@@ -1,62 +1,15 @@
 const router = require("express").Router();
 const Bank = require("../../../model/bank");
-// const session = require("../helpersModule/session");
-// const permission = require("../helpersModule/permission");
-// const revert = require("../../model/revertPayment");
+
 const transaction = require("../../../model/transactionON-OFF");
 const UPI_ID = require("../../../model/upi_ids");
 const dateTime = require("node-datetime");
 const SendOtp = require("sendotp");
-// const sendOtp = new SendOtp("290393AuGCyi6j5d5bfd26");
 const sendOtp = new SendOtp("1207171791436302472");
 const PaymentModes = require("../../../model/payments/pamentModeModel");
+const authMiddleware = require("../../helpersModule/athetication");
 
-// router.post("/OTPsend", async (req, res) => {
-// 	const userInfo = req.session.details;
-// 	let mobile = userInfo.mobile;
-
-// 	res.json({
-// 		status: 1,
-// 		message: "success",
-
-// 	});
-
-// 	// sendOtp.send(`+91${mobile}`, "DGAMES", function (error, data) {
-// 	// 	res.json({
-// 	// 		status: 1,
-// 	// 		message: "success",
-// 	// 		data: data,
-// 	// 	});
-// 	// });
-// });
-
-// router.get("/", session, permission, async (req, res) => {
-// 	try {
-// 		const bank = await Bank.find();
-// 		const userInfo = req.session.details;
-// 		const permissionArray = req.view;
-
-// 		const check = permissionArray["bank"].showStatus;
-// 		if (check === 1) {
-// 			res.render("./masters/bank", {
-// 				data: bank,
-// 				userInfo: userInfo,
-// 				permission: permissionArray,
-// 				title: "Bank",
-// 			});
-// 		} else {
-// 			res.render("./dashboard/starterPage", {
-// 				userInfo: userInfo,
-// 				permission: permissionArray,
-// 				title: "Dashboard",
-// 			});
-// 		}
-// 	} catch (e) {
-// 		res.json({ message: e });
-// 	}
-// });
-
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware, async (req, res) => {
   try {
     const bank = await UPI_ID.find();
     if (!bank || bank.length === 0) {
@@ -80,7 +33,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/upiAdd", async (req, res) => {
+router.post("/upiAdd",authMiddleware,async (req, res) => {
   try {
     let { upiId, status, merchantName } = req.body;
     if (status === true) {
@@ -112,7 +65,7 @@ router.post("/upiAdd", async (req, res) => {
   }
 });
 
-router.post("/blockUnblock", async (req, res) => {
+router.post("/blockUnblock",authMiddleware, async (req, res) => {
   try {
     const { id, status } = req.body;
 
@@ -165,7 +118,7 @@ router.post("/blockUnblock", async (req, res) => {
   }
 });
 
-router.post("/disable_upi", async (req, res) => {
+router.post("/disable_upi",authMiddleware, async (req, res) => {
   try {
     const id = req.body.id;
     const status = req.body.status;
@@ -211,7 +164,7 @@ router.post("/disable_upi", async (req, res) => {
   }
 });
 
-router.patch("/updatePaymentMode", async (req, res) => {
+router.patch("/updatePaymentMode",authMiddleware, async (req, res) => {
   try {
     const { id, status } = req.body;
     if (!id) {
@@ -271,9 +224,7 @@ router.get("/fundMode", async (req, res) => {
   }
 });
 
-
-
-router.post("/registerbank", async (req, res) => {
+router.post("/registerbank",authMiddleware, async (req, res) => {
   try {
     const { bankName, status } = req.body;
 
@@ -325,7 +276,7 @@ router.post("/registerbank", async (req, res) => {
   }
 });
 
-router.post("/dlt_upi", async (req, res) => {
+router.post("/dlt_upi",authMiddleware, async (req, res) => {
   try {
     const id = req.body.id;
 
@@ -354,7 +305,7 @@ router.post("/dlt_upi", async (req, res) => {
   }
 });
 
-router.post("/dltBank", async (req, res) => {
+router.post("/dltBank",authMiddleware, async (req, res) => {
   try {
     const id = req.body.id;
     const bank = await Bank.deleteOne({ _id: id });
@@ -372,7 +323,7 @@ router.post("/dltBank", async (req, res) => {
   }
 });
 
-router.post("/modeAdd", async (req, res) => {
+router.post("/modeAdd",authMiddleware, async (req, res) => {
   try {
     let { mode, status, urlWeb } = req.body;
 
@@ -425,7 +376,7 @@ router.post("/modeAdd", async (req, res) => {
 });
 
 
-router.post("/disable_mode", async (req, res) => {
+router.post("/disable_mode",authMiddleware, async (req, res) => {
   try {
     const id = req.body.id;
     const status = req.body.status;
@@ -450,7 +401,7 @@ router.post("/disable_mode", async (req, res) => {
   }
 });
 
-router.post("/dlt_mode", async (req, res) => {
+router.post("/dlt_mode",authMiddleware, async (req, res) => {
   try {
     const id = req.body.id;
 
@@ -476,7 +427,7 @@ router.post("/dlt_mode", async (req, res) => {
 });
 
 
-router.get("/upiList", async (req, res) => {
+router.get("/upiList",authMiddleware, async (req, res) => {
   try {
     const upiList = await UPI_ID.find();
     let upiLists = [];

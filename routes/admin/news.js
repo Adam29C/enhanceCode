@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const newsInfo = require("../../model/News");
-router.get("/news", async (req, res) => {
+const authMiddleware = require("../helpersModule/athetication");
+router.get("/",authMiddleware, async (req, res) => {
   try {
     const newsData = await newsInfo.find({}, { Description: 1 });
 

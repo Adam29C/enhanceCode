@@ -2,8 +2,9 @@ const router = require("express").Router();
 const notification = require("../../model/notification");
 const sendnotification = require("../helpersModule/sendNotification");
 const moment = require('moment');
+const authMiddleware = require("../helpersModule/athetication");
 
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware, async (req, res) => {
   try {
     const notificationsData = await notification
       .find({})
@@ -23,7 +24,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/inserNotification", async (req, res) => {
+router.post("/inserNotification",authMiddleware, async (req, res) => {
   try {
     const formattedDate = moment().format("D/MM/YYYY h:mm a");
 
@@ -54,7 +55,7 @@ router.post("/inserNotification", async (req, res) => {
   }
 });
 
-router.delete("/notification/:id", async (req, res) => {
+router.delete("/notification/:id",authMiddleware, async (req, res) => {
     try {
         const notificationId = req.params.id;
 

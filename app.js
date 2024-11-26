@@ -136,6 +136,8 @@ const walletContect=require("./routes/admin/appSetting/walletContect.js")
 const versionSetting =require("./routes/admin/appSetting/versionSetting.js")
 const upiId = require("./routes/admin/masters/upiId.js")
 const employees =require("./routes/admin/masters/employee.js")
+const news =require("./routes/admin/news.js")
+const deleteduser=require("./routes/admin/deletedUser.js")
 
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js");
@@ -337,6 +339,8 @@ app.use("/walletContect",walletContect)
 app.use("/versionSetting",versionSetting)
 app.use("/upiId",upiId)
 app.use("/master/employees", employees);
+app.use("/news",news)
+app.use("/deleteduser",deleteduser)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
