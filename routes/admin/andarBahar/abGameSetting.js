@@ -75,7 +75,7 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
     const settingList=await ABgamesSetting.findOne({providerId:gameid});
     if(!settingList){
       return res.status(404).json({
-        success: false,
+        status: false,
         message: "Provider Setting Not Present. First Create Provider Setting."
       });
     }
@@ -95,19 +95,19 @@ router.post("/updateProviderSettings", authMiddleware, async (req, res) => {
 
     if (result.modifiedCount === 0) {
       return res.status(404).json({
-        success: false,
+        status: false,
         message: "No provider settings found for the given providerId or no changes made"
       });
     }
 
     return res.status(200).json({
-      success: true,
+      status: true,
       message: "Provider settings updated successfully"
     });
 
   } catch (e) {
     return res.status(500).json({
-      success: false,
+      status: false,
       message: "Error updating provider settings",
       error: e.toString()
     });
@@ -167,7 +167,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
         }
 
         return res.json({
-          success: true,
+          status: true,
           message: "Successfully inserted or updated timings for all days."
         });
 
@@ -187,7 +187,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
         await newSetting.save();
 
         return res.json({
-          success: true,
+          status: true,
           message: `Successfully inserted timings for ${gameDay}`
         });
       }
@@ -195,7 +195,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
     } else {
       // If the setting already exists for the given provider and gameDay
       return res.json({
-        success: false,
+        status: false,
         message: `Details already filled for ${gameDay}`
       });
     }
@@ -203,7 +203,7 @@ router.post("/insertSettings", authMiddleware, async (req, res) => {
   } catch (e) {
     console.error(e); // Log the error for debugging purposes
     return res.status(400).json({
-      success: false,
+      status: false,
       message: "Error inserting settings",
       error: e.toString()
     });
@@ -216,7 +216,7 @@ router.patch("/", authMiddleware, async (req, res) => {
     const { gameid, game1, game2, game3, status } = req.body;
     if (!gameid || !game1 || !game2 || !game3 || !status) {
       return res.status(400).json({
-        success: false,
+        status: false,
         message: "Missing required fields in the request body."
       });
     }
@@ -236,12 +236,12 @@ router.patch("/", authMiddleware, async (req, res) => {
 
     if (result.modifiedCount === 0) {
       return res.status(404).json({
-        success: false,
+        status: false,
         message: "No settings found for the provided ID or no changes were made."
       });
     }
     return res.status(200).json({
-      success: true,
+      status: true,
       message: "Settings updated successfully.",
       data: {
         _id: gameid,
@@ -254,7 +254,7 @@ router.patch("/", authMiddleware, async (req, res) => {
     });
   } catch (e) {
     return res.status(500).json({
-      success: false,
+      status: false,
       message: "Error updating settings.",
       error: e.toString()
     });
@@ -266,13 +266,13 @@ router.get("/:providerId", authMiddleware, async (req, res) => {
     const id = req.params.providerId;
     let ABgamesSettingInfo = await ABgamesSetting.find({ providerId: id });
     return res.status(200).json({
-      success: true,
+      status: true,
       message: "Settings fetched successfully.",
       data: ABgamesSettingInfo
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
+      status: false,
       message: "An error occurred while processing the request.",
       error: error.message
     });

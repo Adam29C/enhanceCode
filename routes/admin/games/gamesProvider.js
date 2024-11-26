@@ -8,13 +8,13 @@ router.get("/", authMiddleware, async (req, res) => {
         const provider = await gamesProvider.find().sort({ _id: 1 });
         return res.status(200).json({
             statusCode: 200,
-            success: true,
+            staus: true,
             message: "Data fetched successfully",
             data: provider,
         });
     } catch (error) {
         return res.status(500).json({
-            status: 0,
+            status: false,
             message: "Something Bad Happened. Please Contact Support",
             error: error.message,
         });
