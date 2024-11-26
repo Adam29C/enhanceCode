@@ -164,14 +164,14 @@ router.get("/empById/:id",authMiddleware,async function (req, res) {
 
 router.post("/updateEmployee",authMiddleware,async function(req,res){
 try{
-const{id,colViewPermission}=req.body;
-if(!id ||!colViewPermission){
+const{id,colViewPermission,username,loginPermission}=req.body;
+if(!id ||!colViewPermission||!username){
   return res.status(400).json({
     status:false,
-    message:"id and col_view_permission is required"
+    message:"id,col_view_permission,username is required"
   })
 }
-const updatePermition = await empInsert.updateOne({_id:id},{$set:{col_view_permission:colViewPermission}})
+const updatePermition = await empInsert.updateOne({_id:id},{$set:{col_view_permission:colViewPermission,username}})
 return res.status(200).json({
   status:true,
   message:"Permission Update Successfully"
