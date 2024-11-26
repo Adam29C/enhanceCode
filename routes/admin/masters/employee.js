@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const dateTime = require("node-datetime");
 const bcrypt = require("bcryptjs");
 
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware,async (req, res) => {
   try {
     const { searchQuery, page = 1, limit = 10 } = req.body;
 
@@ -31,7 +31,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const totalCount = await empInsert.countDocuments(filter);
 
     const empList = await empInsert
-      .find(filter, { name: 1, username: 1, loginStatus: 1 })
+      .find(filter, { name: 1, username: 1, loginStatus: 1,banned:1 })
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber);
 
@@ -54,7 +54,7 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/updatePassword", authMiddleware, async function (req, res) {
+router.post("/updatePassword",authMiddleware, async function (req, res) {
   try {
     const { password, adminId } = req.body;
 
@@ -105,7 +105,7 @@ router.post("/updatePassword", authMiddleware, async function (req, res) {
   }
 });
 
-router.post("/blockEmployee", async (req, res) => {
+router.post("/blockEmployee",authMiddleware, async (req, res) => {
   try {
     const { adminId, status } = req.body;
 
