@@ -115,6 +115,21 @@ const notification = require("./routes/admin/notification.js")
 const userIdea =require("./routes/admin/userIdia.js")
 const appSetting = require("./routes/admin/appSetting/howToPlay.js")
 const withdraw = require("./routes/admin/appSetting/withdraw.js")
+const mainSalesReport = require("./routes/admin/report/salesReport.js");
+const starSalesReport= require("./routes/admin/report/starLineReport.js");
+const abSalesReport =require("./routes/admin/report/abSalesReport.js");
+const abTotalBid =require("./routes/admin/report/abTotalBids.js");
+const fundReports= require("./routes/admin/report/fundReport.js");
+const upiFundReport =require("./routes/admin/report/upiFoundReport.js");
+const trakPay=require("./routes/admin/report/trakpay.js");
+const razorPay =require("./routes/admin/report/razorpayReport.js");
+const totalBidsReport =require("./routes/admin/report/totalBids.js");
+const creditDebitReport =require("./routes/admin/report/creditDebitReport.js");
+const daliyReport=require("./routes/admin/report/daliyReport.js");
+const biddingReport=require("./routes/admin/report/biddingReport.js");
+const userAnalysis =require("./routes/admin/report/analysis.js");
+const customeBalance =require("./routes/admin/report/customeBalance.js");
+const userBids =require("./routes/admin/report/usersbIds.js");
 const noticeBoard =require("./routes/admin/appSetting/noticeBoard.js")
 const profileNote =require("./routes/admin/appSetting/profileNote.js")
 const walletContect=require("./routes/admin/appSetting/walletContect.js")
@@ -301,6 +316,21 @@ app.use("/notification",notification)
 app.use("/userIdea",userIdea)
 app.use("/appSetting",appSetting)
 app.use("/withdraw",withdraw)
+aap.use("/mainSalesReport",mainSalesReport);
+app.use("/starSalesReport",starSalesReport);
+app.use("/abSalesReport",abSalesReport);
+app.use("/abTotalBid",abTotalBid);
+app.use("/fundReports",fundReports);
+app.use("/upiFundReport",upiFundReport);
+app.use("/trakPay",trakPay);
+app.use("/razorPay",razorPay);
+app.use("/totalBidsReport",totalBidsReport);
+app.use("/creditDebitReport",creditDebitReport);
+app.use("/daliyReport",daliyReport);
+app.use("/biddingReport",biddingReport);
+app.use("/userAnalysis",userAnalysis);
+app.use("/customeBalance",customeBalance);
+app.use("/userBids",userBids)
 app.use("/noticeBoard",noticeBoard)
 app.use("/profileNote",profileNote)
 app.use("/walletContect",walletContect)
