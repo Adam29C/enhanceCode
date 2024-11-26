@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const authMiddleware = require("../../helpersModule/athetication");
 const moment = require("moment");
-const UPI_list = require("../../../../model/upi_ids");
+const UPI_list = require("../../../model/upi_ids");
 const upiFundReport=require("../../../model/onlineUpiPayment")
 const history = require("../../../model/wallet_history");
 
@@ -31,7 +31,7 @@ router.get("/upiReport", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/getUPIReport", async (req, res) => {
+router.post("/getUPIReport", authMiddleware,async (req, res) => {
     try {
         const { id, date, dateStart, page = 1, limit = 10, search = '' } = req.body;
 
@@ -120,7 +120,7 @@ router.post("/getUPIReport", async (req, res) => {
     }
 });
 
-router.post("/getUPIFundReport", async (req, res) => {
+router.post("/getUPIFundReport", authMiddleware,async (req, res) => {
     try {
         const { id, date, dateStart, page = 1, limit = 10, search = '' } = req.body;
         const skip = (page - 1) * limit;
