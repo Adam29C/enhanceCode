@@ -1,3 +1,4 @@
+const router = require("express").Router();
 const userInfo = require("../../../model/API/Users");
 const fundReport = require("../../../model/API/FundRequest");
 const bids = require("../../../model/games/gameBids");
