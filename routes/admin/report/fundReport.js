@@ -2,7 +2,7 @@ const router = require("express").Router();
 const moment = require("moment")
 const authMiddleware = require("../../helpersModule/athetication");
 
-router.get("/", authMiddleware, permission, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const [bankList, adminList] = await Promise.all([
             bank.find(),
