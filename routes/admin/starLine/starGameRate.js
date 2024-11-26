@@ -56,7 +56,7 @@ router.post("/insertGame", authMiddleware, async (req, res) => {
 });
 
 router.delete("/", authMiddleware, async (req, res) => {
-  const { gameRateId } = req.body;
+  const { gameRateId } = req.query;
 
   try {
     const savedGames = await stargameList.deleteOne({ _id: gameRateId });
