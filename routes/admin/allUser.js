@@ -29,7 +29,6 @@ const client = new MongoClient(process.env.DB_CONNECT, {
 
 router.post("/getAllUsers", authMiddleware, async function (req, res) {
     try {
-        console.log(req.body)
         const page = parseInt(req.body.page) || 1;
         const limit = parseInt(req.body.limit) || 10;
         const skip = (page - 1) * limit;

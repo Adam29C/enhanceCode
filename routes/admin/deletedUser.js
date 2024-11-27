@@ -4,36 +4,33 @@ const deletedUser = require("../../model/API/Deleted_User");
 const authMiddleware = require("../helpersModule/athetication");
 router.post("/", authMiddleware, async function (req, res) {
   try {
-    const { start, length, search } = req.body;
-    const startIndex = parseInt(start) + 1;
-    const { value: searchValue } = search || "";
+    const { page = 1, limit = 10, searchQuery = "" } = req.body;
+    const skip = (page - 1) * limit;
 
     const searchFields = ["username", "name", "mobile"];
-    const searchQuery = searchValue
+    const searchConditions = searchQuery
       ? {
           $or: searchFields.map((field) => ({
-            [field]: { $regex: searchValue, $options: "i" },
+            [field]: { $regex: searchQuery, $options: "i" },
           })),
         }
       : {};
 
     const deletedUsers = await deletedUser
-      .find(searchQuery)
-      .skip(parseInt(start))
-      .limit(parseInt(length))
+      .find(searchConditions)
+      .skip(skip)
+      .limit(limit)
       .sort({ _id: 1 });
 
-    const totalRecords = await deletedUser.countDocuments(searchQuery);
+    const totalRecords = await deletedUser.countDocuments(searchConditions);
 
-    const formattedData = deletedUsers.map((user, index) => {
-      return {
-        sno: startIndex + index,
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        mobile: user.mobile,
-      };
-    });
+    const formattedData = deletedUsers.map((user, index) => ({
+      sno: skip + index + 1,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      mobile: user.mobile,
+    }));
 
     if (deletedUsers.length === 0) {
       return res.status(404).json({
