@@ -707,7 +707,7 @@ async function sendRefundNotification(tokenArray, name, body) {
     for (let chunk of tokenChunks) {
         message.tokens = chunk;
         try {
-            const response = await messaging.sendMulticast(message);
+            //const response = await messaging.sendMulticast(message);
             if (response.failureCount > 0) {
                 response.responses.forEach((resp, idx) => {
                     if (!resp.success) {
