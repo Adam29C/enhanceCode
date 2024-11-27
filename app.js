@@ -99,7 +99,7 @@ const starLineWinnerList =require("./routes/admin/starLine/starLineWinnerList.js
 const abGameProvider=require("./routes/admin/andarBahar/abGameProvider")
 const abGameSetting =require("./routes/admin/andarBahar/abGameSetting")
 const abGameRate =require("./routes/admin/andarBahar/abGameRate.js")
-const abProfitLoss =require("./routes/admin/andarBahar/abProfitLoss1.js")
+const abProfitLoss =require("./routes/admin/andarBahar/abProfitLoss.js")
 const abGameResult =require("./routes/admin/andarBahar/abGameResult.js")
 const abWinnerList =require("./routes/admin/andarBahar/abWinnerList.js")
 const exportDebit =require("./routes/admin/wallet/exportDebit.js");
@@ -341,6 +341,7 @@ app.use("/upiId",upiId)
 app.use("/master/employees", employees);
 app.use("/news",news)
 app.use("/deleteduser",deleteduser)
+app.use("/anderBaharProfitLoss",abProfitLoss)
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");

@@ -12,7 +12,7 @@ const mainUser = require("../../model/API/Users");
 const revertEntries = require("../../model/revertPayment");
 const history = require("../../model/wallet_history");
 const moment = require("moment");
-const messaging = require("../../firebase");
+//const messaging = require("../../firebase");
 const lodash = require('lodash');
 
 // const gcm = require("node-gcm");
@@ -1069,7 +1069,7 @@ async function sendRefundNotification(tokenArray, name, body) {
 	for (let chunk of tokenChunks) {
 		message.tokens = chunk;
 		try {
-			const response = await messaging.sendMulticast(message);
+			//const response = await messaging.sendMulticast(message);
 			if (response.failureCount > 0) {
 				response.responses.forEach((resp, idx) => {
 					if (!resp.success) {

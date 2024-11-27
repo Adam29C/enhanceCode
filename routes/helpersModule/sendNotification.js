@@ -1,6 +1,6 @@
 const user = require('../../model/API/Users');
 const chunks = require('array.chunk');
-const messaging = require("../../firebase");
+//const messaging = require("../../firebase");
 module.exports = async function (req, res, sumDgit, uesrtoken) {
     try {
         const x = req.body.gameId;
