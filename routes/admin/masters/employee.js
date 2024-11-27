@@ -222,12 +222,11 @@ router.post("/deleteEmp",authMiddleware, async (req, res) => {
 
 router.post("/createEmployee",authMiddleware, async function (req, res) {
   try {
-    const { name, username, mobileNumber, designation, password, colViewPermission, loginPermission, loginFor } = req.body;
-    console.log(req.body,"admin")
-    if (!name || !username || !mobileNumber || !designation || !password || !colViewPermission || (loginFor !== 0 && loginFor !== 1)) {
+    const { name, username,  designation, password, colViewPermission, loginPermission, loginFor } = req.body;
+    if (!name || !username ||  !designation || !password || !colViewPermission || (loginFor !== 0 && loginFor !== 1)) {
       return res.status(400).json({
         status: false,
-        message: "name, username, mobileNumber, designation, password, permission, loginFor fields are required and loginFor must be 0 (false) or 1 (true)",
+        message: "name, username,  designation, password, permission, loginFor fields are required and loginFor must be 0 (false) or 1 (true)",
       });
     }
 
@@ -242,16 +241,6 @@ router.post("/createEmployee",authMiddleware, async function (req, res) {
       });
     }
 
-    let checkMobile = await empInsert.findOne({
-      mobile: mobileNumber,
-    });
-
-    if (checkMobile) {
-      return res.status(400).json({
-        status: false,
-        message: "USER ALREADY REGISTERED WITH THIS MOBILE NUMBER",
-      });
-    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
