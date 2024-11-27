@@ -1,4 +1,4 @@
-const messaging = require("../../firebase")
+//const messaging = require("../../firebase")
 // const gcm = require("node-gcm");
 // const sender = new gcm.Sender(
 // 	"AAAAz-Vezi4:APA91bHNVKatfjZiHl13fcF1xzWK5pLOixdZlHE8KVRwIxVHLJdWGF973uErxgjL_HkzzD1K7a8oxgfjXp4StlVk_tNOTYdFkSdWe6vaKw6hVEDdt0Dw-J0rEeHpbozOMXd_Xlt-_dM1"
