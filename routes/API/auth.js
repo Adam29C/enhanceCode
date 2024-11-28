@@ -181,6 +181,15 @@ router.post("/verifyMobile", async (req, res) => {
 				message: "Access Denied",
 			});
 
+		let userBanned = await User.findOne({ mobile: mobileNumber, banned: true });
+		if (userBanned) {
+			console.log(userBanned)
+			return res.status(400).json({
+				status: 2,
+				message: "You Are Blocked By Admin",
+			});
+		}
+
 		const user = await User.findOne({ mobile: mobileNumber });
 		if (user) {
 			const username = user.username;
@@ -254,22 +263,22 @@ router.post("/register", async (req, res) => {
 		// check if USER already exist
 		const userExist = await User.findOne({ username: trimusername });
 
-    if (userExist) {
-      let salt = await bcrypt.genSalt(10);
-      let userMpin = req.body.mpin;
-      let hashedMpin = await bcrypt.hash(userMpin, salt);
-      let data = await User.findOneAndUpdate(
-        { _id: userExist._id },
-        {
-          deviceId: req.body.deviceId,
-          mpin: hashedMpin,
-        }
-      );
-      return res.status(200).send({
-        status: 0,
-        message: "User Already Registered",
-      });
-    }
+		if (userExist) {
+			let salt = await bcrypt.genSalt(10);
+			let userMpin = req.body.mpin;
+			let hashedMpin = await bcrypt.hash(userMpin, salt);
+			let data = await User.findOneAndUpdate(
+				{ _id: userExist._id },
+				{
+					deviceId: req.body.deviceId,
+					mpin: hashedMpin,
+				}
+			);
+			return res.status(200).send({
+				status: 0,
+				message: "User Already Registered",
+			});
+		}
 
 		const mobileNumber = req.body.mobile;
 		const OTP = req.body.deviceVeriOTP;
@@ -816,67 +825,67 @@ router.post("/forgotOtpSend", async (req, res) => {
 })
 
 router.post("/userExistOtpVerifyDevice", async (req, res) => {
-  try {
-    const { mobileNumber, otp, deviceId } = req.body;
-    // Validate request body
-    if (!mobileNumber || !otp || !deviceId) {
-      return res.status(400).json({
-        status: 0,
-        message: "Mobile number, OTP, and device ID are required.",
-      });
-    }
+	try {
+		const { mobileNumber, otp, deviceId } = req.body;
+		// Validate request body
+		if (!mobileNumber || !otp || !deviceId) {
+			return res.status(400).json({
+				status: 0,
+				message: "Mobile number, OTP, and device ID are required.",
+			});
+		}
 
-    let userDetails = await initialInfo.findOne({ mobileNumber });
-    if (!userDetails) {
-      return res.status(400).json({
-        status: 0,
-        message: "User details not found.",
-      });
-    }
+		let userDetails = await initialInfo.findOne({ mobileNumber });
+		if (!userDetails) {
+			return res.status(400).json({
+				status: 0,
+				message: "User details not found.",
+			});
+		}
 
-    let newTimestamp = moment(userDetails.forgotOtpTime)
-      .add(2, "minutes")
-      .valueOf();
-    let currentTime = Date.now();
-    if (currentTime > newTimestamp) {
-      return res.status(400).json({
-        status: 0,
-        message: "OTP has expired. Please try again.",
-      });
-    }
+		let newTimestamp = moment(userDetails.forgotOtpTime)
+			.add(2, "minutes")
+			.valueOf();
+		let currentTime = Date.now();
+		if (currentTime > newTimestamp) {
+			return res.status(400).json({
+				status: 0,
+				message: "OTP has expired. Please try again.",
+			});
+		}
 
-    let userDetailsInfo = await User.findOne({ mobile: mobileNumber });
+		let userDetailsInfo = await User.findOne({ mobile: mobileNumber });
 
-    if (!userDetailsInfo) {
-      return res.status(400).json({
-        status: 0,
-        message: "User details not found.",
-      });
-    }
-    if (userDetails.Otp !== parseInt(otp)) {
-      return res.status(400).json({
-        status: 0,
-        message: "Invalid OTP. Please try again.",
-      });
-    }
-    // Update device ID upon successful verification
-    await User.updateOne({ mobile: mobileNumber }, { $set: { deviceId } });
-    const token = jwt.sign(
-      { key: User.deviceId, deviceId },
-      process.env.jsonSecretToken
-    );
-    return res.status(200).send({
-      status: 1,
-      message: "OTP verified successfully.",
-      token: token,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      status: 0,
-      message: "Something bad happened. Please contact support.",
-      error: error.message,
-    });
-  }
+		if (!userDetailsInfo) {
+			return res.status(400).json({
+				status: 0,
+				message: "User details not found.",
+			});
+		}
+		if (userDetails.Otp !== parseInt(otp)) {
+			return res.status(400).json({
+				status: 0,
+				message: "Invalid OTP. Please try again.",
+			});
+		}
+		// Update device ID upon successful verification
+		await User.updateOne({ mobile: mobileNumber }, { $set: { deviceId } });
+		const token = jwt.sign(
+			{ key: User.deviceId, deviceId },
+			process.env.jsonSecretToken
+		);
+		return res.status(200).send({
+			status: 1,
+			message: "OTP verified successfully.",
+			token: token,
+		});
+	} catch (error) {
+		return res.status(400).json({
+			status: 0,
+			message: "Something bad happened. Please contact support.",
+			error: error.message,
+		});
+	}
 });
 
 router.post("/forgotOtpVerify", async (req, res) => {
@@ -1066,7 +1075,7 @@ async function otpSend(mobileNumber) {
 		// 	to: mobileNumber
 		// });
 		// let message = `Dear user,\n${generateOTP} is your OTP ( One time Password ) For Verification Valid For 5 Mins.\nRegards,\nKhatri555.com`;
-		let message= `Your one time verification code is ${generateOTP}. Verification code is valid for 30 min., We have never ask for verification code or pin.`
+		let message = `Your one time verification code is ${generateOTP}. Verification code is valid for 30 min., We have never ask for verification code or pin.`
 		const url = `https://sms.par-ken.com/api/smsapi?key=${account_key}&route=${route}&sender=${sender_id}&number=${mobileNumber}&sms=${message}&templateid=${template_id}`
 		const response = await axios.post(url);
 		console.log('SMS sent successfully:', response.data);
