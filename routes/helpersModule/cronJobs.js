@@ -33,142 +33,142 @@ const client = new MongoClient(process.env.DB_CONNECT, {
 
 const chatDomain = process.env.CHAT_DOMAIN;
 module.exports = async function () {
-	cron.schedule("45 23 * * *", async () => {
-		try {
-			const dt = dateTime.create();
-			const todayDate = dt.format("d/m/Y");
-			let todayRegistered = await users.find(
-				{ wallet_balance: 0, CreatedAt: { $regex: todayDate } },
-				{ mobile: 1, username: 1 }
-			);
+	// cron.schedule("45 23 * * *", async () => {
+	// 	try {
+	// 		const dt = dateTime.create();
+	// 		const todayDate = dt.format("d/m/Y");
+	// 		let todayRegistered = await users.find(
+	// 			{ wallet_balance: 0, CreatedAt: { $regex: todayDate } },
+	// 			{ mobile: 1, username: 1 }
+	// 		);
 
-			var vCard = require("vcards-js");
-			var vContact;
-			var formattedString = "";
-			let i = 1;
-			todayRegistered.forEach(function (contact) {
-				let number = contact.mobile;
-				vContact = vCard();
-				vContact.firstName = contact.username + " Zero Bal";
-				vContact.workPhone = number;
-				formattedString += vContact.getFormattedString();
-				i++;
-			});
+	// 		var vCard = require("vcards-js");
+	// 		var vContact;
+	// 		var formattedString = "";
+	// 		let i = 1;
+	// 		todayRegistered.forEach(function (contact) {
+	// 			let number = contact.mobile;
+	// 			vContact = vCard();
+	// 			vContact.firstName = contact.username + " Zero Bal";
+	// 			vContact.workPhone = number;
+	// 			formattedString += vContact.getFormattedString();
+	// 			i++;
+	// 		});
 
-			var fs = require("fs");
-			fs.writeFileSync("zeroBalance.vcf", formattedString, {
-				encoding: "utf8",
-			});
-			sendMail(i);
-		} catch (error) {
-			console.log(error);
-		}
-	});
+	// 		var fs = require("fs");
+	// 		fs.writeFileSync("zeroBalance.vcf", formattedString, {
+	// 			encoding: "utf8",
+	// 		});
+	// 		sendMail(i);
+	// 	} catch (error) {
+	// 		console.log(error);
+	// 	}
+	// });
 
-	cron.schedule("10 0 * * *", async () => {
-		if (process.env.pm_id == "1") {
-			try {
-				const findUser = await users.find({ wallet_bal_updated_at: null });
-				let deleteArr = [];
-				let idArray = [];
-				let mobileNumber = [];
-				const dt = dateTime.create();
-				const formatted = dt.format("d/m/Y I:M:S");
-				var endDate = moment(formatted, "DD/MM/YYYY");
-				for (index in findUser) {
-					let CreatedAt = findUser[index].CreatedAt;
-					let mobile = findUser[index].mobile;
-					let startDate = moment(CreatedAt, "DD/MM/YYYY");
-					let result = endDate.diff(startDate, "days");
-					let days = 7;
-					if (parseInt(result) >= parseInt(days)) {
-						const user = {
-							userId: findUser[index]._id,
-							name: findUser[index].name,
-							email: findUser[index].email,
-							password: findUser[index].password,
-							username: findUser[index].username,
-							mobile: mobile,
-							firebaseId: findUser[index].firebaseId,
-							deviceName: findUser[index].deviceName,
-							deviceId: findUser[index].deviceId,
-							deviceVeriOTP: findUser[index].deviceVeriOTP,
-							register_via: findUser[index].register_via,
-							wallet_bal_updated_at: findUser[index].wallet_bal_updated_at,
-							wallet_balance: findUser[index].wallet_balance,
-							role: index,
-							mpin: findUser[index].mpin,
-							mpinOtp: findUser[index].mpinOtp,
-							Deleted_At: formatted,
-							CreatedAt: findUser[index].CreatedAt,
-							deleteRsn: "Wallet Balance 0 Since Last 7 Days",
-							mainNotification: findUser[index].mainNotification,
-							gameNotification: findUser[index].gameNotification,
-							starLineNotification: findUser[index].starLineNotification,
-							andarBaharNotification: findUser[index].andarBaharNotification,
-						};
-						deleteArr.push(user);
-						mobileNumber.push(mobile.substring(3));
-						idArray.push(findUser[index]._id);
-					}
-				}
+	// cron.schedule("10 0 * * *", async () => {
+	// 	if (process.env.pm_id == "1") {
+	// 		try {
+	// 			const findUser = await users.find({ wallet_bal_updated_at: null });
+	// 			let deleteArr = [];
+	// 			let idArray = [];
+	// 			let mobileNumber = [];
+	// 			const dt = dateTime.create();
+	// 			const formatted = dt.format("d/m/Y I:M:S");
+	// 			var endDate = moment(formatted, "DD/MM/YYYY");
+	// 			for (index in findUser) {
+	// 				let CreatedAt = findUser[index].CreatedAt;
+	// 				let mobile = findUser[index].mobile;
+	// 				let startDate = moment(CreatedAt, "DD/MM/YYYY");
+	// 				let result = endDate.diff(startDate, "days");
+	// 				let days = 7;
+	// 				if (parseInt(result) >= parseInt(days)) {
+	// 					const user = {
+	// 						userId: findUser[index]._id,
+	// 						name: findUser[index].name,
+	// 						email: findUser[index].email,
+	// 						password: findUser[index].password,
+	// 						username: findUser[index].username,
+	// 						mobile: mobile,
+	// 						firebaseId: findUser[index].firebaseId,
+	// 						deviceName: findUser[index].deviceName,
+	// 						deviceId: findUser[index].deviceId,
+	// 						deviceVeriOTP: findUser[index].deviceVeriOTP,
+	// 						register_via: findUser[index].register_via,
+	// 						wallet_bal_updated_at: findUser[index].wallet_bal_updated_at,
+	// 						wallet_balance: findUser[index].wallet_balance,
+	// 						role: index,
+	// 						mpin: findUser[index].mpin,
+	// 						mpinOtp: findUser[index].mpinOtp,
+	// 						Deleted_At: formatted,
+	// 						CreatedAt: findUser[index].CreatedAt,
+	// 						deleteRsn: "Wallet Balance 0 Since Last 7 Days",
+	// 						mainNotification: findUser[index].mainNotification,
+	// 						gameNotification: findUser[index].gameNotification,
+	// 						starLineNotification: findUser[index].starLineNotification,
+	// 						andarBaharNotification: findUser[index].andarBaharNotification,
+	// 					};
+	// 					deleteArr.push(user);
+	// 					mobileNumber.push(mobile.substring(3));
+	// 					idArray.push(findUser[index]._id);
+	// 				}
+	// 			}
 
-				await users.deleteMany({ _id: { $in: idArray } });
-				//await profile.deleteMany({ userId: { $in: idArray } });
-				await dltUser.insertMany(deleteArr);
+	// 			await users.deleteMany({ _id: { $in: idArray } });
+	// 			//await profile.deleteMany({ userId: { $in: idArray } });
+	// 			await dltUser.insertMany(deleteArr);
 
-				var request = require("request");
-				var options = {
-					method: "POST",
-					// url: "https://chatpanel.rolloutgames.xyz/deleteZeroBalanceUsers",
-					// url: "http://162.241.115.39/deleteZeroBalanceUsers",
-					url: `${chatDomain}/deleteZeroBalanceUsers`,
-					headers: {
-						"postman-token": "a10d4b83-7ff5-aad7-162c-b586d639b191",
-						"cache-control": "no-cache",
-						"content-type": "application/json",
-					},
-					body: { userIds: idArray },
-					json: true,
-				};
+	// 			var request = require("request");
+	// 			var options = {
+	// 				method: "POST",
+	// 				// url: "https://chatpanel.rolloutgames.xyz/deleteZeroBalanceUsers",
+	// 				// url: "http://162.241.115.39/deleteZeroBalanceUsers",
+	// 				url: `${chatDomain}/deleteZeroBalanceUsers`,
+	// 				headers: {
+	// 					"postman-token": "a10d4b83-7ff5-aad7-162c-b586d639b191",
+	// 					"cache-control": "no-cache",
+	// 					"content-type": "application/json",
+	// 				},
+	// 				body: { userIds: idArray },
+	// 				json: true,
+	// 			};
 
-				request(options, function (error, response, body) {
-					if (error) throw new Error(error);
-				});
+	// 			request(options, function (error, response, body) {
+	// 				if (error) throw new Error(error);
+	// 			});
 
-				let customeMessage =
-					"Alert:-\n\nSince You Have Not Buyed Any Points\nIn Your Khatri Game App Wallet\n\nWe Have Deleted Your Khatri Game App Registration\n\nHence You Have To Reinstall Our App And\nRegister Again To Play Matka Online\n\nFor Any Type Of Enquiry\n\nCall Us\n09929143143\n\nOffice Timing\n(10AM TO 10PM)\n\nWatch Video:-\nhttps://youtu.be/tRUtnsQBF3s\n\nWebsite:-\nhttps://dhangame.com";
+	// 			let customeMessage =
+	// 				"Alert:-\n\nSince You Have Not Buyed Any Points\nIn Your Khatri Game App Wallet\n\nWe Have Deleted Your Khatri Game App Registration\n\nHence You Have To Reinstall Our App And\nRegister Again To Play Matka Online\n\nFor Any Type Of Enquiry\n\nCall Us\n09929143143\n\nOffice Timing\n(10AM TO 10PM)\n\nWatch Video:-\nhttps://youtu.be/tRUtnsQBF3s\n\nWebsite:-\nhttps://dhangame.com";
 
-				let body = {
-					sender: "DGAMES",
-					route: "4",
-					country: "91",
-					unicode: "1",
-					sms: [
-						{
-							message: customeMessage,
-							to: mobileNumber,
-						},
-					],
-				};
+	// 			let body = {
+	// 				sender: "DGAMES",
+	// 				route: "4",
+	// 				country: "91",
+	// 				unicode: "1",
+	// 				sms: [
+	// 					{
+	// 						message: customeMessage,
+	// 						to: mobileNumber,
+	// 					},
+	// 				],
+	// 			};
 
-				fetch("https://api.msg91.com/api/v2/sendsms", {
-					method: "POST",
-					body: JSON.stringify(body),
-					headers: {
-						"Content-Type": "application/json",
-						authkey: "407097AwSzYk8hvZC6519cb42P1",
-					},
-				})
-					.then((res) => res.json())
-					.then((json) => json);
-			} catch (error) {
-				console.log(error);
-			}
-		}
-	});
+	// 			fetch("https://api.msg91.com/api/v2/sendsms", {
+	// 				method: "POST",
+	// 				body: JSON.stringify(body),
+	// 				headers: {
+	// 					"Content-Type": "application/json",
+	// 					authkey: "407097AwSzYk8hvZC6519cb42P1",
+	// 				},
+	// 			})
+	// 				.then((res) => res.json())
+	// 				.then((json) => json);
+	// 		} catch (error) {
+	// 			console.log(error);
+	// 		}
+	// 	}
+	// });
 
-	cron.schedule("*/5 * * * *", async () => {
+	cron.schedule("30 2 * * *", async () => {
 		let dataUpdate = await dashboard.find();
 		if (dataUpdate.length) {
 			let lastUpdate = dataUpdate[0].lastUpdatedAt;
@@ -199,7 +199,7 @@ module.exports = async function () {
 		}
 	});
 
-	cron.schedule("*/5 * * * * *", async () => {
+	cron.schedule("30 3 * * * *", async () => {
 		let dataUpdate = await dashboard.find();
 		if (dataUpdate.length) {
 			let lastUpdate = dataUpdate[0].lastUpdatedAt;
@@ -273,7 +273,7 @@ module.exports = async function () {
 	// 	}
 	// });
 
-	cron.schedule("1 0 * * *", async () => {
+	cron.schedule("50 0 * * *", async () => {
 		//if (process.env.pm_id == "1") {
 		try {
 			let yesterdayRegister = moment().subtract(1, 'days').format('DD/MM/YYYY');
