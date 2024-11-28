@@ -14,7 +14,7 @@ const moment = require("moment");
 const lodash = require("lodash");
 const authMiddleware = require("../../helpersModule/athetication");
 
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/", async (req, res) => {
   const formatted = moment().format("M/D/YYYY");
   console.log(formatted,"formatted")
   try {
@@ -22,21 +22,12 @@ router.get("/", authMiddleware, async (req, res) => {
     const result = await StarlinegameResult.find({
       resultDate: formatted,
     }).sort({ _id: -1 });
-
     if (!provider || provider.length === 0) {
       return res.status(404).json({
         status: false,
         message: "No providers found.",
       });
     }
-
-    if (!result || result.length === 0) {
-      return res.status(404).json({
-        status: false,
-        message: "No game results found for today.",
-      });
-    }
-
     res.status(200).json({
       status: true,
       message: "Starline game results fetched successfully.",
