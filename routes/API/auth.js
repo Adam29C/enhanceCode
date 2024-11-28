@@ -497,6 +497,7 @@ router.post("/login", async (req, res) => {
 		});
 	}
 });
+
 router.get("/getUserInfo", async (req, res) => {
 	try {
 		const { userId } = req.query;
@@ -520,6 +521,7 @@ router.get("/getUserInfo", async (req, res) => {
 		});
 	}
 });
+
 router.post("/loginwithOnlyUsername", async (req, res) => {
 	try {
 		const username = req.body.username.toLowerCase().replace(/\s/g, "");

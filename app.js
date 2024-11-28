@@ -351,22 +351,22 @@ const userWalletTracing = require("./model/Wallet_Bal_trace");
 const userDltCron = require("./routes/helpersModule/cronJobs");
 
 userDltCron();
-cron.schedule("0 8 * * *", async () => {
-  try {
-    const dt = dateTime.create();
-    const formatted = dt.format("m/d/Y I:M:S p");
+// cron.schedule("0 8 * * *", async () => {
+//   try {
+//     const dt = dateTime.create();
+//     const formatted = dt.format("m/d/Y I:M:S p");
 
-    await gameProvi.updateMany({
-      $set: {
-        providerResult: "***-**-***",
-        modifiedAt: formatted,
-        resultStatus: 0,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-  }
-});
+//     await gameProvi.updateMany({
+//       $set: {
+//         providerResult: "***-**-***",
+//         modifiedAt: formatted,
+//         resultStatus: 0,
+//       },
+//     });
+//   } catch (error) {
+//     console.log(error);
+//   }
+// });
 
 cron.schedule("58 7 * * *", async () => {
   try {
@@ -401,7 +401,7 @@ cron.schedule("55 23 * * *", async (req, res) => {
   }
 });
 
-cron.schedule("5 0 * * *", async (req, res) => {
+cron.schedule("30 0 * * *", async (req, res) => {
   try {
     const Active_TotWalletBal = await userBal.aggregate([
       { $match: { banned: false } },
@@ -421,22 +421,22 @@ cron.schedule("5 0 * * *", async (req, res) => {
   }
 });
 
-cron.schedule("*/1 * * * *", async (req, res) => {
-  try {
-    const dt = dateTime.create();
-    const formatted = dt.format("I:M p");
-    var time = new Date();
-    const current_time = time.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
+// cron.schedule("*/1 * * * *", async (req, res) => {
+//   try {
+//     const dt = dateTime.create();
+//     const formatted = dt.format("I:M p");
+//     var time = new Date();
+//     const current_time = time.toLocaleString("en-US", {
+//       hour: "numeric",
+//       minute: "numeric",
+//       hour12: true,
+//     });
 
-    whatsAppCron.executeWhatsAppTrigger(`${current_time}`);
-  } catch (error) {
-    console.log(error);
-  }
-});
+//     whatsAppCron.executeWhatsAppTrigger(`${current_time}`);
+//   } catch (error) {
+//     console.log(error);
+//   }
+// });
 let port = 5200
 app.listen(port, () => {
   new Date().toLocaleDateString();

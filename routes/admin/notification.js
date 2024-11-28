@@ -55,7 +55,7 @@ router.post("/inserNotification",authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/notification/:id",authMiddleware, async (req, res) => {
+router.delete("/:id",authMiddleware, async (req, res) => {
     try {
         const notificationId = req.params.id;
 
