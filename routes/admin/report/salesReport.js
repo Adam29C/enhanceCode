@@ -3,7 +3,7 @@ const provider = require("../../../model/games/Games_Provider");
 const authMiddleware = require("../../helpersModule/athetication");
 const providerSetting=require("../../../model/games/AddSetting");
 const bids =require("../../../model/games/gameBids");
-
+const moment =require("moment")
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const providerData = await provider.find().sort({ _id: 1 });
