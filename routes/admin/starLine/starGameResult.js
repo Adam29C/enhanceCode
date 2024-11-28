@@ -30,19 +30,22 @@ router.get("/", authMiddleware, async (req, res) => {
       });
     }
 
-    if (!result || result.length === 0) {
-      return res.status(404).json({
-        status: false,
-        message: "No game results found for today.",
-      });
+    // if (!result || result.length === 0) {
+    //   return res.status(404).json({
+    //     status: false,
+    //     message: "No game results found for today.",
+    //   });
+    // }
+    let starlineResult=[]
+    if(result.length===0){
+      starlineResult=result
     }
-
     res.status(200).json({
       status: true,
       message: "Starline game results fetched successfully.",
       data: {
         providers: provider,
-        results: result,
+        results: starlineResult,
       },
     });
   } catch (e) {
