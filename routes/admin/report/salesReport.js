@@ -1,9 +1,11 @@
 const router = require("express").Router();
 const provider = require("../../../model/games/Games_Provider");
 const authMiddleware = require("../../helpersModule/athetication");
-const providerSetting=require("../../../model/games/AddSetting");
-const bids =require("../../../model/games/gameBids");
-const moment =require("moment")
+const providerSetting = require("../../../model/games/AddSetting");
+const bids = require("../../../model/games/gameBids");
+const moment = require("moment");
+const { ObjectId } = require('mongodb');
+
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const providerData = await provider.find().sort({ _id: 1 });
@@ -30,11 +32,12 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/userReport", authMiddleware, async (req, res) => {
+router.post("/userReport", async (req, res) => {
     try {
         const { userId, gameId, startDate, endDate } = req.body;
 
-        if (!startDate || !endDate || !moment(startDate).isValid() || !moment(endDate).isValid()) {
+        // Validate input dates
+        if (!startDate || !endDate) {
             return res.status(400).json({
                 status: false,
                 message: "Invalid startDate or endDate format. Please use YYYY-MM-DD format.",
@@ -42,16 +45,11 @@ router.post("/userReport", authMiddleware, async (req, res) => {
         }
 
         const dayOfWeek = moment().format("dddd");
-
         const [gameSettings, providerList] = await Promise.all([
-            providerSetting
-                .find(
-                    { gameDay: dayOfWeek },
-                    { providerId: 1, OBT: 1, _id: 0 }
-                )
-                .sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A")),
+            providerSetting.find({ gameDay: dayOfWeek }, { providerId: 1, OBT: 1, _id: 0 }),
             provider.find(),
         ]);
+        gameSettings.sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A"));
 
         const providerMap = new Map(providerList.map((p) => [p._id.toString(), p.providerName]));
 
@@ -71,7 +69,7 @@ router.post("/userReport", authMiddleware, async (req, res) => {
                 matchCriteria.userName = userName;
             }
 
-            return bids.aggregate([
+            const bidsData = await bids.aggregate([
                 { $match: matchCriteria },
                 {
                     $group: {
@@ -81,6 +79,7 @@ router.post("/userReport", authMiddleware, async (req, res) => {
                     },
                 },
             ]);
+            return bidsData;
         };
 
         const providerIds = gameId === "0"
