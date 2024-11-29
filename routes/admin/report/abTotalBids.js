@@ -45,14 +45,6 @@ router.post("/andarBaharBidsData", authMiddleware, async (req, res) => {
       });
     }
 
-    const date = new Date(startDate);
-    if (isNaN(date.getTime())) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid 'startDate'. Please provide a valid date.",
-      });
-    }
-
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
     if (isNaN(pageNumber) || pageNumber <= 0 || isNaN(pageSize) || pageSize <= 0) {
@@ -64,7 +56,7 @@ router.post("/andarBaharBidsData", authMiddleware, async (req, res) => {
 
     const query = {
       providerId: gameId,
-      gameDate: date.toISOString().split("T")[0],
+      gameDate: startDate,
     };
 
     if (search) {
