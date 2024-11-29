@@ -1,11 +1,13 @@
 const router = require("express").Router();
-const moment = require("moment")
-const authMiddleware = require("../../helpersModule/athetication");
 const bank = require("../../../model/bank");
+const fundReport = require("../../../model/API/FundRequest");
 const adminName = require("../../../model/dashBoard/AdminModel");
+const history = require("../../../model/wallet_history");
+const moment = require("moment");
+const authMiddleware = require("../../helpersModule/athetication");
 
 
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/",authMiddleware,  async (req, res) => {
     try {
         const [bankList, adminList] = await Promise.all([
             bank.find(),
@@ -33,7 +35,7 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/",authMiddleware, async (req, res) => {
     const {
         sdate,
         edate,
@@ -53,18 +55,15 @@ router.post("/", authMiddleware, async (req, res) => {
             });
         }
 
-        const startDate0 = moment(sdate, "MM-DD-YYYY").format("DD/MM/YYYY");
-        const endDate0 = moment(edate, "MM-DD-YYYY").format("DD/MM/YYYY");
-        if (!moment(startDate0, "DD/MM/YYYY").isValid() || !moment(endDate0, "DD/MM/YYYY").isValid()) {
+        const startDate = moment(sdate, "MM-DD-YYYY").unix();
+        const endDate = moment(edate, "MM-DD-YYYY").unix();
+        
+        if (!moment(startDate, "X").isValid() || !moment(endDate, "X").isValid()) {
             return res.status(400).json({
                 status: false,
                 message: "Invalid date format. Please use 'MM-DD-YYYY'.",
             });
         }
-
-        const startDate = moment(startDate0, "DD/MM/YYYY").unix();
-        const endDate = moment(endDate0, "DD/MM/YYYY").unix();
-
         const pageNumber = parseInt(page, 10);
         const pageSize = parseInt(limit, 10);
         if (isNaN(pageNumber) || pageNumber <= 0 || isNaN(pageSize) || pageSize <= 0) {
@@ -75,18 +74,23 @@ router.post("/", authMiddleware, async (req, res) => {
         }
 
         let query = {
-            reqType: reqType.charAt(0).toUpperCase() + reqType.slice(1).toLowerCase(), // Standardize 'reqType' case
+            reqType: reqType.charAt(0).toUpperCase() + reqType.slice(1).toLowerCase(),
             timestamp: {
                 $gte: startDate,
                 $lte: endDate,
             },
         };
-
         if (reqType.toUpperCase() === "CREDIT") {
-            if (bankName !== "1") query.particular = bankName;
+            if (bankName && bankName !== "1") {
+                query.particular = bankName;
+            }
         } else {
-            if (bankName !== "1") query.withdrawalMode = bankName;
-            if (admin_id && admin_id !== "1") query.UpdatedBy = { $regex: admin_id };
+            if (bankName && bankName !== "1") {
+                query.withdrawalMode = bankName;
+            }
+            if (admin_id && admin_id !== "1") {
+                query.UpdatedBy = { $regex: admin_id };
+            }
         }
 
         if (searchKey) {
@@ -97,9 +101,18 @@ router.post("/", authMiddleware, async (req, res) => {
             ];
         }
 
-        const totalRecords = await (reqType.toUpperCase() === "CREDIT" ? history : fundReport).countDocuments(query);
+        let collection;
+        if (reqType.toUpperCase() === "CREDIT") {
+            collection = history;
+        } else {
+            collection = fundReport;
+        }
+          
+        console.log(collection,"collection")
 
-        const data = await (reqType.toUpperCase() === "CREDIT" ? history : fundReport)
+        const totalRecords = await collection.countDocuments(query);
+        
+        const data = await collection
             .find(query, {
                 username: 1,
                 mobile: 1,
@@ -111,9 +124,10 @@ router.post("/", authMiddleware, async (req, res) => {
             .sort({ _id: -1 })
             .skip((pageNumber - 1) * pageSize)
             .limit(pageSize);
-
-        const formattedData = reqType.toUpperCase() === "CREDIT"
-            ? data.map(details => ({
+            console.log(collection,"collection")
+        let formattedData;
+        if (reqType.toUpperCase() === "CREDIT") {
+            formattedData = data.map(details => ({
                 _id: details._id,
                 reqAmount: details.transaction_amount,
                 username: details.username,
@@ -121,8 +135,10 @@ router.post("/", authMiddleware, async (req, res) => {
                 withdrawalMode: details?.particular,
                 UpdatedBy: details.addedBy_name || "By self",
                 reqUpdatedAt: details?.transaction_date,
-            }))
-            : data;
+            }));
+        } else {
+            formattedData = data;
+        }
 
         if (data.length === 0) {
             return res.status(404).json({
@@ -135,6 +151,7 @@ router.post("/", authMiddleware, async (req, res) => {
             });
         }
 
+
         return res.status(200).json({
             status: true,
             message: `${reqType} data fetched successfully.`,
@@ -143,7 +160,9 @@ router.post("/", authMiddleware, async (req, res) => {
             totalPages: Math.ceil(totalRecords / pageSize),
             data: formattedData,
         });
+
     } catch (error) {
+        // Error handling
         return res.status(500).json({
             status: false,
             message: "An error occurred while fetching data. Please contact support.",
@@ -151,6 +170,7 @@ router.post("/", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 module.exports = router;
 
