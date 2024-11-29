@@ -4,6 +4,8 @@ const authMiddleware = require("../../helpersModule/athetication");
 const abProvider = require("../../../model/AndarBahar/ABProvider");
 const abBids = require("../../../model/AndarBahar/ABbids");
 const abProviderSetting = require("../../../model/AndarBahar/ABAddSetting")
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 
 router.get("/andarBahar", authMiddleware, async (req, res) => {
     try {
@@ -42,10 +44,10 @@ router.post("/userReportAB", authMiddleware, async (req, res) => {
             });
         }
         const dayOfWeek = moment().format("dddd");
-
+        
         const gameSettings = await abProviderSetting
             .find({ gameDay: dayOfWeek, isClosed: "1" }, { providerId: 1, OBT: 1, _id: 0 })
-            .sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A"));
+            //.sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A"));
 
         const providerList = await abProvider.find();
 
