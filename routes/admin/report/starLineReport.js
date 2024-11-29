@@ -4,6 +4,7 @@ const moment=require("moment")
 const starProvider = require("../../../model/starline/Starline_Provider");
 const slProviderSetting = require("../../../model/starline/AddSetting")
 const starBids = require("../../../model/starline/StarlineBids");
+const { ObjectId } = require('mongoose').Types; 
 
 router.get("/", authMiddleware, async (req, res) => {
     try {
@@ -40,30 +41,25 @@ router.post("/userReportStar", authMiddleware, async (req, res) => {
                 message: "Invalid startDate or endDate format" 
             });
         }
-
         const today = moment();
         const dayOfWeek = today.format("dddd");
-
         const gameSettings = await slProviderSetting
             .find(
                 { gameDay: dayOfWeek, isClosed: "1" },
                 { providerId: 1, OBT: 1, _id: 0 }
             )
-            .sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A"));
-
+            // .sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A"));
+            // console.log("3")
         const providerList = await starProvider.find();
-
         const arrangedProviderList = gameSettings
             .map(game => providerList.find(provider => provider._id.toString() === game.providerId.toString()))
             .filter(Boolean);
-
         const fetchBidsData = async (providerId, userName = null) => {
             const matchCriteria = {
                 providerId: new ObjectId(providerId),
                 gameDate: { $gte: startDate, $lte: endDate }
             };
             if (userName) matchCriteria.userName = userName;
-
             const [result] = await starBids.aggregate([
                 { $match: matchCriteria },
                 {
@@ -74,10 +70,8 @@ router.post("/userReportStar", authMiddleware, async (req, res) => {
                     }
                 }
             ]);
-
             return result || { GameWinPoints: 0, BiddingPoints: 0 };
         };
-
         const processProvider = async (providerData, index) => {
             const bidData = await fetchBidsData(providerData._id, userId);
             return {
@@ -87,7 +81,6 @@ router.post("/userReportStar", authMiddleware, async (req, res) => {
                 providerName: providerData.providerName
             };
         };
-
         let finalResult = [];
         if (gameId === "0") {
             finalResult = await Promise.all(
@@ -106,7 +99,6 @@ router.post("/userReportStar", authMiddleware, async (req, res) => {
             const result = await processProvider(providerData, 0);
             finalResult.push(result);
         }
-
         finalResult.sort((a, b) => a.index - b.index);
 
         return res.json({
