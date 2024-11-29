@@ -3,11 +3,12 @@ const UPIlist = require("../../model/API/upiPayments");
 const moment = require("moment");
 const authMiddleware = require("../helpersModule/athetication");
 
-router.get("/creditUPI",authMiddleware, async (req, res) => {
+router.post("/creditUPI",authMiddleware, async (req, res) => {
     try {
-        const { date_cust, page = 1, limit = 10, search } = req.query;
-        const currentDate = moment().format("DD/MM/YYYY"); // Using moment to get current date
+        const { date_cust, page = 1, limit = 10, search } = req.body;
+        const currentDate = moment().format("DD/MM/YYYY"); 
         const dateToUse = date_cust ? moment(date_cust, "MM/DD/YYYY").format("DD/MM/YYYY") : currentDate;
+        console.log(dateToUse,"dateToUse")
         const skip = (page - 1) * limit;
 
         const query = {
