@@ -120,18 +120,27 @@ router.post("/getUPIReport", authMiddleware,async (req, res) => {
     }
 });
 
-router.post("/getUPIFundReport", authMiddleware,async (req, res) => {
+router.post("/getUPIFundReport", authMiddleware, async (req, res) => {
     try {
         const { id, date, dateStart, page = 1, limit = 10, search = '' } = req.body;
         const skip = (page - 1) * limit;
 
-        let startDate0 = moment(dateStart, "MM/DD/YYYY").valueOf();
-        let endDate0 = moment(date, "MM/DD/YYYY").valueOf();
+        let startDate0 = moment(dateStart, "YYYY-MM-DD").valueOf();
+        let endDate0 = moment(date, "YYYY-MM-DD").valueOf();
 
+        // Check if the parsed dates are valid
+        if (isNaN(startDate0) || isNaN(endDate0)) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid date format. Please ensure the date is in YYYY-MM-DD format."
+            });
+        }
+
+        // Build the query object
         let query = {
             reqType: "Credit",
             particular: "UPI",
-            timestamp: { '$gte': startDate0, '$lte': endDate0 },
+            timestamp: { '$gte': startDate0, '$lte': endDate0 }, // Use valid date range
         };
 
         if (id !== '1') {
@@ -152,7 +161,6 @@ router.post("/getUPIFundReport", authMiddleware,async (req, res) => {
             { $match: query },
             { $group: { _id: null, totalAmount: { $sum: "$transaction_amount" } } }
         ]);
-
         const totalAmount = totalAmountData.length > 0 ? totalAmountData[0].totalAmount : 0;
 
         const totalItems = await upiFundReport.countDocuments(query);
@@ -161,7 +169,6 @@ router.post("/getUPIFundReport", authMiddleware,async (req, res) => {
             .sort({ transaction_date: 1, transaction_time: 1 })
             .skip(skip)
             .limit(limit);
-
         const newArray = creditAmountDetails.map(details => ({
             _id: details._id,
             username: details.username,
