@@ -8,6 +8,7 @@ const dateTime = require("node-datetime");
 const notification = require("../../helpersModule/creditDebitNotification");
 const moment = require("moment");
 const authMiddleware=require("../../helpersModule/athetication");
+const admin = require("../../../model/dashBoard/AdminModel");
 
 router.post("/", authMiddleware,async (req, res) => {
     try {
@@ -160,7 +161,7 @@ router.post("/newCredit", authMiddleware,async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            status: fasle,
+            status: false,
             message: "An error occurred while processing your request.",
             error: error.message,
         });
@@ -172,14 +173,14 @@ router.get("/getProfile", authMiddleware,async (req, res) => {
         const { userId } = req.query;
         if (!userId) {
             return res.status(400).json({
-                status: fasle,
+                status: false,
                 message: "User ID is required.",
             });
         }
         const userprofile = await Userprofile.findOne({ userId }).lean();
         if (!userprofile) {
             return res.status(404).json({
-                status: fasle,
+                status: false,
                 message: "Profile not filled by user.",
             });
         }
@@ -194,7 +195,7 @@ router.get("/getProfile", authMiddleware,async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            status: fasle,
+            status: false,
             message: "An error occurred while fetching the profile.",
             error: error.message,
         });
@@ -203,11 +204,16 @@ router.get("/getProfile", authMiddleware,async (req, res) => {
 
 router.post("/walletUpdate", authMiddleware, async (req, res) => {
     try {
-        const { id, amount: bal, type, particular, admin_id } = req.body;
+        let { id, amount: bal, type, particular, admin_id } = req.body;
 
-        const user = await User.findOne({ _id: id });
+        const user = await User.findOne({ _id: "66e2f96bc855164134e6d33b" });
         if (!user) {
-            return res.status(404).json({ status: fasle, message: "User not found." });
+            return res.status(404).json({ status: false, message: "User not found." });
+        }
+
+        const findAdmin = await admin.findOne({ _id: admin_id });
+        if (!findAdmin) {
+            return res.status(404).json({ status: false, message: "Admin not found." });
         }
 
         const { wallet_balance, firebaseId, mobile, username, name: fullname } = user;
@@ -215,12 +221,12 @@ router.post("/walletUpdate", authMiddleware, async (req, res) => {
 
         if (type === 1) {
             update_bal = wallet_balance + parseInt(bal);
-            detail = `Amount Added To Wallet By ${adminName}`;
+            detail = `Amount Added To Wallet By ${findAdmin.adminName}`;
             reqType = "Credit";
             filter = 4;
         } else {
             update_bal = wallet_balance - parseInt(bal);
-            detail = `Amount Withdrawn From Wallet By ${adminName}`;
+            detail = `Amount Withdrawn From Wallet By ${findAdmin.adminName}`;
             reqType = "Debit";
             particular = "Bank";
             filter = 5;
@@ -255,7 +261,7 @@ router.post("/walletUpdate", authMiddleware, async (req, res) => {
                         reqDate: formatted,
                         reqTime: time,
                         withdrawalMode: particular,
-                        UpdatedBy: adminName,
+                        UpdatedBy: findAdmin.adminName,
                         reqUpdatedAt: `${formatted} ${time}`,
                         fromExport: false,
                         from: 1,
@@ -280,22 +286,20 @@ router.post("/walletUpdate", authMiddleware, async (req, res) => {
                         timestamp,
                         username,
                         reqType,
-                        addedBy_name: adminName,
+                        addedBy_name: findAdmin.adminName,
                         mobile,
                     }),
                 },
             },
         ];
+        //await User.bulkWrite(operations);
 
-        await User.bulkWrite(operations);
-
-        const userToken = [firebaseId];
-        const notificationTitle = type === 1
-            ? `Your Credit (Deposit) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`
-            : `Your Debit (Withdrawal) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`;
-        const notificationBody = `Hello ${username} 🤩🤩`;
-        notification(userToken, notificationTitle, notificationBody);
-
+        //const userToken = [firebaseId];
+        //const notificationTitle = type === 1
+          //  ? `Your Credit (Deposit) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`
+           // : `Your Debit (Withdrawal) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`;
+       // const notificationBody = `Hello ${username} 🤩🤩`;
+        //notification(userToken, notificationTitle, notificationBody);
         res.json({
             status: true,
             username,
@@ -307,5 +311,6 @@ router.post("/walletUpdate", authMiddleware, async (req, res) => {
         res.json({ message: e.message });
     }
 });
+
 
 module.exports = router;
