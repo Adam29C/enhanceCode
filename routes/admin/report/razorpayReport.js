@@ -8,12 +8,34 @@ router.post("/razorpayReport", authMiddleware, async (req, res) => {
         const { sdate, edate, page = 1, limit = 10, search = '' } = req.body;
         const skip = (page - 1) * limit;
 
-        const startDate0 = moment(sdate, "MM-DD-YYYY").format("DD/MM/YYYY");
-        const endDate0 = moment(edate, "MM-DD-YYYY").format("DD/MM/YYYY");
-        const startDate = moment(startDate0, "DD/MM/YYYY").unix();
-        const endDate = moment(endDate0, "DD/MM/YYYY").unix();
+        const startDate0 = moment(sdate, "MM-DD-YYYY");
+        const endDate0 = moment(edate, "MM-DD-YYYY");
+
+        // Check if the dates are valid
+        if (!startDate0.isValid() || !endDate0.isValid()) {
+            return res.json({
+                status: false,
+                message: "Invalid date format. Please use MM-DD-YYYY."
+            });
+        }
+
+        // Format to "DD/MM/YYYY"
+        const startDateFormatted = startDate0.format("DD/MM/YYYY");
+        const endDateFormatted = endDate0.format("DD/MM/YYYY");
+
+        // Convert to Unix timestamps
+        const startDate = startDate0.unix();
+        const endDate = endDate0.unix();
+
+        if (isNaN(startDate) || isNaN(endDate)) {
+            return res.json({
+                status: false,
+                message: "Invalid date range."
+            });
+        }
 
         let query = {
+            //Uncomment this line if you want to filter by timestamp
             timestamp: { $gte: startDate, $lte: endDate },
             reqStatus: 0,
             mode: 'razorpay'
@@ -29,7 +51,6 @@ router.post("/razorpayReport", authMiddleware, async (req, res) => {
         }
 
         const totalItems = await trakpay.countDocuments(query);
-
         const reportData = await trakpay.find(query)
             .skip(skip)
             .limit(limit)
@@ -60,5 +81,6 @@ router.post("/razorpayReport", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 module.exports = router;

@@ -125,14 +125,14 @@ router.post("/getUPIFundReport", authMiddleware, async (req, res) => {
         const { id, date, dateStart, page = 1, limit = 10, search = '' } = req.body;
         const skip = (page - 1) * limit;
 
-        let startDate0 = moment(dateStart, "YYYY-MM-DD").valueOf();
-        let endDate0 = moment(date, "YYYY-MM-DD").valueOf();
+        let startDate0 = moment(dateStart, "MM-DD-YYYY").valueOf();
+        let endDate0 = moment(date, "MM-DD-YYYY").valueOf();
 
         // Check if the parsed dates are valid
         if (isNaN(startDate0) || isNaN(endDate0)) {
             return res.status(400).json({
                 status: false,
-                message: "Invalid date format. Please ensure the date is in YYYY-MM-DD format."
+                message: "Invalid date format. Please ensure the date is in MM-DD-YYYY format."
             });
         }
 
