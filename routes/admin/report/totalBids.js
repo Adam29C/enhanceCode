@@ -3,6 +3,7 @@ const authMiddleware = require("../../helpersModule/athetication");
 const moment = require("moment");
 const gamesProvider = require("../../../model/games/Games_Provider");
 const gamesList = require("../../../model/games/GameList");
+const gameBids =require("../../../model/games/gameBids")
 
 router.get("/games", authMiddleware, async (req, res) => {
     try {
@@ -33,9 +34,9 @@ router.get("/games", authMiddleware, async (req, res) => {
     }
 });
 
-router.get("/gameBidsData", authMiddleware, async (req, res) => {
+router.post("/gameBidsData", authMiddleware,async (req, res) => {
     try {
-        const { providerName, gameType, session: gameSession, date, userName, page = 1, limit = 10 } = req.query;
+        const { providerName, gameType, session: gameSession, date, userName, page = 1, limit = 10 } = req.body;
 
         const pageNumber = parseInt(page);
         const pageSize = parseInt(limit);
@@ -53,7 +54,6 @@ router.get("/gameBidsData", authMiddleware, async (req, res) => {
         }
 
         const totalItems = await gameBids.countDocuments(query);
-
         const bidsData = await gameBids.find(query)
             .skip(skip)
             .limit(pageSize)
