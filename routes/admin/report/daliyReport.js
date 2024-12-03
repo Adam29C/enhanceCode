@@ -15,30 +15,34 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
             });
         }
 
-        const startDate = moment(sdate, "MM/DD/YYYY", true);
-        const endDate = moment(edate, "MM/DD/yyyy", true);
+        // Format the start and end dates to DD/MM/YYYY
+        const startDate = moment(sdate, "MM/DD/YYYY", true).format("DD/MM/YYYY");
+        const endDate = moment(edate, "MM/DD/YYYY", true).format("DD/MM/YYYY");
 
-        if (!startDate.isValid() || !endDate.isValid()) {
+        // Validate the date formats
+        if (!moment(startDate, "DD/MM/YYYY", true).isValid() || !moment(endDate, "DD/MM/YYYY", true).isValid()) {
             return res.status(400).json({
                 status: false,
-                message: "Invalid date format. Use MM/DD/yyyy.",
+                message: "Invalid date format. Use MM/DD/YYYY.",
             });
         }
 
+        // Define the date range query (string comparison)
         const dateQuery = {
-            $gte: startDate.toDate(),
-            $lte: endDate.toDate(),
+            $gte: startDate,
+            $lte: endDate,
         };
 
         let data;
 
+        // Handle different reqType cases
         switch (reqType) {
             case "PG":
                 const gameQuery = { gameDate: dateQuery };
                 if (username && username.trim()) {
                     gameQuery.userName = username.trim();
                 }
-                data = await bids.find(gameQuery);
+                data = await bids.find();
                 break;
 
             case "UR":
@@ -47,7 +51,7 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
 
             case "RDP":
                 data = await fundReport.find({
-                    //reqDate: dateQuery,
+                    reqDate: dateQuery,
                     reqType: "Credit",
                 });
                 break;
@@ -82,6 +86,7 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
                 });
         }
 
+        // Check if no data was found
         if (!data || data.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -93,6 +98,7 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
             status: true,
             message: "Data retrieved successfully.",
             data,
+            reqType:reqType
         });
     } catch (error) {
         return res.status(500).json({
@@ -101,5 +107,7 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
         });
     }
 });
+
+
 
 module.exports = router;
