@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const fundReq = require("../../model/API/FundRequest");
 const UPIlist = require("../../model/API/upiPayments");
-const userProfile = require("../../model/API/Profile");
+const profileModel = require("../../model/API/Profile");  // Renamed import
 const dateTime = require("node-datetime");
 const moment = require("moment");
 const mongoose = require("mongoose");
@@ -20,12 +20,12 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
             reqStatus: "Approved",
             reqType: "Debit",
             $and: [{ $or: [{ withdrawalMode: "Bank" }, { withdrawalMode: "Paytm" }] }],
-            fromExport: true,
+            //fromExport: true,//abhi mane data lane ke lia ise comment out kiya hai
         })
             .skip(skip)
             .limit(parsedLimit)
             .exec();
-
+           
         if (!userBebitReq || userBebitReq.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -62,15 +62,15 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
 
         let arr = Object.entries(debitArray).map(([key, value]) => ({ key, ...value }));
         arr.sort((a, b) => {
-            return new Date(a.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.reqTime.split(' ').slice(1).join(' ')) -
+            return new Date(a.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.reqTime.split(' ').slice(1).join(' ')) - 
                 new Date(b.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.reqTime.split(' ').slice(1).join(' '));
         });
 
         finalObject = Object.fromEntries(arr.map(item => [item.key, item]));
 
-        const userProfile = await userProfile.find({ userId: { $in: userIdArray } });
+        const userProfiles = await profileModel.find({ userId: { $in: userIdArray } }); // Renamed query result variable
 
-        userProfile.forEach(profile => {
+        userProfiles.forEach(profile => {
             let id = profile.userId;
             if (finalObject[id]) {
                 finalObject[id].address = profile.address;
