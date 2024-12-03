@@ -8,10 +8,8 @@ const authMiddleware = require("../helpersModule/athetication")
 router.post("/declined", authMiddleware, async (req, res) => {
     try {
         const { page, limit, date_cust,search } = req.body;
-        console.log(req.body,"req.body")
         const dt = dateTime.create();
         let date = dt.format("d/m/Y");
-        console.log(date,"date")
         if (date_cust) {
             date = moment(date_cust, "MM/DD/YYYY").format("DD/MM/YYYY");
         }
@@ -44,7 +42,7 @@ router.post("/declined", authMiddleware, async (req, res) => {
         const report = await fundReq.find(query)
             .skip(skip)
             .limit(limit);
-        console.log(report,"report")
+
         const totalCount = await fundReq.countDocuments(query);
 
         res.status(200).json({
