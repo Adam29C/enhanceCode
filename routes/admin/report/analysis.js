@@ -186,8 +186,6 @@ router.get("/analysis", authMiddleware, async (req, res) => {
 router.get("/analysisReport", authMiddleware, async (req, res) => {
     try {
         const { userName, limit = 10, page = 1 } = req.query;
-        console.log(userName,"userName")
-
         // Validate required inputs
         if (!userName) {
             return res.status(400).json({
@@ -201,12 +199,12 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
         const skip = (pageNumber - 1) * limitNumber; // Calculate skip
 
         // Query for user
-        let query = { username: userName };
+        let query = userName === 'all' ? {} : { username: userName };
 
         // Aggregation queries
         const [bidsData, abBidsData, starBidsData, amountCreditDebit, userData] = await Promise.all([
             bids.aggregate([
-                { $match: { userName } },
+                { $match: userName === 'all' ? {} : { userName } },
                 {
                     $group: {
                         _id: null,
@@ -216,7 +214,7 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
                 },
             ]),
             abBids.aggregate([
-                { $match: { userName } },
+                { $match: userName === 'all' ? {} : { userName } },
                 {
                     $group: {
                         _id: null,
@@ -226,7 +224,7 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
                 },
             ]),
             starBids.aggregate([
-                { $match: { userName } },
+                { $match: userName === 'all' ? {} : { userName } },
                 {
                     $group: {
                         _id: null,
@@ -236,7 +234,7 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
                 },
             ]),
             fundsreq.aggregate([
-                { $match: { username: userName, reqStatus: "Approved" } },
+                { $match: userName === 'all' ? {} : { username: userName, reqStatus: "Approved" } },
                 {
                     $group: {
                         _id: "$reqType",
@@ -244,37 +242,40 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
                     },
                 },
             ]),
-            user.findOne({ username: userName }).lean(),
+            userName === 'all' ? null : user.findOne({ username: userName }).lean(),
         ]);
 
         let totalDebitAmount = 0,
             totalCreditAmount = 0;
+
         amountCreditDebit.forEach((elem) => {
             if (elem._id === "Debit") totalDebitAmount = elem.totalAmount;
             if (elem._id === "Credit") totalCreditAmount = elem.totalAmount;
         });
 
-        // Update or insert analysis report data
-        await analysisCol.updateOne(
-            { username: userName },
-            {
-                $set: {
-                    username: userName,
-                    gameBidPoint: bidsData.length ? bidsData[0].BiddingPoints : 0,
-                    gameWinPoints: bidsData.length ? bidsData[0].GameWinPoints : 0,
-                    AbWinPoints: abBidsData.length ? abBidsData[0].GameWinPoints : 0,
-                    AbBidPoint: abBidsData.length ? abBidsData[0].BiddingPoints : 0,
-                    starWinPoints: starBidsData.length ? starBidsData[0].GameWinPoints : 0,
-                    starBidPoint: starBidsData.length ? starBidsData[0].BiddingPoints : 0,
-                    totalPointsDebited: totalDebitAmount,
-                    totalPointsCredited: totalCreditAmount,
-                    updatedAt: userData ? userData.lastLoginDate : "",
+        if (userName !== 'all' && userData) {
+            // Update or insert analysis report data for the user
+            await analysisCol.updateOne(
+                { username: userName },
+                {
+                    $set: {
+                        username: userName,
+                        gameBidPoint: bidsData.length ? bidsData[0].BiddingPoints : 0,
+                        gameWinPoints: bidsData.length ? bidsData[0].GameWinPoints : 0,
+                        AbWinPoints: abBidsData.length ? abBidsData[0].GameWinPoints : 0,
+                        AbBidPoint: abBidsData.length ? abBidsData[0].BiddingPoints : 0,
+                        starWinPoints: starBidsData.length ? starBidsData[0].GameWinPoints : 0,
+                        starBidPoint: starBidsData.length ? starBidsData[0].BiddingPoints : 0,
+                        totalPointsDebited: totalDebitAmount,
+                        totalPointsCredited: totalCreditAmount,
+                        updatedAt: userData ? userData.lastLoginDate : "",
+                    },
                 },
-            },
-            { upsert: true }
-        );
+                { upsert: true }
+            );
+        }
 
-        // DataTables query for pagination and sorting, without search
+        // DataTables query for pagination and sorting
         const tableData = await analysisCol.dataTables({
             find: query,
             limit: limitNumber,
@@ -335,6 +336,7 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 
 module.exports = router;
