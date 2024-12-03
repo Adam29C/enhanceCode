@@ -41,17 +41,25 @@ router.post("/report", authMiddleware, async (req, res) => {
             });
         }
 
+        // Accept both MM/DD/YYYY and DD/MM/YYYY formats
+        let formattedDate = null;
         if (date) {
-            const NewDate = moment(date, "MM/DD/YYYY", true);
-            if (!NewDate.isValid()) {
+            const dateFormat1 = moment(date, "MM/DD/YYYY", true);
+            const dateFormat2 = moment(date, "DD/MM/YYYY", true);
+
+            if (dateFormat1.isValid()) {
+                formattedDate = dateFormat1.format("DD/MM/YYYY");  // Convert to DD/MM/YYYY
+            } else if (dateFormat2.isValid()) {
+                formattedDate = dateFormat2.format("DD/MM/YYYY");  // Convert to DD/MM/YYYY
+            } else {
                 return res.status(400).json({
                     status: false,
-                    message: "Invalid date format. Use MM/DD/YYYY.",
+                    message: "Invalid date format. Use MM/DD/YYYY or DD/MM/YYYY.",
                 });
             }
         }
 
-        const formattedDate = date ? moment(date, "MM/DD/YYYY").format("DD/MM/YYYY") : null;
+        // Construct the query
         const query = {
             ...(formattedDate ? { reqDate: formattedDate } : {}),
             ...(reqType ? { reqType } : {}),
@@ -61,17 +69,20 @@ router.post("/report", authMiddleware, async (req, res) => {
         if (searchKey) {
             const regexSearch = new RegExp(searchKey, 'i');
             query.$or = [
-                { username: regexSearch }, 
+                { username: regexSearch },
                 { reqAmount: regexSearch }
             ];
         }
 
+
+        // Pagination logic
         const skip = (pageNumber - 1) * limitNumber;
 
         const [reportData, total] = await Promise.all([
             fundreq.find(query).skip(skip).limit(limitNumber),
             fundreq.countDocuments(query),
         ]);
+
 
         if (!reportData || reportData.length === 0) {
             return res.status(404).json({
@@ -100,6 +111,8 @@ router.post("/report", authMiddleware, async (req, res) => {
         });
     }
 });
+
+
 
 
 module.exports = router;
