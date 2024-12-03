@@ -5,7 +5,7 @@ const gamesList = require("../../../model/games/GameList");
 const { ObjectId } = require("mongodb");
 const authMiddleware = require("../../helpersModule/athetication");
 
-router.get("/biddingReport", authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
         const [providers, gameLists] = await Promise.all([
             gamesProvider.find().sort({ _id: 1 }).exec(),
