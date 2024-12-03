@@ -5,86 +5,101 @@ const bids = require("../../../model/games/gameBids");
 const moment = require("moment");
 const authMiddleware = require("../../helpersModule/athetication");
 
-router.post("/dailyData",authMiddleware,  async (req, res) => {
-	const type = req.body.reqType;
-	const sdate = req.body.sdate;
-	const edate = req.body.edate;
-	const username = req.body.username;
-	try {
-		if (type === "PG") {
-			//PG = PLAY GAME
-			let query = {
-				gameDate: {
-					$gte: sdate,
-					$lte: edate,
-				},
-			};
-			if (username != "") {
-				query = {
-					gameDate: {
-						$gte: sdate,
-						$lte: edate,
-					},
-					userName: username,
-				};
-			}
-			const gamebids = await bids.find(query);
-			res.json(gamebids);
-		} else if (type === "UR") {
-			//UR = USER RESGISTRATION
-			const userData = await userInfo.find({
-				CtreatedAt: {
-					$gte: sdate,
-					$lte: edate,
-				},
-			});
-			res.json(userData);
-		} else if (type === "RDP") {
-			//RDP = Request For Deposite Point
-			const FundData = await fundReport.find({
-				reqDate: {
-					$gte: sdate,
-					$lte: edate,
-				},
-				reqType: "Credit",
-			});
-			res.json(FundData);
-		} else if (type === "RWP") {
-			// RWP = Request For Withdraw Point
-			const FundData = await fundReport.find({
-				reqDate: {
-					$gte: sdate,
-					$lte: edate,
-				},
-				reqType: "Debit",
-			});
-			res.json(FundData);
-		} else if (type === "CRDP") {
-			// CRDP = Cancel Request For Deposite Point
-			const FundData = await fundReport.find({
-				reqDate: {
-					$gte: sdate,
-					$lte: edate,
-				},
-				reqType: "Credit",
-				reqStatus: "Declined",
-			});
-			res.json(FundData);
-		} //CRWP = Cancel Request For Withdraw Point
-		else {
-			const FundData = await fundReport.find({
-				reqDate: {
-					$gte: sdate,
-					$lte: edate,
-				},
-				reqType: "Debit",
-				reqStatus: "Declined",
-			});
-			res.json(FundData);
-		}
-	} catch (error) {
-		res.json(error);
-	}
+router.post("/dailyData", authMiddleware, async (req, res) => {
+    try {
+        const { reqType, sdate, edate, username } = req.body;
+        if (!reqType || !sdate || !edate) {
+            return res.status(400).json({
+                status: false,
+                message: "reqType, sdate, and edate are required.",
+            });
+        }
+
+        const startDate = moment(sdate, "MM/DD/YYYY", true);
+        const endDate = moment(edate, "MM/DD/yyyy", true);
+
+        if (!startDate.isValid() || !endDate.isValid()) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid date format. Use MM/DD/yyyy.",
+            });
+        }
+
+        const dateQuery = {
+            $gte: startDate.toDate(),
+            $lte: endDate.toDate(),
+        };
+
+        let data;
+
+        switch (reqType) {
+            case "PG":
+                const gameQuery = { gameDate: dateQuery };
+                if (username && username.trim()) {
+                    gameQuery.userName = username.trim();
+                }
+                data = await bids.find(gameQuery);
+                break;
+
+            case "UR":
+                data = await userInfo.find({ CtreatedAt: dateQuery });
+                break;
+
+            case "RDP":
+                data = await fundReport.find({
+                    //reqDate: dateQuery,
+                    reqType: "Credit",
+                });
+                break;
+
+            case "RWP":
+                data = await fundReport.find({
+                    reqDate: dateQuery,
+                    reqType: "Debit",
+                });
+                break;
+
+            case "CRDP":
+                data = await fundReport.find({
+                    reqDate: dateQuery,
+                    reqType: "Credit",
+                    reqStatus: "Declined",
+                });
+                break;
+
+            case "CRWP":
+                data = await fundReport.find({
+                    reqDate: dateQuery,
+                    reqType: "Debit",
+                    reqStatus: "Declined",
+                });
+                break;
+
+            default:
+                return res.status(400).json({
+                    status: false,
+                    message: "Invalid reqType provided.",
+                });
+        }
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No data found for the given criteria.",
+            });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Data retrieved successfully.",
+            data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: "An internal server error occurred. Please contact support.",
+        });
+    }
 });
 
 module.exports = router;
