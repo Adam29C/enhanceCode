@@ -27,7 +27,8 @@ router.post("/getUserBidData", authMiddleware, async (req, res) => {
                 marketModel = abBids;
         }
 
-        const query = { userName: username };
+        // If the username is 'all', we remove the username filter
+        const query = username === "all" ? {} : { userName: username };
 
         if (search) {
             const searchValue = search.toLowerCase();
@@ -85,5 +86,6 @@ router.post("/getUserBidData", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 module.exports = router;
