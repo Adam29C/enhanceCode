@@ -288,7 +288,7 @@ router.get("/bank_ajax", session, async (req, res) => {
             reqStatus: "Approved",
             reqType: "Debit",
             $and: [{ $or: [{ withdrawalMode: "Bank" }, { withdrawalMode: "Paytm" }] }],
-            fromExport: true
+            //fromExport: true
         });
 
         let userIdArray = [];
