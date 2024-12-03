@@ -83,11 +83,12 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
                 finalObject[id].paytm_number = profile.paytm_number;
             }
         });
-
+        let approvedData=[]
+        approvedData.push(finalObject)
         return res.status(200).json({
             status: true,
             message: "Report fetched successfully.",
-            approvedData: finalObject,
+            approvedData:approvedData,
             total: await fundReq.countDocuments({
                 reqDate: dateFormat,
                 reqStatus: "Approved",
