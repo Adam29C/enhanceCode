@@ -7,9 +7,9 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const authMiddleware = require("../helpersModule/athetication")
 
-router.get("/bank_ajax", authMiddleware, async (req, res) => {
+router.post("/bank_ajax", authMiddleware, async (req, res) => {
     try {
-        const { date_cust, page = 1, limit = 10 } = req.query;
+        const { date_cust, page = 1, limit = 10 } = req.body;
         const dateFormat = moment(date_cust, "MM/DD/YYYY").format("DD/MM/YYYY");
 
         const skip = (page - 1) * limit;

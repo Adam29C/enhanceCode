@@ -317,7 +317,7 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
                 gameBidPoint,
                 totalBidPoint: totalBid,
                 totalWinPoint: totalWin,
-                profit: `<p style='color:${clrName};font-weight:Bold'>${profitLoss}</p>`,
+                profit: profitLoss,
                 updatedAt,
             };
         });
