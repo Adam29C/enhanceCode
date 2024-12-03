@@ -46,7 +46,7 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
                 break;
 
             case "UR":
-                data = await userInfo.find({ CtreatedAt: dateQuery });
+                data = await userInfo.find({ CreatedAt: dateQuery });
                 break;
 
             case "RDP":
