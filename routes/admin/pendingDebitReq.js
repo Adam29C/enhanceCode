@@ -258,6 +258,73 @@ router.post("/updateWallet", async (req, res) => {
     }
 });
 
+router.patch("/decline", async (req, res) => {
+    const { rowId, adminId } = req.body;
+
+    // Check if rowId and adminId are provided in the request body
+    if (!rowId || !adminId) {
+        return res.status(400).json({
+            status: false,
+            message: "rowId and adminId are required"
+        });
+    }
+
+    const dt = dateTime.create();
+    const formatted = dt.format("d/m/Y I:M:S");
+
+    try {
+        // Fetch admin details from the Admin collection using adminId
+        const adminInfo = await AdminModel.findOne({ _id: adminId });
+        
+        // Check if the admin is found
+        if (!adminInfo) {
+            return res.status(404).json({
+                status: false,
+                message: "Admin not found"
+            });
+        }
+
+        const adminName = adminInfo.username;  // Admin name fetched from the Admin table
+
+        // Update the fund request status to "Declined"
+        const updateDecline = await fundReq.findOneAndUpdate(
+            { _id: rowId },
+            {
+                $set: {
+                    reqStatus: "Declined",
+                    reqUpdatedAt: formatted,
+                    UpdatedBy: adminName,
+                    adminId: adminId
+                }
+            },
+            { returnOriginal: false } // return the updated document
+        );
+
+        // If no fund request is found to update
+        if (!updateDecline) {
+            return res.status(404).json({
+                status: false,
+                message: "Fund request not found"
+            });
+        }
+
+        // Return the updated fund request
+        res.status(200).json({
+            status: true,
+            message: "Fund request declined successfully",
+            data: updateDecline
+        });
+
+    } catch (e) {
+        console.error("Error in declining fund request:", e);
+        res.status(500).json({
+            status: false,
+            message: "An error occurred while declining the fund request",
+            error: e.message
+        });
+    }
+});
+
 router.get("/pendingPaytm", authMiddleware, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
