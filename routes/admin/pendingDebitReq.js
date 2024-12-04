@@ -44,7 +44,7 @@ router.post("/pendingBank", authMiddleware, async (req, res) => {
         }
 
         const pendingCreditList = await fundReq
-            .find()
+            .find()//.find(query)
             .sort({ _id: -1 })
             .skip(skip)
             .limit(limit);
