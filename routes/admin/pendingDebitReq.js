@@ -325,6 +325,56 @@ router.patch("/decline", async (req, res) => {
     }
 });
 
+router.get("/getProfile", async (req, res) => {
+    try {
+        const { userId } = req.query;
+
+        if (!userId) {
+            return res.status(400).json({
+                status: false,
+                message: "User ID is required"
+            });
+        }
+
+        const userprofile = await Userprofile.findOne({ userId });
+
+        if (!userprofile) {
+            return res.status(404).json({
+                status: false,
+                message: "Profile not filled by user"
+            });
+        }
+
+        const user = await User.findOne({ _id: userId });
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+
+        const userData = {
+            userData1: user,
+            userData2: userprofile
+        };
+
+        res.status(200).json({
+            status: true,
+            data: userData
+        });
+
+    } catch (e) {
+        console.error("Error in /getProfile API:", e);
+        res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching user profile",
+            error: e.message || "Internal Server Error"
+        });
+    }
+});
+
+
 router.get("/pendingPaytm", authMiddleware, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
