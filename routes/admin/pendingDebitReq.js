@@ -175,7 +175,7 @@ router.post("/updateWallet", async (req, res) => {
         if (id === 1) { 
             update_bal = wallet_balance + parseInt(bal);
             if (update_bal < 0) {
-                return res.status(400).json({ message: "Insufficient wallet balance" });
+                return res.status(200).json({ status:false,message: "Insufficient wallet balance" });
             }
             // Using admin's name from the fetched admin info
             detail = `Amount Added To Wallet By ${admin.name}`;
@@ -186,7 +186,9 @@ router.post("/updateWallet", async (req, res) => {
         } else if (id === 2) { 
             update_bal = wallet_balance - parseInt(bal);
             if (update_bal < 0) {
-                return res.status(400).json({ message: "Insufficient wallet balance" });
+                return res.status(400).json({
+                    status:false, 
+                    message: "Insufficient wallet balance" });
             }
             // Using admin's name for withdrawal as well
             detail = `Amount Withdrawn From Wallet By ${admin.name}`;
@@ -248,7 +250,7 @@ router.post("/updateWallet", async (req, res) => {
         notification(userToken, title, body);
 
         res.json({
-            status: 1,
+            status: true,
             message: "Points Updated Successfully"
         });
 
