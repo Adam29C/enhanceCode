@@ -9,12 +9,12 @@ const dateTime = require("node-datetime");
 const notification = require("../helpersModule/creditDebitNotification");
 const moment = require("moment");
 
-router.get("/pendingBank", authMiddleware, async (req, res) => {
+router.post("/pendingBank", authMiddleware, async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+        // Destructuring parameters from the request body
+        const { page = 1, limit = 10, search } = req.body;
 
+        const skip = (page - 1) * limit;
         const dt = dateTime.create();
         const formatted = dt.format("d/m/Y");
 
@@ -25,27 +25,26 @@ router.get("/pendingBank", authMiddleware, async (req, res) => {
             reqDate: formatted
         };
 
-        if (req.query.search) {
-            const searchValue = req.query.search;
-
-            const normalizedSearch = searchValue.startsWith('+91') ? searchValue : '+91' + searchValue;
+        // Handling search query if provided
+        if (search) {
+            const normalizedSearch = search.startsWith('+91') ? search : '+91' + search;
 
             query = {
                 ...query,
                 $or: [
-                    { fullname: { $regex: searchValue, $options: "i" } },
-                    { username: { $regex: searchValue, $options: "i" } },
+                    { fullname: { $regex: search, $options: "i" } },
+                    { username: { $regex: search, $options: "i" } },
                     { mobile: { $regex: normalizedSearch, $options: "i" } },
-                    { reqStatus: { $regex: searchValue, $options: "i" } },
-                    { withdrawalMode: { $regex: searchValue, $options: "i" } },
-                    { reqAmount: searchValue },
-                    { reqType: { $regex: searchValue, $options: "i" } }
+                    { reqStatus: { $regex: search, $options: "i" } },
+                    { withdrawalMode: { $regex: search, $options: "i" } },
+                    { reqAmount: search },
+                    { reqType: { $regex: search, $options: "i" } }
                 ]
             };
         }
 
         const pendingCreditList = await fundReq
-            .find(query)
+            .find()
             .sort({ _id: -1 })
             .skip(skip)
             .limit(limit);
@@ -81,7 +80,7 @@ router.get("/pendingBank", authMiddleware, async (req, res) => {
             }
 
             finalArray.sort((a, b) => {
-                return new Date(a.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.reqTime.split(' ').slice(1).join(' ')) -
+                return new Date(a.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.reqTime.split(' ').slice(1).join(' ')) - 
                     new Date(b.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.reqTime.split(' ').slice(1).join(' '));
             });
         }
