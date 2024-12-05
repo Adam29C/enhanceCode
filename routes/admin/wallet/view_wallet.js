@@ -206,7 +206,7 @@ router.post("/walletUpdate", authMiddleware, async (req, res) => {
     try {
         let { id, amount: bal, type, particular, admin_id } = req.body;
 
-        const user = await User.findOne({ _id: "66e2f96bc855164134e6d33b" });
+        const user = await User.findOne({ _id: id });
         if (!user) {
             return res.status(404).json({ status: false, message: "User not found." });
         }
