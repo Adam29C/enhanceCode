@@ -133,7 +133,7 @@ router.patch("/approveManualPayment", authMiddleware,async (req, res) => {
                 },
             }
         );
-        const walletHistory = new wallet_history({
+        const walletHistory = new wallet_hstry({
             userId: manualPaymentDetails.userId,
             bidId: savedFundRequest._id,
             filterType: 4,
