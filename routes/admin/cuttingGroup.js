@@ -301,30 +301,43 @@ router.post("/getOC", authMiddleware, async (req, res) => {
 
 router.post("/getBidData", authMiddleware, async (req, res) => {
   try {
-    const { date, bidDigit, id: gameId, gameSession } = req.body;
+    const { date, bidDigit, id, gameSession, page = 1, limit = 10 } = req.body;
 
-    if (!date || !bidDigit || !gameId || !gameSession) {
-      return res.status(400).json({ error: "Missing required fields." });
+    if (page <= 0 || limit <= 0) {
+      return res.status(400).json({ error: "Invalid page or limit values." });
     }
 
-    const bidData = await gameBids.find({
+    const bidData = await gameBids
+      .find({
+        gameDate: date,
+        providerId: id,
+        bidDigit: bidDigit,
+        gameSession: gameSession,
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalCount = await gameBids.countDocuments({
       gameDate: date,
-      providerId: gameId,
+      providerId: id,
       bidDigit: bidDigit,
       gameSession: gameSession,
     });
 
     if (bidData.length === 0) {
-      console.log("No bid data found for the provided parameters.");
       return res.status(404).json({ message: "No bid data found." });
     }
 
-    console.log("Bid data found:", bidData);
-
-    res.status(200).json(bidData);
+    res.status(200).json({
+      bidData,
+      pagination: {
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: page,
+        pageSize: limit,
+      },
+    });
   } catch (e) {
-    console.error("Error occurred while fetching bid data:", e);
-
     res.status(500).json({
       error:
         "An error occurred while fetching the bid data. Please try again later.",
