@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const dateTime = require("node-datetime");
 const bcrypt = require("bcryptjs");
 
-router.post("/", authMiddleware,async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const { searchQuery, page = 1, limit = 10 } = req.body;
 
@@ -31,7 +31,7 @@ router.post("/", authMiddleware,async (req, res) => {
     const totalCount = await empInsert.countDocuments(filter);
 
     const empList = await empInsert
-      .find(filter, { name: 1, username: 1, loginStatus: 1,banned:1 })
+      .find(filter, { name: 1, username: 1, loginStatus: 1, banned: 1 })
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber);
 
@@ -54,7 +54,7 @@ router.post("/", authMiddleware,async (req, res) => {
   }
 });
 
-router.post("/updatePassword",authMiddleware, async function (req, res) {
+router.post("/updatePassword", authMiddleware, async function (req, res) {
   try {
     const { password, adminId } = req.body;
 
@@ -105,7 +105,7 @@ router.post("/updatePassword",authMiddleware, async function (req, res) {
   }
 });
 
-router.post("/blockEmployee",authMiddleware, async (req, res) => {
+router.post("/blockEmployee", authMiddleware, async (req, res) => {
   try {
     const { adminId, status } = req.body;
 
@@ -139,52 +139,55 @@ router.post("/blockEmployee",authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/empById/:id",authMiddleware,async function (req, res) {
-	try {
-		const empID = req.params.id;
-    if(!empID){
+router.get("/empById/:id", authMiddleware, async function (req, res) {
+  try {
+    const empID = req.params.id;
+    if (!empID) {
       return res.status(400).json({
-        status:false,
-        message:"empId is required",
-      })  
+        status: false,
+        message: "empId is required",
+      });
     }
-		const findEmp = await empInsert.findOne({ _id: empID },{password:0});
-	  return res.status(200).json({
-      status:true,
-      message:"Employee informition show successfully",
-      data:findEmp
-    })
-	} catch (error) {
-		return res.status(400).json({
-			status: false,
-			message: "Something Bad Happend Contact Support",
-		});
-	}
+    const findEmp = await empInsert.findOne({ _id: empID }, { password: 0 });
+    return res.status(200).json({
+      status: true,
+      message: "Employee informition show successfully",
+      data: findEmp,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: false,
+      message: "Something Bad Happend Contact Support",
+    });
+  }
 });
 
-router.post("/updateEmployee",authMiddleware,async function(req,res){
-try{
-const{id,colViewPermission,username,loginPermission}=req.body;
-if(!id ||!colViewPermission||!username){
-  return res.status(400).json({
-    status:false,
-    message:"id,col_view_permission,username is required"
-  })
-}
-const updatePermition = await empInsert.updateOne({_id:id},{$set:{col_view_permission:colViewPermission,username}})
-return res.status(200).json({
-  status:true,
-  message:"Permission Update Successfully"
-})
-}catch(err){
-return res.status(400).json({
-  status:false,
-  message:"Internal Server Error"
-})
-}
-})
+router.post("/updateEmployee", authMiddleware, async function (req, res) {
+  try {
+    const { id, colViewPermission, username, loginPermission } = req.body;
+    if (!id || !colViewPermission || !username) {
+      return res.status(400).json({
+        status: false,
+        message: "id,col_view_permission,username is required",
+      });
+    }
+    const updatePermition = await empInsert.updateOne(
+      { _id: id },
+      { $set: { col_view_permission: colViewPermission, username } }
+    );
+    return res.status(200).json({
+      status: true,
+      message: "Permission Update Successfully",
+    });
+  } catch (err) {
+    return res.status(400).json({
+      status: false,
+      message: "Internal Server Error",
+    });
+  }
+});
 
-router.post("/deleteEmp",authMiddleware, async (req, res) => {
+router.post("/deleteEmp", authMiddleware, async (req, res) => {
   try {
     const { id } = req.body;
 
@@ -211,7 +214,7 @@ router.post("/deleteEmp",authMiddleware, async (req, res) => {
       message: "Employee deleted successfully.",
     });
   } catch (error) {
-    console.error('Error deleting employee:', error);
+    console.error("Error deleting employee:", error);
 
     return res.status(500).json({
       status: false,
@@ -220,13 +223,29 @@ router.post("/deleteEmp",authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/createEmployee",authMiddleware, async function (req, res) {
+router.post("/createEmployee", authMiddleware, async function (req, res) {
   try {
-    const { name, username,  designation, password, colViewPermission, loginPermission, loginFor } = req.body;
-    if (!name || !username ||  !designation || !password || !colViewPermission || (loginFor !== 0 && loginFor !== 1)) {
+    const {
+      name,
+      username,
+      designation,
+      password,
+      colViewPermission,
+      loginPermission,
+      loginFor,
+    } = req.body;
+    if (
+      !name ||
+      !username ||
+      !designation ||
+      !password ||
+      !colViewPermission ||
+      (loginFor !== 0 && loginFor !== 1)
+    ) {
       return res.status(400).json({
         status: false,
-        message: "name, username,  designation, password, permission, loginFor fields are required and loginFor must be 0 (false) or 1 (true)",
+        message:
+          "name, username,  designation, password, permission, loginFor fields are required and loginFor must be 0 (false) or 1 (true)",
       });
     }
 
@@ -240,7 +259,6 @@ router.post("/createEmployee",authMiddleware, async function (req, res) {
         message: "USERNAME ALREADY EXISTS",
       });
     }
-
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -265,12 +283,28 @@ router.post("/createEmployee",authMiddleware, async function (req, res) {
       status: true,
       message: "Registered Successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       status: false,
       message: "Server Error",
       error: error.message || "An unexpected error occurred",
+    });
+  }
+});
+
+router.get("/profileAdmin",authMiddleware, async (req, res) => {
+  try {
+    const empList = await empInsert.find({ role: 1 },{name:1,username:1,banned:1});
+    return res.status(200).json({
+      status: true,
+      message: "Profile list show successfully",
+      data: empList,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
     });
   }
 });
