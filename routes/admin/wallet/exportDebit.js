@@ -17,7 +17,7 @@ router.get("/", authMiddleware,async (req, res) => {
         const dt = dateTime.create();
         const formattedDate = dt.format("d/m/Y");
         const userDebitRequests = await debitReq.find(
-            { reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate },
+            { reqStatus: "Pending", reqType: "Debit", reqDate: "04/12/2024" },
             { _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
         );
 
@@ -96,7 +96,6 @@ router.get("/", authMiddleware,async (req, res) => {
         });
     }
 });
-
 
 router.post("/xlsDataNew", async (req, res) => {
     try {
@@ -191,6 +190,770 @@ router.post("/getDetails", authMiddleware, async (req, res) => {
             status: false,
             message: "Internal Server Error",
             error: error.message || "Something went wrong",
+        });
+    }
+});
+
+router.post("/todayApproved", async (req, res) => {
+	try {
+		const date = req.body.date;
+		const formatDate = moment(date, "MM/DD/YYYY").format("DD/MM/YYYY");
+		const todayReports = await daily.find({ ReportDate: formatDate });
+		res.json({
+			status: 1,
+			data: todayReports,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/xlsDataDaily", async (req, res) => {
+	try {
+		const { reportID, type, reportType, Product_Code, Bank_Code_Indicator, Client_Code, Dr_Ac_No } = req.body;
+		const formatDate = moment().format("DD/MM/YYYY");
+		const todayReports = await daily.findOne({ _id: reportID });
+		const ids = todayReports.ApprovedIDs;
+		const reportName = todayReports.ReportName;
+		const userBebitReq = await debitReq.find({ _id: { $in: ids } });
+		if (type === 1) {
+			return res.json({
+				status: 0,
+				Profile: userBebitReq,
+				date: formatDate,
+			});
+		}
+		const filename = formatDate + Client_Code + reportName + ".txt";
+		let finalReport = "";
+		for (index in userBebitReq) {
+			let bankDetails = userBebitReq[index].toAccount;
+			let ifsc = bankDetails.ifscCode;
+			let name = bankDetails.accName;
+			let amt = userBebitReq[index].reqAmount;
+			let accNo = bankDetails.accNumber;
+			if (ifsc != null) {
+				ifsc = ifsc.toUpperCase();
+				name = name.replace(/\.+/g, " ");
+				name = name.toUpperCase();
+			}
+			finalReport += Client_Code + "~" + Product_Code + "~NEFT~~" + formatDate + "~~" + Dr_Ac_No + "~" + amt + "~" + Bank_Code_Indicator + "~~" + name + "~~" + ifsc + "~" + accNo + "~~~~~~~~~~" + name + "~" + name + "~~~~~~~~~~~~~~~~~~~~~~~~\n";
+		}
+		res.json({
+			status: 0,
+			filename: filename,
+			writeString: finalReport,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error.toString(),
+		});
+	}
+});
+
+router.post("/xlsDataDailyTrak", async (req, res) => {
+	try {
+		const reqStatus = req.body.searchType;
+		const reportDate = req.body.reportDate;
+		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+
+		let query = {
+			reqStatus: reqStatus,
+			reqType: "Debit",
+			reqDate: formatDate,
+			fromExport: true,
+		};
+
+		if (reqStatus == "Pending") {
+			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+		}
+
+		const userBebitReq = await debitReq.find(query, {
+			_id: 1,
+			reqAmount: 1,
+			withdrawalMode: 1,
+			reqDate: 1,
+			toAccount: 1,
+			mobile: 1
+		});
+
+		res.json({
+			status: 0,
+			Profile: userBebitReq,
+			date: formatDate,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/showCondition", async (req, res) => {
+	try {
+		const reqStatus = req.body.searchType;
+		const reportDate = req.body.reportDate;
+		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+		let totlaAmt = 0;
+		let query;
+
+		switch (reqStatus) {
+			case "0":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+				};
+				break;
+			case "1":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $eq: 1000 },
+				};
+
+				break;
+			case "2":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lte: 5000 },
+				};
+				break;
+			case "3":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lt: 20000 },
+				};
+				break;
+			case "4":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $gte: 20000 },
+				};
+				break;
+		}
+
+		if (reqStatus == "Pending") {
+			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+		}
+
+		const userBebitReq = await debitReq.find(query, {
+			_id: 1,
+			userId: 1,
+			reqAmount: 1,
+			withdrawalMode: 1,
+			reqDate: 1,
+			username: 1,
+		});
+
+		let userIdArray = [];
+		let debitArray = {};
+
+		for (index in userBebitReq) {
+			let reqAmount = userBebitReq[index].reqAmount;
+			let withdrawalMode = userBebitReq[index].withdrawalMode;
+			let reqDate = userBebitReq[index].reqDate;
+			let username = userBebitReq[index].username;
+			let user = userBebitReq[index].userId;
+			let userKi = mongoose.mongo.ObjectId(user);
+			userIdArray.push(userKi);
+			totlaAmt += reqAmount;
+			debitArray[userKi] = {
+				reqAmount: reqAmount,
+				withdrawalMode: withdrawalMode,
+				reqDate: reqDate,
+				username: username,
+			};
+		}
+
+		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } });
+
+		for (index in user_Profile) {
+			let id = user_Profile[index].userId;
+			if (debitArray[id]) {
+				debitArray[id].name = user_Profile[index].account_holder_name;
+				debitArray[id].account_no = user_Profile[index].account_no;
+				debitArray[id].ifsc = user_Profile[index].ifsc_code;
+				debitArray[id].bname = user_Profile[index].bank_name;
+			}
+		}
+
+		res.json({
+			status: 0,
+			Profile: debitArray,
+			totalAmt: totlaAmt,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/xlsDataNewCondition", async (req, res) => {
+	try {
+		const reqStatus = req.body.searchType;
+		const reportDate = req.body.reportDate;
+		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+		let totlaAmt = 0;
+		let query;
+
+		switch (reqStatus) {
+			case "0":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+				};
+				break;
+			case "1":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $eq: 1000 },
+				};
+
+				break;
+			case "2":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lte: 5000 },
+				};
+				break;
+			case "3":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lt: 20000 },
+				};
+				break;
+			case "4":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $gte: 20000 },
+				};
+				break;
+		}
+
+		if (reqStatus == "Pending") {
+			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+		}
+
+		const userBebitReq = await debitReq.find(query, {
+			_id: 1,
+			userId: 1,
+			reqAmount: 1,
+			withdrawalMode: 1,
+			reqDate: 1,
+		});
+
+		let userIdArray = [];
+		let debitArray = {};
+
+		for (index in userBebitReq) {
+			let reqAmount = userBebitReq[index].reqAmount;
+			let withdrawalMode = userBebitReq[index].withdrawalMode;
+			let reqDate = userBebitReq[index].reqDate;
+			let user = userBebitReq[index].userId;
+			let rowId = userBebitReq[index]._id;
+			let userKi = mongoose.mongo.ObjectId(user);
+			totlaAmt += reqAmount;
+			userIdArray.push(userKi);
+			debitArray[userKi] = {
+				rowId: rowId,
+				userId: userKi,
+				reqAmount: reqAmount,
+				withdrawalMode: withdrawalMode,
+				reqDate: reqDate,
+			};
+		}
+
+		let userData = await User.find(
+			{ _id: { $in: userIdArray } },
+			{ _id: 1, wallet_balance: 1 }
+		);
+
+		for (index in userData) {
+			let id = userData[index]._id;
+			let walletBal = userData[index].wallet_balance;
+			if (debitArray[id]) {
+				debitArray[id].walletBal = walletBal;
+			}
+		}
+
+		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } });
+
+		for (index in user_Profile) {
+			let id = user_Profile[index].userId;
+			if (debitArray[id]) {
+				debitArray[id].name = user_Profile[index].account_holder_name;
+				debitArray[id].account_no = user_Profile[index].account_no;
+				debitArray[id].ifsc = user_Profile[index].ifsc_code;
+			}
+		}
+
+		let Product_Code = req.body.Product_Code;
+		let Bank_Code_Indicator = req.body.Bank_Code_Indicator;
+		let Client_Code = req.body.Client_Code;
+		let Dr_Ac_No = req.body.Dr_Ac_No;
+
+		const filename = formatDate + Client_Code + ".txt";
+		let finalReport = "";
+
+		for (index in debitArray) {
+			let ifsc = debitArray[index].ifsc;
+			let name = debitArray[index].name;
+			let amt = debitArray[index].reqAmount;
+			let accNo = debitArray[index].account_no;
+
+			if (ifsc != null) {
+				ifsc = ifsc.toUpperCase();
+				name = name.replace(/\.+/g, " ");
+				name = name.toUpperCase();
+			}
+
+			finalReport +=
+				Client_Code +
+				"~" +
+				Product_Code +
+				"~NEFT~~" +
+				formatDate +
+				"~~" +
+				Dr_Ac_No +
+				"~" +
+				amt +
+				"~" +
+				Bank_Code_Indicator +
+				"~~" +
+				name +
+				"~~" +
+				ifsc +
+				"~" +
+				accNo +
+				"~~~~~~~~~~" +
+				name +
+				"~" +
+				name +
+				"~~~~~~~~~~~~~~~~~~~~~~~~\n";
+		}
+
+		res.json({
+			status: 0,
+			Profile: debitArray,
+			filename: filename,
+			writeString: finalReport,
+			totalAmt: totlaAmt,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/xlsDataDailyTrakCondition", async (req, res) => {
+	try {
+		const reqStatus = req.body.searchType;
+		const reportDate = req.body.reportDate;
+		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+		let totlaAmt = 0;
+		let query;
+
+		switch (reqStatus) {
+			case "0":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+				};
+				break;
+			case "1":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $eq: 1000 },
+				};
+
+				break;
+			case "2":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lte: 5000 },
+				};
+				break;
+			case "3":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lt: 20000 },
+				};
+				break;
+			case "4":
+				query = {
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $gte: 20000 },
+				};
+				break;
+		}
+
+		const userBebitReq = await debitReq.find(query, {
+			_id: 1,
+			userId: 1,
+			reqAmount: 1,
+			withdrawalMode: 1,
+			reqDate: 1,
+		});
+
+		let userIdArray = [];
+		let debitArray = {};
+
+		for (index in userBebitReq) {
+			let reqAmount = userBebitReq[index].reqAmount;
+			let withdrawalMode = userBebitReq[index].withdrawalMode;
+			let reqDate = userBebitReq[index].reqDate;
+			let user = userBebitReq[index].userId;
+			let rowId = userBebitReq[index]._id;
+			let userKi = mongoose.mongo.ObjectId(user);
+			totlaAmt += reqAmount;
+			userIdArray.push(userKi);
+			debitArray[userKi] = {
+				rowId: rowId,
+				userId: userKi,
+				reqAmount: reqAmount,
+				withdrawalMode: withdrawalMode,
+				reqDate: reqDate,
+			};
+		}
+
+		let userData = await User.find(
+			{ _id: { $in: userIdArray } },
+			{ _id: 1, wallet_balance: 1 }
+		);
+
+		for (index in userData) {
+			let id = userData[index]._id;
+			let walletBal = userData[index].wallet_balance;
+			if (debitArray[id]) {
+				debitArray[id].walletBal = walletBal;
+			}
+		}
+
+		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } });
+
+		for (index in user_Profile) {
+			let id = user_Profile[index].userId;
+			if (debitArray[id]) {
+				debitArray[id].name = user_Profile[index].account_holder_name;
+				debitArray[id].account_no = user_Profile[index].account_no;
+				debitArray[id].ifsc = user_Profile[index].ifsc_code;
+				debitArray[id].bank_name = user_Profile[index].bank_name;
+			}
+		}
+
+		res.json({
+			status: 0,
+			Profile: debitArray,
+			date: formatDate,
+			totalAmt: totlaAmt,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/getDetails", async (req, res) => {
+	try {
+		const number = req.body.acc_num;
+		let profile = await userProfile.find({ account_no: { $regex: number } });
+		let profileAgain = await userProfile.find({
+			"changeDetails.old_acc_no": { $regex: number },
+		});
+		let merge = [...profile, ...profileAgain]
+		res.json(merge);
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/getChangeDetails",async (req, res) => {
+	try {
+		const number = req.body.rowId;
+		let profile = await userProfile.findOne({ _id: number });
+		res.json(profile);
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+async function updateReal(points) {
+	let dataUpdate = await dashBoardUp.find();
+	const update_id = dataUpdate[0]._id;
+	await dashBoardUp.updateOne(
+		{ _id: update_id },
+		{
+			$inc: {
+				total_withdraw_amount: parseInt(points),
+			},
+		}
+	);
+}
+router.post("/rblxls", async (req, res) => {
+    try {
+        const reqStatus = req.body.searchType;
+        const reportDate = req.body.reportDate;
+        const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+        let query = {
+            reqStatus: reqStatus,
+            reqType: "Debit",
+            reqDate: formatDate,
+            fromExport: true,
+        };
+        if (reqStatus == "Pending") {
+            query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+        }
+        const userBebitReq = await debitReq.find(query, {
+            _id: 1,
+            reqAmount: 1,
+            withdrawalMode: 1,
+            reqDate: 1,
+            toAccount: 1,
+            mobile: 1
+        });
+        const formattedData = userBebitReq.map(item => ({
+            destinationAcNumber: item.toAccount.accNumber,
+            destinationBankName: item.toAccount.bankName,
+            destinationIfscCode: item.toAccount.ifscCode,
+            destinationAccName: item.toAccount.accName,
+            amount: item.reqAmount,
+            withdrawalMode: item.withdrawalMode,
+            paymentType: "NFT",
+            sourceNarration: "to XYZ",
+            currency: "INR",
+            destinationNarration: "From abc",
+            beneficiaryAccountType: "Saving",
+            sourceAccountNumber: "100881008810088",
+            email: "abc@ac.com"
+        }));
+        res.json({
+            status: 0,
+            Profile: formattedData,
+            date: formatDate,
+        });
+    } catch (error) {
+        res.json({
+            status: 0,
+            error: error.message || error,
+        });
+    }
+});
+
+router.post("/mkxls", async (req, res) => {
+	try {
+		const reqStatus = req.body.searchType;
+		const reportDate = req.body.reportDate;
+		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+		let query = {
+			reqStatus: reqStatus,
+			reqType: "Debit",
+			reqDate: formatDate,
+			fromExport: true,
+		};
+		if (reqStatus == "Pending") {
+			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+		}
+		const userBebitReq = await debitReq.find(query, {
+			_id: 1,
+			reqAmount: 1,
+			withdrawalMode: 1,
+			reqDate: 1,
+			toAccount: 1,
+			mobile: 1
+		});
+		let finalReport = "";
+		let Client_Code = "MKTTC";
+		let filename =`${Client_Code}.txt`;
+		for (index in userBebitReq) {
+			let bankDetails = userBebitReq[index].toAccount;
+			let ifsc = bankDetails.ifscCode;
+			let name = bankDetails.accName;
+			let amt = userBebitReq[index].reqAmount;
+			let accNo = bankDetails.accNumber;
+
+			if (ifsc != null) {
+				ifsc = ifsc.toUpperCase();
+				name = name.replace(/\.+/g, " ");
+				name = name.toUpperCase();
+			}
+			let Product_Code = "VPAY";
+			let Dr_Ac_No = 1548423085;
+			let Bank_Code_Indicator = "M";
+
+			finalReport += Client_Code + "~" + Product_Code + "~NEFT~~" + formatDate + "~~" + Dr_Ac_No + "~" + amt + "~" + Bank_Code_Indicator + "~~" + name + "~~" + ifsc + "~" + accNo + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+		}
+		res.json({
+			status: 0,
+			filename: filename,
+			writeString: finalReport,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error.message || error,
+		});
+	}
+});
+
+router.post("/gajjubob", async (req, res) => {
+	try {
+		const reqStatus = req.body.searchType;
+		const reportDate = req.body.reportDate;
+		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+		let query = {
+			reqStatus: reqStatus,
+			reqType: "Debit",
+			reqDate: formatDate,
+			fromExport: true,
+		};
+		if (reqStatus == "Pending") {
+			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+		}
+		const userBebitReq = await debitReq.find(query, {
+			_id: 1,
+			reqAmount: 1,
+			withdrawalMode: 1,
+			reqDate: 1,
+			toAccount: 1,
+			mobile: 1,
+			username:1
+		});
+		let finalReport = "";
+		let clientAccount="33190200000689"
+		let filename = "GAJJUBOB.TXT";
+		let count =1;
+		for (index in userBebitReq) {
+			let bankDetails = userBebitReq[index].toAccount;
+			let ifsc = bankDetails.ifscCode;
+			let name = bankDetails.accName;
+			let amt = userBebitReq[index].reqAmount;
+			let accNo = bankDetails.accNumber;
+			let username = userBebitReq[index].username
+			const formattedSerial = count.toString().padStart(4, '0');
+			if (ifsc != null) {
+				ifsc = ifsc.toUpperCase();
+				name = name.replace(/\.+/g, " ");
+				name = name.toUpperCase();
+			}
+			finalReport += `${formattedSerial} | ${clientAccount} | ${amt} | ${ifsc} | ${accNo} | ${username} | SB \n`
+			count = count +1
+		}
+		return res.json({
+			status: 0,
+			filename: filename,
+			writeString: finalReport,
+		});
+	} catch (error) {
+		return res.json({
+			status: 0,
+			error: error.message || error,
+		});
+	}
+})
+
+router.post("/Finapnb", async (req, res) => {
+    try {
+        const reqStatus = req.body.searchType;
+        const reportDate = req.body.reportDate;
+        const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+        
+        let query = {
+            reqStatus,
+            reqType: "Debit",
+            reqDate: formatDate,
+            fromExport: true,
+        };
+
+        if (reqStatus === "Pending") {
+            query = { reqStatus, reqType: "Debit", reqDate: formatDate };
+        }
+
+        const userBebitReq = await debitReq.find(query, {
+            _id: 1,
+            reqAmount: 1,
+            withdrawalMode: 1,
+            reqDate: 1,
+            toAccount: 1,
+            mobile: 1,
+            username: 1
+        });
+
+        const formattedData = userBebitReq.map(item => ({
+			type: "NFT",
+			parentAcountNo: "0153001111111111",
+			amount: item.reqAmount,
+			currency: "INR",
+			clientAcount: item.toAccount.accNumber,
+            customerAccount: item.toAccount.accName.replace(/\.+/g, " ").toUpperCase(),
+			ifscCode : item.toAccount.ifscCode?.toUpperCase(),
+        }));
+
+        res.json({
+            status: 1,
+            profile: formattedData,
+            date: formatDate,
+        });
+    } catch (error) {
+        res.json({
+            status: 0,
+            error: error.message || error,
         });
     }
 });
