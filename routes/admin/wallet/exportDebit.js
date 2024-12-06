@@ -181,13 +181,13 @@ router.post("/xlsDataNew", async (req, res) => {
       }
   
       res.json({
-        status: 0,
+        status: true,
         filename: filename,
         writeString: finalReport,
       });
     } catch (error) {
       res.json({
-        status: 0,
+        status: flase,
         error: error.toString(),
       });
     }
@@ -233,12 +233,12 @@ router.post("/todayApproved",authMiddleware, async (req, res) => {
 		const formatDate = moment(date, "MM/DD/YYYY").format("DD/MM/YYYY");
 		const todayReports = await daily.find({ ReportDate: formatDate });
 		res.json({
-			status: 1,
+			status: true,
 			data: todayReports,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -254,7 +254,7 @@ router.post("/xlsDataDaily",authMiddleware, async (req, res) => {
 		const userBebitReq = await debitReq.find({ _id: { $in: ids } });
 		if (type === 1) {
 			return res.json({
-				status: 0,
+				status: true,
 				Profile: userBebitReq,
 				date: formatDate,
 			});
@@ -275,13 +275,13 @@ router.post("/xlsDataDaily",authMiddleware, async (req, res) => {
 			finalReport += Client_Code + "~" + Product_Code + "~NEFT~~" + formatDate + "~~" + Dr_Ac_No + "~" + amt + "~" + Bank_Code_Indicator + "~~" + name + "~~" + ifsc + "~" + accNo + "~~~~~~~~~~" + name + "~" + name + "~~~~~~~~~~~~~~~~~~~~~~~~\n";
 		}
 		res.json({
-			status: 0,
+			status: true,
 			filename: filename,
 			writeString: finalReport,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error.toString(),
 		});
 	}
@@ -314,13 +314,13 @@ router.post("/xlsDataDailyTrak",authMiddleware, async (req, res) => {
 		});
 
 		res.json({
-			status: 0,
+			status: true,
 			Profile: userBebitReq,
 			date: formatDate,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -428,13 +428,13 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 		}
 
 		res.json({
-			status: 0,
+			status: true,
 			Profile: debitArray,
 			totalAmt: totlaAmt,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -599,7 +599,7 @@ router.post("/xlsDataNewCondition",authMiddleware, async (req, res) => {
 		}
 
 		res.json({
-			status: 0,
+			status: true,
 			Profile: debitArray,
 			filename: filename,
 			writeString: finalReport,
@@ -607,7 +607,7 @@ router.post("/xlsDataNewCondition",authMiddleware, async (req, res) => {
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -724,14 +724,14 @@ router.post("/xlsDataDailyTrakCondition",authMiddleware, async (req, res) => {
 		}
 
 		res.json({
-			status: 0,
+			status: true,
 			Profile: debitArray,
 			date: formatDate,
 			totalAmt: totlaAmt,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -748,7 +748,7 @@ router.post("/getDetails", async (req, res) => {
 		res.json(merge);
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -761,7 +761,7 @@ router.post("/getChangeDetails",authMiddleware,async (req, res) => {
 		res.json(profile);
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
@@ -817,13 +817,13 @@ router.post("/rblxls",authMiddleware, async (req, res) => {
             email: "abc@ac.com"
         }));
         res.json({
-            status: 0,
+            status: true,
             Profile: formattedData,
             date: formatDate,
         });
     } catch (error) {
         res.json({
-            status: 0,
+            status: false,
             error: error.message || error,
         });
     }
@@ -873,13 +873,13 @@ router.post("/mkxls",authMiddleware, async (req, res) => {
 			finalReport += Client_Code + "~" + Product_Code + "~NEFT~~" + formatDate + "~~" + Dr_Ac_No + "~" + amt + "~" + Bank_Code_Indicator + "~~" + name + "~~" + ifsc + "~" + accNo + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 		}
 		res.json({
-			status: 0,
+			status: false,
 			filename: filename,
 			writeString: finalReport,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error.message || error,
 		});
 	}
@@ -929,13 +929,13 @@ router.post("/gajjubob",authMiddleware, async (req, res) => {
 			count = count +1
 		}
 		return res.json({
-			status: 0,
+			status: true,
 			filename: filename,
 			writeString: finalReport,
 		});
 	} catch (error) {
 		return res.json({
-			status: 0,
+			status: false,
 			error: error.message || error,
 		});
 	}
@@ -979,13 +979,13 @@ router.post("/Finapnb",authMiddleware, async (req, res) => {
         }));
 
         res.json({
-            status: 1,
+            status: true,
             profile: formattedData,
             date: formatDate,
         });
     } catch (error) {
         res.json({
-            status: 0,
+            status: false,
             error: error.message || error,
         });
     }
@@ -1091,11 +1091,11 @@ router.post("/approveReq",authMiddleware,async (req, res) => {
 		await history.insertMany(historyArray);
 
 		res.json({
-			status: 1,
+			status: true,
 		});
 	} catch (error) {
 		res.json({
-			status: 0,
+			status: false,
 			error: error,
 		});
 	}
