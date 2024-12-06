@@ -141,6 +141,7 @@ const deleteduser=require("./routes/admin/deletedUser.js")
 
 const cuttingGroups = require("./routes/admin/cuttingGroup.js")
 const ocCutting = require("./routes/admin/ocCutting.js");
+const searchAccount =require("./routes/admin/wallet/searchAccount.js")
 dotenv.config();
 
 // Connect To DB
@@ -342,6 +343,7 @@ app.use("/master/employees", employees);
 app.use("/news",news)
 app.use("/deleteduser",deleteduser)
 app.use("/anderBaharProfitLoss",abProfitLoss)
+app.use("/searchAccount",searchAccount);
 
 const gameProvi = require("./model/games/Games_Provider");
 const declineNoti = require("./routes/helpersModule/cancelReq");
