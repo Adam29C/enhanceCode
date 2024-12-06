@@ -97,6 +97,70 @@ router.get("/", authMiddleware,async (req, res) => {
     }
 });
 
+
+router.post("/xlsDataNew", async (req, res) => {
+    try {
+      const { 
+        searchType: reqStatus, 
+        reportDate, 
+        Product_Code, 
+        Bank_Code_Indicator, 
+        Client_Code, 
+        Dr_Ac_No 
+      } = req.body;
+  
+      const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+  
+      let query = {
+        reqStatus: reqStatus,
+        reqType: "Debit",
+        reqDate: formatDate,
+        fromExport: true,
+      };
+  
+      if (reqStatus === "Pending") {
+        query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+      }
+  
+      const userDebitReq = await debitReq.find(query, {
+        _id: 1,
+        reqAmount: 1,
+        withdrawalMode: 1,
+        reqDate: 1,
+        toAccount: 1,
+      });
+  
+      const filename = formatDate + Client_Code + ".txt";
+      let finalReport = "";
+  
+      for (const index in userDebitReq) {
+        let bankDetails = userDebitReq[index].toAccount;
+        let ifsc = bankDetails.ifscCode;
+        let name = bankDetails.accName;
+        let amt = userDebitReq[index].reqAmount;
+        let accNo = bankDetails.accNumber;
+  
+        if (ifsc != null) {
+          ifsc = ifsc.toUpperCase();
+          name = name.replace(/\.+/g, " ").toUpperCase();
+        }
+  
+        finalReport += `${Client_Code}~${Product_Code}~NEFT~~${formatDate}~~${Dr_Ac_No}~${amt}~${Bank_Code_Indicator}~~${name}~~${ifsc}~${accNo}~~~~~~~~~~${name}~${name}~~~~~~~~~~~~~~~~~~~~~~~~\n`;
+      }
+  
+      res.json({
+        status: 0,
+        filename: filename,
+        writeString: finalReport,
+      });
+    } catch (error) {
+      res.json({
+        status: 0,
+        error: error.toString(),
+      });
+    }
+});
+
 router.post("/getDetails", authMiddleware, async (req, res) => {
     try {
         const { acc_num } = req.body;
