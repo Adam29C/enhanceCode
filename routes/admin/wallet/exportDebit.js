@@ -875,7 +875,7 @@ router.post("/mkxls",authMiddleware, async (req, res) => {
 			finalReport += Client_Code + "~" + Product_Code + "~NEFT~~" + formatDate + "~~" + Dr_Ac_No + "~" + amt + "~" + Bank_Code_Indicator + "~~" + name + "~~" + ifsc + "~" + accNo + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 		}
 		res.json({
-			status: false,
+			status: true,
 			filename: filename,
 			writeString: finalReport,
 		});
