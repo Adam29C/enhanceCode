@@ -12,14 +12,41 @@ const notification = require("../../helpersModule/creditDebitNotification");
 const moment = require("moment");
 const authMiddleware =require("../../helpersModule/athetication")
 
-router.get("/", authMiddleware,async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
     try {
+        // Extract limit and page from the request body
+        const { limit = 10, page = 1 } = req.body;
+
+        // Validate limit and page values
+        const parsedLimit = parseInt(limit, 10);
+        const parsedPage = parseInt(page, 10);
+
+        if (isNaN(parsedLimit) || parsedLimit <= 0) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
+                message: "Invalid limit parameter",
+            });
+        }
+
+        if (isNaN(parsedPage) || parsedPage <= 0) {
+            return res.status(400).json({
+                statusCode: 400,
+                status: false,
+                message: "Invalid page parameter",
+            });
+        }
+
+        // Calculate skip based on page and limit
+        const skip = (parsedPage - 1) * parsedLimit;
+
         const dt = dateTime.create();
         const formattedDate = dt.format("d/m/Y");
-        const userDebitRequests = await debitReq.find(
-            // { reqStatus: "Pending", reqType: "Debit", reqDate: "04/12/2024" },
-            // { _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
-        );
+
+        // Find user debit requests with limit and pagination
+        const userDebitRequests = await debitReq.find()
+            .skip(skip)
+            .limit(parsedLimit);
 
         if (userDebitRequests.length === 0) {
             return res.status(200).json({
@@ -44,6 +71,7 @@ router.get("/", authMiddleware,async (req, res) => {
             return acc;
         }, {});
 
+        // Fetch user data
         const userData = await User.find(
             { _id: { $in: userIdArray } },
             { _id: 1, wallet_balance: 1, username: 1, mobile: 1, firebaseId: 1 }
@@ -61,6 +89,7 @@ router.get("/", authMiddleware,async (req, res) => {
             }
         });
 
+        // Fetch user profiles
         const userProfiles = await userProfile.find({
             userId: { $in: userIdArray },
         });
@@ -96,6 +125,7 @@ router.get("/", authMiddleware,async (req, res) => {
         });
     }
 });
+
 
 router.post("/xlsDataNew", async (req, res) => {
     try {
