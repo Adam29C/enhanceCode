@@ -32,7 +32,6 @@ router.get("/profileChange", authMiddleware, async (req, res) => {
         return res.status(200).json({
             statusCode: 200,
             status: true,
-            data: resultArray,
             records,
             current: page,
             pages: Math.ceil(totalCount / perPage),
@@ -41,6 +40,7 @@ router.get("/profileChange", authMiddleware, async (req, res) => {
             title: "Invoices",
         });
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             status: false,
             message: "Internal Server Error",
