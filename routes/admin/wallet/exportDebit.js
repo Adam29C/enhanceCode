@@ -45,9 +45,10 @@ router.post("/", authMiddleware, async (req, res) => {
         const formattedDate = dt.format("d/m/Y");
 
         // Find user debit requests with limit and pagination
+		//yha par maine query hatai hai jisse data a sake baad me ise lgana hai
         const userDebitRequests = await debitReq.find(
-		{ reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate },
-		{ _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
+		// { reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate },
+		// { _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
 		)
             .skip(skip)
             .limit(parsedLimit);
@@ -193,7 +194,7 @@ router.post("/xlsDataNew", async (req, res) => {
     }
 });
 
-router.post("/getDetails",authMiddleware, authMiddleware, async (req, res) => {
+router.post("/getDetails",authMiddleware,  async (req, res) => {
     try {
         const { acc_num } = req.body;
 
@@ -465,6 +466,7 @@ router.post("/xlsDataNewCondition",authMiddleware, async (req, res) => {
 					fromExport: true,
 					reqAmount: { $eq: 1000 },
 				};
+				
 
 				break;
 			case "2":
@@ -1202,4 +1204,4 @@ router.post("/decline", async (req, res) => {
     }
 });
 
-module.exports = router;	
+module.exports = router;
