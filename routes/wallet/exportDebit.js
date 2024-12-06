@@ -23,8 +23,8 @@ router.get("/", session, permission, async (req, res) => {
 
 	//ye data lane ki liye lgaya hai(comment kiya hai)
 	const userBebitReq = await debitReq.find(
-		// { reqStatus: "Pending", reqType: "Debit", reqDate: "04/12/2024" },
-		// { _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
+		{ reqStatus: "Pending", reqType: "Debit", reqDate: "04/12/2024" },
+		{ _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
 	);
 	let userIdArray = [];
 	let debitArray = [];

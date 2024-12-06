@@ -11,6 +11,7 @@ const daily = require("../../../model/dailyWithdraw");
 const notification = require("../../helpersModule/creditDebitNotification");
 const moment = require("moment");
 const authMiddleware =require("../../helpersModule/athetication")
+const AdminModel = require("../../../model/dashBoard/AdminModel");
 
 router.post("/", authMiddleware, async (req, res) => {
     try {
@@ -44,7 +45,10 @@ router.post("/", authMiddleware, async (req, res) => {
         const formattedDate = dt.format("d/m/Y");
 
         // Find user debit requests with limit and pagination
-        const userDebitRequests = await debitReq.find()
+        const userDebitRequests = await debitReq.find(
+		{ reqStatus: "Pending", reqType: "Debit", reqDate: "04/12/2024" },
+		{ _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
+		)
             .skip(skip)
             .limit(parsedLimit);
 
@@ -126,7 +130,6 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 });
 
-
 router.post("/xlsDataNew", async (req, res) => {
     try {
       const { 
@@ -151,7 +154,7 @@ router.post("/xlsDataNew", async (req, res) => {
         query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
       }
   
-      const userDebitReq = await debitReq.find(query, {
+      const userDebitReq = await debitReq.find({
         _id: 1,
         reqAmount: 1,
         withdrawalMode: 1,
@@ -190,7 +193,7 @@ router.post("/xlsDataNew", async (req, res) => {
     }
 });
 
-router.post("/getDetails", authMiddleware, async (req, res) => {
+router.post("/getDetails",authMiddleware, authMiddleware, async (req, res) => {
     try {
         const { acc_num } = req.body;
 
@@ -224,7 +227,7 @@ router.post("/getDetails", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/todayApproved", async (req, res) => {
+router.post("/todayApproved",authMiddleware, async (req, res) => {
 	try {
 		const date = req.body.date;
 		const formatDate = moment(date, "MM/DD/YYYY").format("DD/MM/YYYY");
@@ -241,7 +244,7 @@ router.post("/todayApproved", async (req, res) => {
 	}
 });
 
-router.post("/xlsDataDaily", async (req, res) => {
+router.post("/xlsDataDaily",authMiddleware, async (req, res) => {
 	try {
 		const { reportID, type, reportType, Product_Code, Bank_Code_Indicator, Client_Code, Dr_Ac_No } = req.body;
 		const formatDate = moment().format("DD/MM/YYYY");
@@ -284,7 +287,7 @@ router.post("/xlsDataDaily", async (req, res) => {
 	}
 });
 
-router.post("/xlsDataDailyTrak", async (req, res) => {
+router.post("/xlsDataDailyTrak",authMiddleware, async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
@@ -323,7 +326,7 @@ router.post("/xlsDataDailyTrak", async (req, res) => {
 	}
 });
 
-router.post("/showCondition", async (req, res) => {
+router.post("/showCondition",authMiddleware, async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
@@ -437,7 +440,7 @@ router.post("/showCondition", async (req, res) => {
 	}
 });
 
-router.post("/xlsDataNewCondition", async (req, res) => {
+router.post("/xlsDataNewCondition",authMiddleware, async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
@@ -610,7 +613,7 @@ router.post("/xlsDataNewCondition", async (req, res) => {
 	}
 });
 
-router.post("/xlsDataDailyTrakCondition", async (req, res) => {
+router.post("/xlsDataDailyTrakCondition",authMiddleware, async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
@@ -751,7 +754,7 @@ router.post("/getDetails", async (req, res) => {
 	}
 });
 
-router.post("/getChangeDetails",async (req, res) => {
+router.post("/getChangeDetails",authMiddleware,async (req, res) => {
 	try {
 		const number = req.body.rowId;
 		let profile = await userProfile.findOne({ _id: number });
@@ -776,7 +779,7 @@ async function updateReal(points) {
 		}
 	);
 }
-router.post("/rblxls", async (req, res) => {
+router.post("/rblxls",authMiddleware, async (req, res) => {
     try {
         const reqStatus = req.body.searchType;
         const reportDate = req.body.reportDate;
@@ -826,7 +829,7 @@ router.post("/rblxls", async (req, res) => {
     }
 });
 
-router.post("/mkxls", async (req, res) => {
+router.post("/mkxls",authMiddleware, async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
@@ -882,7 +885,7 @@ router.post("/mkxls", async (req, res) => {
 	}
 });
 
-router.post("/gajjubob", async (req, res) => {
+router.post("/gajjubob",authMiddleware, async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
@@ -938,7 +941,7 @@ router.post("/gajjubob", async (req, res) => {
 	}
 })
 
-router.post("/Finapnb", async (req, res) => {
+router.post("/Finapnb",authMiddleware, async (req, res) => {
     try {
         const reqStatus = req.body.searchType;
         const reportDate = req.body.reportDate;
@@ -988,4 +991,215 @@ router.post("/Finapnb", async (req, res) => {
     }
 });
 
-module.exports = router;
+router.post("/approveReq",authMiddleware,async (req, res) => {
+	try {
+		const updateArray = req.body.ids;
+		const userArray = req.body.userData;
+		const userplusIds = req.body.userplusIds;
+		const dt = dateTime.create();
+		const formatted = dt.format("m/d/Y I:M:S p");
+		const formatted2 = dt.format("d/m/Y I:M:S p");
+		const time = dt.format("I:M p");
+		const dateToday = dt.format("d/m/Y");
+		const userInfo = req.session.details;
+		const adminName = userInfo.username;
+		const adminId = userInfo.user_id;
+		let total = 0;
+		const historyArray = [];
+
+
+		const dailyReport = new daily({
+			ApprovedIDs: updateArray,
+			ReportName: time + " Report",
+			ReportTime: time,
+			ReportDate: dateToday,
+			adminName: adminName,
+		});
+
+		await dailyReport.save();
+
+		await debitReq.updateMany(
+			{ _id: updateArray },
+			{
+				$set: {
+					reqStatus: "Approved",
+					UpdatedBy: adminName,
+					reqUpdatedAt: formatted,
+					fromExport: true,
+					from: 2,
+				},
+			}
+		);
+
+		for (index in userArray) {
+			let userId = userArray[index].userId;
+			let userName = userArray[index].username;
+			let transaction_amount = userArray[index].req_amt;
+			let mobile = userArray[index].mobile;
+
+			total += parseInt(transaction_amount);
+
+			let userDetail = await User.findOne(
+				{ _id: userId },
+				{ wallet_balance: 1,firebaseId:1 }
+			);
+			let wallet_balance = userDetail.wallet_balance;
+			let updateAmt = wallet_balance - transaction_amount;
+			await User.updateOne(
+				{ _id: userId },
+				{
+					$set: {
+						wallet_balance: updateAmt,
+						wallet_bal_updated_at: formatted2,
+					},
+				}
+			);
+
+			let dt0 = dateTime.create();
+			let time = dt0.format("I:M:S p");
+
+			let rowSearch = userplusIds[userId];
+			let rowId = rowSearch.rowId
+
+			let dataHistory = {
+				userId: userId,
+				bidId: rowId,
+				filterType: 9,
+				previous_amount: wallet_balance,
+				current_amount: updateAmt,
+				transaction_amount: transaction_amount,
+				username: userName,
+				description: "Amount Debited For Withdraw Request",
+				transaction_date: dateToday,
+				transaction_time: time,
+				transaction_status: "Success",
+				reqType: "Debit",
+				admin_id: adminId,
+				addedBy_name: adminName,
+				mobile: mobile,
+			};
+			historyArray.push(dataHistory);
+			updateReal(total);
+
+			let userToken = [];
+			userToken.push(userDetail.firebaseId);
+			let title = `Your Debit (Withdrawal) Request Of Rs.${transaction_amount}/- is Approved ✔️🤑💰`;
+			let body = `Hello ${userName} 🤩🤩`;
+			notification(userToken, title, body);
+		}
+
+		await history.insertMany(historyArray);
+
+		res.json({
+			status: 1,
+		});
+	} catch (error) {
+		res.json({
+			status: 0,
+			error: error,
+		});
+	}
+});
+
+router.post("/decline", async (req, res) => {
+    try {
+        // Validate required fields
+        const { rowId, firebaseId, userId, reason, amountDecline,id } = req.body;
+        if (!rowId || !firebaseId || !userId || !reason || !amountDecline) {
+            return res.status(400).json({
+                status: false,
+                error: "Missing required fields (rowId, firebaseId, userId, reason, amountDecline)."
+            });
+        }
+		const adminInfo= await AdminModel.findOne({_id:id})
+		console.log(adminInfo,"adminInfo")
+
+        const dt = dateTime.create();
+        const formatted = dt.format("m/d/Y I:M:S");
+        const time = dt.format("I:M p");
+        const dateToday = dt.format("d/m/Y");
+        const userInfo = req.session.details;
+        const adminName = adminInfo.name;
+        const adminId = adminInfo._id;
+        // Start a database session for transaction handling
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            // Update debit request status to "Declined"
+            const updatedDebitReq = await debitReq.updateOne(
+                { _id: rowId },
+                {
+                    $set: {
+                        reqStatus: "Declined",
+                        reqUpdatedAt: formatted,
+                        UpdatedBy: adminName,
+                    },
+                },
+                { session }
+            );
+
+            if (updatedDebitReq.nModified === 0) {
+                throw new Error("Failed to update the debit request status.");
+            }
+            // Retrieve user data
+            const user = await User.findOne({ _id: userId }, { wallet_balance: 1, mobile: 1, username: 1, firebaseId: 1, _id: 0 }).session(session);
+            if (!user) {
+                throw new Error("User not found.");
+            }
+            // Create transaction history record
+            const dataHistory = new history({
+                userId,
+                bidId: rowId,
+                filterType: 9,
+                previous_amount: user.wallet_balance,
+                current_amount: user.wallet_balance,
+                transaction_amount: amountDecline,
+                username: user.username,
+                description: `Your Withdraw Request Is Cancelled Due To ${reason}`,
+                transaction_date: dateToday,
+                transaction_time: time,
+                transaction_status: "Success",
+                reqType: "Debit",
+                admin_id: adminId,
+                addedBy_name: adminName,
+                mobile: user.mobile,
+            });
+            await dataHistory.save({ session });
+
+            // Commit the transaction
+            await session.commitTransaction();
+            session.endSession();
+
+            // Prepare notification
+            let title = `Your Debit (Withdrawal) Request is declined for ${reason} 😌😌`;
+            let body = `Hello ${user.username},\n\nYour withdrawal request has been declined due to the following reason: ${reason}.`;
+            notification([firebaseId], title, body); // Assuming notification function handles sending the message.
+			
+            // Send successful response
+            res.json({
+                status: true,
+                message: "Withdrawal request declined successfully.",
+                data: rowId,
+            });
+			
+        } catch (error) {
+            // If any operation fails, abort the transaction
+            await session.abortTransaction();
+            session.endSession();
+            console.error("Error processing decline:", error);
+            res.status(500).json({
+                status: false,
+                error: error.message || "Internal server error during decline process.",
+            });
+        }
+    } catch (error) {
+		console.log("this is test ")
+        console.error("Unexpected error:", error);
+        res.status(500).json({
+            status: false,
+            error: error.message || "An unexpected error occurred.",
+        });
+    }
+});
+
+module.exports = router;	
