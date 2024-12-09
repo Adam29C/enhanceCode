@@ -331,7 +331,6 @@ router.post("/xlsDataDailyTrak",authMiddleware, async (req, res) => {
 
 router.post("/showCondition",authMiddleware, async (req, res) => {
 	try {
-		console.log("1")
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
 		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
@@ -341,9 +340,9 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 		switch (reqStatus) {
 			case "0":
 				query = {
-					//reqStatus: "Approved",
-					//reqType: "Debit",
-					//reqDate: formatDate,
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
 					fromExport: true,
 				};
 				break;
@@ -389,18 +388,15 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 		if (reqStatus == "Pending") {
 			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
 		}
-        //testing ke lia maine ues kiya hai
-		const userBebitReq = await debitReq.find(
-			//query
-			{}, {
+
+		const userBebitReq = await debitReq.find(query, {
 			_id: 1,
 			userId: 1,
 			reqAmount: 1,
 			withdrawalMode: 1,
 			reqDate: 1,
 			username: 1,
-		}
-		);
+		});
 
 		let userIdArray = [];
 		let debitArray = {};
@@ -433,7 +429,6 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 				debitArray[id].bname = user_Profile[index].bank_name;
 			}
 		}
-
 		res.json({
 			status: true,
 			Profile: debitArray,
@@ -441,7 +436,7 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 		});
 	} catch (error) {
 		res.json({
-			status: false,
+			status: flase,
 			error: error,
 		});
 	}
