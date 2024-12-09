@@ -982,7 +982,7 @@ router.post("/Finapnb",authMiddleware, async (req, res) => {
 
         res.json({
             status: true,
-            profile: formattedData,
+            Profile: formattedData,
             date: formatDate,
         });
     } catch (error) {
@@ -1195,7 +1195,6 @@ router.post("/decline", async (req, res) => {
             });
         }
     } catch (error) {
-		console.log("this is test ")
         console.error("Unexpected error:", error);
         res.status(500).json({
             status: false,
