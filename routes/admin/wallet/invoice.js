@@ -3,12 +3,11 @@ const router = express.Router();
 const changeHistory = require("../../../model/API/Profile")
 const authMiddleware = require("../../helpersModule/athetication");
 
-router.get("/profileChange", authMiddleware, async (req, res) => {
+router.post("/profileChange", authMiddleware, async (req, res) => {
     try {
-        const perPage = parseInt(req.query.perPage) || 50;
-        const page = parseInt(req.query.page) || 1;
-        const searchQuery = req.query.search || "";
-
+        const perPage = parseInt(req.body.perPage) || 50;
+        const page = parseInt(req.body.page) || 1;
+        const searchQuery = req.body.search || "";
         const searchFilter = {
             changeDetails: { $exists: true, $ne: [] },
             ...(searchQuery && {
@@ -21,17 +20,15 @@ router.get("/profileChange", authMiddleware, async (req, res) => {
                 ],
             }),
         };
-
         const records = await changeHistory
             .find(searchFilter)
             .skip(perPage * (page - 1))
             .limit(perPage);
-
         const totalCount = await changeHistory.countDocuments(searchFilter);
-
         return res.status(200).json({
             statusCode: 200,
             status: true,
+            //data: resultArray,
             records,
             current: page,
             pages: Math.ceil(totalCount / perPage),
@@ -40,7 +37,6 @@ router.get("/profileChange", authMiddleware, async (req, res) => {
             title: "Invoices",
         });
     } catch (error) {
-        console.log(error)
         res.status(500).json({
             status: false,
             message: "Internal Server Error",

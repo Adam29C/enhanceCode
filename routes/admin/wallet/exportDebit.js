@@ -230,9 +230,11 @@ router.post("/getDetails",authMiddleware,  async (req, res) => {
 
 router.post("/todayApproved",authMiddleware, async (req, res) => {
 	try {
+
 		const date = req.body.date;
 		const formatDate = moment(date, "MM/DD/YYYY").format("DD/MM/YYYY");
-		const todayReports = await daily.find({ ReportDate: formatDate });
+		console.log(formatDate,"formatDate")
+		const todayReports = await daily.find({ ReportDate: "06/12/2024" });//yha par static data daal diya hai testing ke lia
 		res.json({
 			status: true,
 			data: todayReports,
