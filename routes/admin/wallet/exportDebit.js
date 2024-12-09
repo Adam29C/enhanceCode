@@ -47,8 +47,8 @@ router.post("/", authMiddleware, async (req, res) => {
         // Find user debit requests with limit and pagination
 		//yha par maine query hatai hai jisse data a sake baad me ise lgana hai
         const userDebitRequests = await debitReq.find(
-		// { reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate },
-		// { _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
+		{ reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate },
+		{ _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
 		)
             .skip(skip)
             .limit(parsedLimit);
