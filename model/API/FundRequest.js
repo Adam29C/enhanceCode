@@ -82,4 +82,5 @@ const fundreqSchema = new mongoose.Schema({
     });
 
 fundreqSchema.plugin(dataTables);
+
 module.exports = mongoose.model('fund_request', fundreqSchema);
