@@ -340,47 +340,47 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 		switch (reqStatus) {
 			case "0":
 				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
+					//reqStatus: "Approved",
+					//reqType: "Debit",
+					//reqDate: formatDate,
+					//fromExport: true,
 				};
 				break;
 			case "1":
 				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $eq: 1000 },
+					// reqStatus: "Approved",
+					// reqType: "Debit",
+					// reqDate: formatDate,
+					// fromExport: true,
+					// reqAmount: { $eq: 1000 },
 				};
 
 				break;
 			case "2":
 				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $lte: 5000 },
+					// reqStatus: "Approved",
+					// reqType: "Debit",
+					// reqDate: formatDate,
+					// fromExport: true,
+					// reqAmount: { $lte: 5000 },
 				};
 				break;
 			case "3":
 				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $lt: 20000 },
+					// reqStatus: "Approved",
+					// reqType: "Debit",
+					// reqDate: formatDate,
+					// fromExport: true,
+					// reqAmount: { $lt: 20000 },
 				};
 				break;
 			case "4":
 				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $gte: 20000 },
+					// reqStatus: "Approved",
+					// reqType: "Debit",
+					// reqDate: formatDate,
+					// fromExport: true,
+					// reqAmount: { $gte: 20000 },
 				};
 				break;
 		}
