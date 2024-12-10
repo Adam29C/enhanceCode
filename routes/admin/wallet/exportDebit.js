@@ -839,6 +839,7 @@ router.post("/mkxls",authMiddleware, async (req, res) => {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
 		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+
 		let query = {
 			reqStatus: reqStatus,
 			reqType: "Debit",
@@ -848,6 +849,7 @@ router.post("/mkxls",authMiddleware, async (req, res) => {
 		if (reqStatus == "Pending") {
 			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
 		}
+		console.log(query,"query")
 		const userBebitReq = await debitReq.find(query, {
 			_id: 1,
 			reqAmount: 1,

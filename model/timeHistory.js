@@ -14,6 +14,9 @@ const timeHistorySchema = new mongoose.Schema({
     deleteTime: {
         type: Number,
         default: 0,
+    },
+    description:{
+        type:String
     }
 }, {
     timestamps: true
