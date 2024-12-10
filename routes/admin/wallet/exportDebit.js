@@ -329,58 +329,58 @@ router.post("/xlsDataDailyTrak",authMiddleware, async (req, res) => {
 	}
 });
 
-router.post("/showCondition",authMiddleware, async (req, res) => {
+router.post("/showCondition",authMiddleware,  async (req, res) => {
 	try {
 		const reqStatus = req.body.searchType;
 		const reportDate = req.body.reportDate;
 		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
 		let totlaAmt = 0;
 		let query;
-
+        
 		switch (reqStatus) {
 			case "0":
 				query = {
-					//reqStatus: "Approved",
-					//reqType: "Debit",
-					//reqDate: formatDate,
-					//fromExport: true,
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					//fromExport: true,--->testing ke lia 
 				};
 				break;
 			case "1":
 				query = {
-					// reqStatus: "Approved",
-					// reqType: "Debit",
-					// reqDate: formatDate,
-					// fromExport: true,
-					// reqAmount: { $eq: 1000 },
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $eq: 1000 },
 				};
 
 				break;
 			case "2":
 				query = {
-					// reqStatus: "Approved",
-					// reqType: "Debit",
-					// reqDate: formatDate,
-					// fromExport: true,
-					// reqAmount: { $lte: 5000 },
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lte: 5000 },
 				};
 				break;
 			case "3":
 				query = {
-					// reqStatus: "Approved",
-					// reqType: "Debit",
-					// reqDate: formatDate,
-					// fromExport: true,
-					// reqAmount: { $lt: 20000 },
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $lt: 20000 },
 				};
 				break;
 			case "4":
 				query = {
-					// reqStatus: "Approved",
-					// reqType: "Debit",
-					// reqDate: formatDate,
-					// fromExport: true,
-					// reqAmount: { $gte: 20000 },
+					reqStatus: "Approved",
+					reqType: "Debit",
+					reqDate: formatDate,
+					fromExport: true,
+					reqAmount: { $gte: 20000 },
 				};
 				break;
 		}
@@ -388,7 +388,7 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 		if (reqStatus == "Pending") {
 			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
 		}
-
+        console.log(query,"query")
 		const userBebitReq = await debitReq.find(query, {
 			_id: 1,
 			userId: 1,
@@ -418,25 +418,27 @@ router.post("/showCondition",authMiddleware, async (req, res) => {
 			};
 		}
 
-		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } });
+		//let user_Profile = await userProfile.find({ userId: { $in: userIdArray }});
+		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } }, { account_holder_name: 1, account_no: 1,ifsc_code:1,bank_name:1 });
 
-		for (index in user_Profile) {
-			let id = user_Profile[index].userId;
-			if (debitArray[id]) {
-				debitArray[id].name = user_Profile[index].account_holder_name;
-				debitArray[id].account_no = user_Profile[index].account_no;
-				debitArray[id].ifsc = user_Profile[index].ifsc_code;
-				debitArray[id].bname = user_Profile[index].bank_name;
-			}
-		}
+    //    console.log(user_Profile,"user_Profile") 
+	// 	for (index in user_Profile) {
+	// 		let id = user_Profile[index].userId;
+	// 		if (debitArray[id]) {
+	// 			debitArray[id].name = user_Profile[index].account_holder_name;
+	// 			debitArray[id].account_no = user_Profile[index].account_no;
+	// 			debitArray[id].ifsc = user_Profile[index].ifsc_code;
+	// 			debitArray[id].bname = user_Profile[index].bank_name;
+	// 		}
+	// 	}
 		res.json({
 			status: true,
-			Profile: debitArray,
+			Profile: user_Profile,
 			totalAmt: totlaAmt,
 		});
 	} catch (error) {
 		res.json({
-			status: flase,
+			status: false,
 			error: error,
 		});
 	}
@@ -1205,3 +1207,6 @@ router.post("/decline", async (req, res) => {
 });
 
 module.exports = router;
+
+//in done logo me se 1 tikega 
+//1 bhag jayega 
