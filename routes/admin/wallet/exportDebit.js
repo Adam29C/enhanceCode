@@ -329,119 +329,118 @@ router.post("/xlsDataDailyTrak",authMiddleware, async (req, res) => {
 	}
 });
 
-router.post("/showCondition",authMiddleware,  async (req, res) => {
-	try {
-		const reqStatus = req.body.searchType;
-		const reportDate = req.body.reportDate;
-		const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
-		let totlaAmt = 0;
-		let query;
-        
-		switch (reqStatus) {
-			case "0":
-				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					//fromExport: true,--->testing ke lia 
-				};
-				break;
-			case "1":
-				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $eq: 1000 },
-				};
+router.post("/showCondition", authMiddleware, async (req, res) => {
+    try {
+        const { searchType: reqStatus, reportDate, page = 1, limit = 10 } = req.body;
+        const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
+        let totlaAmt = 0;
+        let query;
 
-				break;
-			case "2":
-				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $lte: 5000 },
-				};
-				break;
-			case "3":
-				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $lt: 20000 },
-				};
-				break;
-			case "4":
-				query = {
-					reqStatus: "Approved",
-					reqType: "Debit",
-					reqDate: formatDate,
-					fromExport: true,
-					reqAmount: { $gte: 20000 },
-				};
-				break;
-		}
+        const skip = (page - 1) * limit;
 
-		if (reqStatus == "Pending") {
-			query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
-		}
-        console.log(query,"query")
-		const userBebitReq = await debitReq.find(query, {
-			_id: 1,
-			userId: 1,
-			reqAmount: 1,
-			withdrawalMode: 1,
-			reqDate: 1,
-			username: 1,
-		});
+        switch (reqStatus) {
+            case "0":
+                query = {
+                    reqStatus: "Approved",
+                    reqType: "Debit",
+                    reqDate: formatDate,
+                };
+                break;
+            case "1":
+                query = {
+                    reqStatus: "Approved",
+                    reqType: "Debit",
+                    reqDate: formatDate,
+                    fromExport: true,
+                    reqAmount: { $eq: 1000 },
+                };
+                break;
+            case "2":
+                query = {
+                    reqStatus: "Approved",
+                    reqType: "Debit",
+                    reqDate: formatDate,
+                    fromExport: true,
+                    reqAmount: { $lte: 5000 },
+                };
+                break;
+            case "3":
+                query = {
+                    reqStatus: "Approved",
+                    reqType: "Debit",
+                    reqDate: formatDate,
+                    fromExport: true,
+                    reqAmount: { $lt: 20000 },
+                };
+                break;
+            case "4":
+                query = {
+                    reqStatus: "Approved",
+                    reqType: "Debit",
+                    reqDate: formatDate,
+                    fromExport: true,
+                    reqAmount: { $gte: 20000 },
+                };
+                break;
+            default:
+                if (reqStatus === "Pending") {
+                    query = { reqStatus: reqStatus, reqType: "Debit", reqDate: formatDate };
+                }
+        }
 
-		let userIdArray = [];
-		let debitArray = {};
+        const userBebitReq = await debitReq.find(query, {
+            _id: 1,
+            userId: 1,
+            reqAmount: 1,
+            withdrawalMode: 1,
+            reqDate: 1,
+            username: 1,
+        })
+        .skip(skip)
+        .limit(limit);
 
-		for (index in userBebitReq) {
-			let reqAmount = userBebitReq[index].reqAmount;
-			let withdrawalMode = userBebitReq[index].withdrawalMode;
-			let reqDate = userBebitReq[index].reqDate;
-			let username = userBebitReq[index].username;
-			let user = userBebitReq[index].userId;
-			let userKi = mongoose.mongo.ObjectId(user);
-			userIdArray.push(userKi);
-			totlaAmt += reqAmount;
-			debitArray[userKi] = {
-				reqAmount: reqAmount,
-				withdrawalMode: withdrawalMode,
-				reqDate: reqDate,
-				username: username,
-			};
-		}
+        let userIdArray = [];
+        let debitArray = {};
 
-		//let user_Profile = await userProfile.find({ userId: { $in: userIdArray }});
-		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } }, { account_holder_name: 1, account_no: 1,ifsc_code:1,bank_name:1,username:1 });
+        for (let index in userBebitReq) {
+            let reqAmount = userBebitReq[index].reqAmount;
+            let withdrawalMode = userBebitReq[index].withdrawalMode;
+            let reqDate = userBebitReq[index].reqDate;
+            let username = userBebitReq[index].username;
+            let user = userBebitReq[index].userId;
+            let userKi = mongoose.mongo.ObjectId(user);
+            userIdArray.push(userKi);
+            totlaAmt += reqAmount;
+            debitArray[userKi] = {
+                reqAmount: reqAmount,
+                withdrawalMode: withdrawalMode,
+                reqDate: reqDate,
+                username: username,
+            };
+        }
 
-    //    console.log(user_Profile,"user_Profile") 
-	// 	for (index in user_Profile) {
-	// 		let id = user_Profile[index].userId;
-	// 		if (debitArray[id]) {
-	// 			debitArray[id].name = user_Profile[index].account_holder_name;
-	// 			debitArray[id].account_no = user_Profile[index].account_no;
-	// 			debitArray[id].ifsc = user_Profile[index].ifsc_code;
-	// 			debitArray[id].bname = user_Profile[index].bank_name;
-	// 		}
-	// 	}
-		res.json({
-			status: true,
-			Profile: user_Profile,
-			totalAmt: totlaAmt,
-		});
-	} catch (error) {
-		res.json({
-			status: false,
-			error: error,
-		});
-	}
+        let user_Profile = await userProfile.find({ userId: { $in: userIdArray } }, {
+            account_holder_name: 1,
+            account_no: 1,
+            ifsc_code: 1,
+            bank_name: 1,
+            username: 1,
+        });
+
+        res.json({
+            status: true,
+            Profile: user_Profile,
+            totalAmt: totlaAmt,
+            totalRecords: await debitReq.countDocuments(query),
+            page,
+            limit
+        });
+    } catch (error) {
+        res.json({
+            status: false,
+            error: error,
+        });
+    }
 });
 
 router.post("/xlsDataNewCondition",authMiddleware, async (req, res) => {
