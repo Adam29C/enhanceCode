@@ -419,7 +419,7 @@ router.post("/showCondition",authMiddleware,  async (req, res) => {
 		}
 
 		//let user_Profile = await userProfile.find({ userId: { $in: userIdArray }});
-		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } }, { account_holder_name: 1, account_no: 1,ifsc_code:1,bank_name:1 });
+		let user_Profile = await userProfile.find({ userId: { $in: userIdArray } }, { account_holder_name: 1, account_no: 1,ifsc_code:1,bank_name:1,username:1 });
 
     //    console.log(user_Profile,"user_Profile") 
 	// 	for (index in user_Profile) {
