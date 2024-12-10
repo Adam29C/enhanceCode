@@ -1208,5 +1208,3 @@ router.post("/decline", async (req, res) => {
 
 module.exports = router;
 
-//in done logo me se 1 tikega 
-//1 bhag jayega 
