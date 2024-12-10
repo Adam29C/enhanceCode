@@ -76,7 +76,6 @@ router.get("/getTimeHistory",authMiddleware, async (req, res) => {
 router.post("/timeHistory",authMiddleware, async (req, res) => {
   try {
     const { timeList } = req.body;
-    console.log(timeList,"timeList")
     if (timeList.length === 0) {
       return res.status(400).json({
         statusCode: 400,
@@ -91,6 +90,7 @@ router.post("/timeHistory",authMiddleware, async (req, res) => {
           isActive: timeDetails.isActive,
           deleteTime: timeDetails.deleteTime,
           name: timeDetails.name,
+          description:timeDetails.description
         }
       );
     }
