@@ -9,7 +9,11 @@ const { ObjectId } = mongoose.Types;
 
 router.get("/andarBahar", authMiddleware, async (req, res) => {
     try {
-        const providerData = await abProvider.find().sort({ _id: 1 });
+        const { page = 1, limit = 10 } = req.query;
+
+        const skip = (page - 1) * limit;
+
+        const providerData = await abProvider.find().sort({ _id: 1 }).skip(skip).limit(limit);
 
         if (!providerData || providerData.length === 0) {
             return res.status(400).json({
@@ -19,10 +23,20 @@ router.get("/andarBahar", authMiddleware, async (req, res) => {
             });
         }
 
+        const totalItems = await abProvider.countDocuments();
+
+        const totalPages = Math.ceil(totalItems / limit);
+
         return res.status(200).json({
             status: true,
             message: "Sales Report fetched successfully.",
             data: providerData,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: page,
+                itemsPerPage: limit,
+            },
         });
     } catch (error) {
         return res.status(500).json({
@@ -35,7 +49,7 @@ router.get("/andarBahar", authMiddleware, async (req, res) => {
 
 router.post("/userReportAB", authMiddleware, async (req, res) => {
     try {
-        const { userId, gameId, startDate, endDate } = req.body;
+        const { userId, gameId, startDate, endDate, page = 1, limit = 10 } = req.body;
 
         if (!startDate || !endDate || !moment(startDate).isValid() || !moment(endDate).isValid()) {
             return res.status(400).json({ 
@@ -43,11 +57,11 @@ router.post("/userReportAB", authMiddleware, async (req, res) => {
                 message: "Invalid startDate or endDate format" 
             });
         }
+
         const dayOfWeek = moment().format("dddd");
-        
+
         const gameSettings = await abProviderSetting
-            .find({ gameDay: dayOfWeek, isClosed: "1" }, { providerId: 1, OBT: 1, _id: 0 })
-            //.sort((a, b) => moment(a.OBT, "hh:mm A") - moment(b.OBT, "hh:mm A"));
+            .find({ gameDay: dayOfWeek, isClosed: "1" }, { providerId: 1, OBT: 1, _id: 0 });
 
         const providerList = await abProvider.find();
 
@@ -106,10 +120,22 @@ router.post("/userReportAB", authMiddleware, async (req, res) => {
 
         finalResult.sort((a, b) => a.index - b.index);
 
+        const skip = (page - 1) * limit;
+        const totalItems = finalResult.length;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const paginatedResult = finalResult.slice(skip, skip + limit);
+
         return res.json({ 
             status: true, 
             message: "Report generated successfully", 
-            data: finalResult 
+            data: paginatedResult,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: page,
+                itemsPerPage: limit,
+            }
         });
     } catch (error) {
         return res.status(500).json({

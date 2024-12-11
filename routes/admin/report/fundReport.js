@@ -35,7 +35,7 @@ router.get("/",authMiddleware,  async (req, res) => {
     }
 });
 
-router.post("/",authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
     const {
         sdate,
         edate,
@@ -64,8 +64,10 @@ router.post("/",authMiddleware, async (req, res) => {
                 message: "Invalid date format. Please use 'MM-DD-YYYY'.",
             });
         }
+
         const pageNumber = parseInt(page, 10);
         const pageSize = parseInt(limit, 10);
+
         if (isNaN(pageNumber) || pageNumber <= 0 || isNaN(pageSize) || pageSize <= 0) {
             return res.status(400).json({
                 status: false,
@@ -80,6 +82,7 @@ router.post("/",authMiddleware, async (req, res) => {
                 $lte: endDate,
             },
         };
+
         if (reqType.toUpperCase() === "CREDIT") {
             if (bankName && bankName !== "1") {
                 query.particular = bankName;
@@ -107,11 +110,9 @@ router.post("/",authMiddleware, async (req, res) => {
         } else {
             collection = fundReport;
         }
-          
-        console.log(collection,"collection")
 
         const totalRecords = await collection.countDocuments(query);
-        
+
         const data = await collection
             .find(query, {
                 username: 1,
@@ -124,7 +125,7 @@ router.post("/",authMiddleware, async (req, res) => {
             .sort({ _id: -1 })
             .skip((pageNumber - 1) * pageSize)
             .limit(pageSize);
-            console.log(collection,"collection")
+
         let formattedData;
         if (reqType.toUpperCase() === "CREDIT") {
             formattedData = data.map(details => ({
@@ -151,7 +152,6 @@ router.post("/",authMiddleware, async (req, res) => {
             });
         }
 
-
         return res.status(200).json({
             status: true,
             message: `${reqType} data fetched successfully.`,
@@ -162,7 +162,6 @@ router.post("/",authMiddleware, async (req, res) => {
         });
 
     } catch (error) {
-        // Error handling
         return res.status(500).json({
             status: false,
             message: "An error occurred while fetching data. Please contact support.",
