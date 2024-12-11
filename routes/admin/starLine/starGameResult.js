@@ -107,7 +107,7 @@ router.post("/", authMiddleware, async (req, res) => {
       const { providerId, providerName, session, resultDate, winningDigit } = req.body;
       if (!providerId || !providerName || !session || !resultDate || !winningDigit) {
           return res.status(400).json({
-              status: "Failure",
+              status: false,
               message: "All fields are required in API request.",
           });
       }
@@ -129,7 +129,7 @@ router.post("/", authMiddleware, async (req, res) => {
           });
           if (!openResult) {
               return res.status(400).json({
-                  status: "Failure",
+                  status: false,
                   message: "Open result must be declared before declaring Close session.",
                   data: `Open Result Not Declared For: ${providerName}, Date: ${resultDate}`,
               });
@@ -142,7 +142,7 @@ router.post("/", authMiddleware, async (req, res) => {
       );
       if (!findTime) {
           return res.status(400).json({
-              status: "Failure",
+              status: false,
               message: "Time settings not found for the provider and day.",
           });
       }
@@ -152,7 +152,7 @@ router.post("/", authMiddleware, async (req, res) => {
       const endTime = moment(timeCheck, "h:mm a");
       if (todayDate === resultDate && beginningTime < endTime) {
           return res.status(400).json({
-              status: "Failure",
+              status: false,
               message: "It is not time to declare the result yet.",
           });
       }
@@ -164,7 +164,7 @@ router.post("/", authMiddleware, async (req, res) => {
       });
       if (existingResult) {
           return res.status(200).json({
-              status: "Failure",
+              status: false,
               message: `Details already filled for: ${providerName}, Session: ${session}, Date: ${resultDate}`,
           });
       }
@@ -172,7 +172,7 @@ router.post("/", authMiddleware, async (req, res) => {
       const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
       if (!digitFamily) {
           return res.status(400).json({
-              status: "Failure",
+              status: false,
               message: "Winning digit family not found.",
           });
       }
@@ -231,7 +231,7 @@ router.post("/", authMiddleware, async (req, res) => {
   } catch (error) {
       console.error("Error occurred:", error);
       return res.status(500).json({
-          status: "Failure",
+          status: false,
           message: "An error occurred while processing the request.",
           error: error.message,
       });
@@ -244,7 +244,7 @@ router.get("/pastResult",authMiddleware,  async (req, res) => {
     const { date } = req.query;
     if (!date) {
       return res.status(400).json({
-        status: "Failure",
+        status: false,
         message: "Date query parameter is required",
       });
     }
@@ -258,7 +258,7 @@ router.get("/pastResult",authMiddleware,  async (req, res) => {
     const pendingCount = providerCount - countResult;
 
     return res.status(200).json({
-      status: "Success",
+      status: true,
       message: "Results fetched successfully",
       data: {
         result: result,
@@ -269,7 +269,7 @@ router.get("/pastResult",authMiddleware,  async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
-      status: "Failure",
+      status: false,
       message: "An error occurred while fetching the past results.",
       error: error.message,
     });
@@ -284,7 +284,7 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
       // Check if required fields are provided
       if (!resultId || !providerId || !digit || !date || !family) {
           return res.status(400).json({
-              status: "Failure",
+              status: false,
               message: "Missing required parameters: resultId, providerId, digit, date, family"
           });
       }
