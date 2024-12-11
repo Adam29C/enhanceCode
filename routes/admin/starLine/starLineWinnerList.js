@@ -10,7 +10,7 @@ const admins = require("../../../model/dashBoard/AdminModel.js");
 
 router.post("/starLineWinnerList", authMiddleware, async (req, res) => {
     try {
-        const { digit, provider, date, resultId, resultStatus, digitFamily } = req.body;
+        const { digit, provider, date, resultId, resultStatus, digitFamily, page = 1, limit = 10 } = req.body;
 
         if (!digit || !provider || !date || !resultId || resultStatus === undefined) {
             return res.status(400).json({
@@ -19,13 +19,23 @@ router.post("/starLineWinnerList", authMiddleware, async (req, res) => {
             });
         }
 
+        // Get the total count of winners for pagination
+        const totalCount = await starBIds.countDocuments({
+            providerId: provider,
+            gameDate: date,
+            $and: [{ $or: [{ bidDigit: digit }, { bidDigit: digitFamily }] }]
+        });
+
+        // Fetch the paginated winner list
         const winnerList = await starBIds
             .find({
                 providerId: provider,
                 gameDate: date,
                 $and: [{ $or: [{ bidDigit: digit }, { bidDigit: digitFamily }] }]
             })
-            .sort({ _id: -1 });
+            .sort({ _id: -1 })
+            .skip((page - 1) * limit) // Skip records for pagination
+            .limit(limit); // Limit the number of records per page
 
         const pageData = {
             winnerList,
@@ -40,7 +50,10 @@ router.post("/starLineWinnerList", authMiddleware, async (req, res) => {
         return res.status(200).json({
             status: true,
             message: "Star Game Winner List",
-            data: pageData
+            data: pageData,
+            currentPage: page,
+            totalPages: Math.ceil(totalCount / limit), // Calculate total pages
+            totalCount
         });
     } catch (error) {
         return res.status(500).json({
@@ -51,20 +64,34 @@ router.post("/starLineWinnerList", authMiddleware, async (req, res) => {
     }
 });
 
+
 router.post('/starWinners', authMiddleware, async (req, res) => {
     try {
-        const { providerId, windigit, gameDate, digitFamily, resultId, adminId } = req.body;
+        const { providerId, windigit, gameDate, digitFamily, resultId, adminId, page = 1, limit = 10 } = req.body;
         let namefor = '';
         let historyDataArray = [];
         let tokenArray = [];
 
+        // Count the total number of results for pagination
+        const totalCount = await starBIds.countDocuments({
+            $and: [
+                { $or: [{ bidDigit: windigit }, { bidDigit: digitFamily }] }
+            ],
+            providerId: providerId,
+            gameDate: gameDate
+        });
+
+        // Fetch the paginated results
         const resultList = await starBIds.find({
             $and: [
                 { $or: [{ bidDigit: windigit }, { bidDigit: digitFamily }] }
             ],
             providerId: providerId,
             gameDate: gameDate
-        }).sort({ _id: -1 });
+        })
+        .sort({ _id: -1 })
+        .skip((page - 1) * limit) // Skip records for pagination
+        .limit(limit); // Limit the number of records per page
 
         const dt0 = dateTime.create();
         const todayDate = dt0.format('d/m/Y');
@@ -161,7 +188,10 @@ router.post('/starWinners', authMiddleware, async (req, res) => {
 
         res.status(200).send({
             status: true,
-            message: 'Points Added Successfully'
+            message: 'Points Added Successfully',
+            currentPage: page,
+            totalPages: Math.ceil(totalCount / limit), // Calculate total pages
+            totalCount
         });
 
     } catch (error) {
@@ -172,6 +202,5 @@ router.post('/starWinners', authMiddleware, async (req, res) => {
         });
     }
 });
-
 
 module.exports = router;
