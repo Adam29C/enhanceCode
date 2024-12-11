@@ -20,7 +20,9 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
             resultStatus,
             digitFamily,
             sessionType,
-            providerName
+            providerName,
+            page = 1,
+            limit = 10
         } = req.body;
 
         if (!digit || !provider || !gamedate || !resultId || !resultStatus) {
@@ -47,6 +49,8 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
             };
         }
 
+        const skip = (page - 1) * limit;
+
         const winnerList = await gameBids
             .find({
                 $and: [{ $or: [{ bidDigit: digit }, { bidDigit: digitFamily }] }],
@@ -54,7 +58,9 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
                 gameDate: gamedate,
                 gameSession: sessionType
             })
-            .sort({ bidDigit: -1 });
+            .sort({ bidDigit: -1 })
+            .skip(skip)
+            .limit(limit);
 
         winnerList.forEach((winner) => {
             const gameType = winner.gameTypeName;
@@ -100,7 +106,9 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
                         gameDate: gamedate,
                         gameSession: sessionType
                     })
-                    .sort({ bidDigit: -1 });
+                    .sort({ bidDigit: -1 })
+                    .skip(skip)
+                    .limit(limit);
 
                 winnerListClose.forEach((winner) => {
                     const gameType = winner.gameTypeName;
@@ -110,6 +118,15 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
                 });
             }
         }
+
+        const totalItems = await gameBids.countDocuments({
+            $and: [{ $or: [{ bidDigit: digit }, { bidDigit: digitFamily }] }],
+            providerId: provider,
+            gameDate: gamedate,
+            gameSession: sessionType
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
 
         const pageData = {
             winnerList: finalArray,
@@ -124,7 +141,13 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
             halfSangam1,
             halfSangam2,
             fullSangam,
-            name: providerName
+            name: providerName,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: page,
+                itemsPerPage: limit
+            }
         };
 
         return res.status(200).json({
@@ -145,7 +168,7 @@ router.post("/mainWinnerList", authMiddleware, async (req, res) => {
 
 router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
     try {
-        const { providerId, date, session } = req.body;
+        const { providerId, date, session, page = 1, limit = 10 } = req.body;
 
         if (!providerId || !date || !session) {
             return res.json({
@@ -188,13 +211,17 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
         const winningDigit = providerResult.winningDigit.toString();
         const winningDigitFamily = providerResult.winningDigitFamily.toString();
 
+        const skip = (page - 1) * limit;
+
         const winnerList = await gameBids.find({
             $and: [{ $or: [{ bidDigit: winningDigit }, { bidDigit: winningDigitFamily }] }],
             providerId,
             gameDate: date,
             gameSession: session,
             isPaymentDone: false
-        }).sort({ bidDigit: -1 });
+        }).sort({ bidDigit: -1 })
+          .skip(skip)
+          .limit(limit);
 
         if (winnerList.length === 0) {
             return res.json({
@@ -202,6 +229,7 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
                 data: [],
             });
         }
+
         winnerList.forEach((winner) => {
             const gameType = winner.gameTypeName;
             if (finalArray[gameType]) {
@@ -245,7 +273,9 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
                     gameDate: date,
                     gameSession: session,
                     isPaymentDone: false
-                }).sort({ bidDigit: -1 });
+                }).sort({ bidDigit: -1 })
+                  .skip(skip)
+                  .limit(limit);
 
                 winnerListClose.forEach((winner) => {
                     const gameType = winner.gameTypeName;
@@ -255,6 +285,17 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
                 });
             }
         }
+
+        const totalItems = await gameBids.countDocuments({
+            $and: [{ $or: [{ bidDigit: winningDigit }, { bidDigit: winningDigitFamily }] }],
+            providerId,
+            gameDate: date,
+            gameSession: session,
+            isPaymentDone: false
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
         const pageData = {
             winnerList: finalArray,
             winDigit: providerResult.winningDigit,
@@ -266,7 +307,13 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
             halfSangam1,
             halfSangam2,
             fullSangam,
-            name: providerResult.providerName
+            name: providerResult.providerName,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: page,
+                itemsPerPage: limit
+            }
         };
 
         return res.json({
@@ -282,6 +329,7 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
     }
 });
 
+
 router.post('/gameWinner', authMiddleware, async (req, res) => {
     try {
         const {
@@ -295,7 +343,9 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             halfSangam2,
             fullSangam,
             resultId,
-            adminId
+            adminId,
+            page = 1,
+            limit = 10
         } = req.body;
 
         let totalPoints = 0;
@@ -303,7 +353,6 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
         let notificationArray = [];
 
         const winningCriteria = [{ bidDigit: windigit }];
-
         calculateSum(session, providerId, gameDate);
 
         if (digitFamily) winningCriteria.push({ bidDigit: digitFamily });
@@ -314,12 +363,15 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             if (fullSangam) winningCriteria.push({ bidDigit: fullSangam });
         }
 
+        // Pagination logic
+        const skip = (page - 1) * limit;
+
         const winningBids = await gameBids.find({
             $and: [
                 { $or: winningCriteria },
                 { providerId, gameDate, gameSession: session }
             ]
-        });
+        }).skip(skip).limit(limit);
 
         if (winningBids.length === 0) {
             return res.status(404).json({
@@ -351,6 +403,7 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
                     }
                 }
             });
+
             if (userUpdates.has(userId.toString())) {
                 userUpdates.get(userId.toString()).wallet_balance += winPoints;
             } else {
@@ -420,10 +473,26 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
 
         await notification(req, res, providerName, notificationArray);
 
+        // Calculate total pages for pagination
+        const totalItems = await gameBids.countDocuments({
+            $and: [
+                { $or: winningCriteria },
+                { providerId, gameDate, gameSession: session }
+            ]
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
         res.status(200).json({
             status: true,
             message: 'Winning amounts distributed successfully.',
-            totalPoints
+            totalPoints,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: page,
+                itemsPerPage: limit
+            }
         });
     } catch (error) {
         res.status(500).json({
