@@ -74,7 +74,7 @@ router.get("/pastResult", authMiddleware, async (req, res) => {
         const date = req.query.date;
         if (!date) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Date query parameter is required",
             });
         }
@@ -110,7 +110,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
 
         if (!resultId || !providerId || !session) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Missing required fields",
             });
         }
@@ -118,7 +118,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
         const dltResult = await gameResult.deleteOne({ _id: resultId });
         if (dltResult.deletedCount === 0) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Result not found or already deleted",
             });
         }
@@ -137,7 +137,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
                 const result = await gamesProvider.findOne({ _id: providerId });
                 if (!result) {
                     return res.status(400).json({
-                        sstatus: "Failure",
+                        sstatus: false,
                         message: "Provider not found",
                     });
                 }
@@ -177,7 +177,7 @@ router.post("/digits", authMiddleware, async (req, res) => {
         const { digitArray } = req.body;
         if (!Array.isArray(digitArray) || digitArray.length === 0) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Invalid input: Array of digits is required.",
             });
         }
@@ -225,7 +225,7 @@ router.post("/", authMiddleware, async (req, res) => {
         const { providerId, providerName, session, resultDate, winningDigit } = req.body
         if (!providerId || !providerName || !session || !resultDate || !winningDigit) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "all field require in api req",
             });
         }
@@ -773,8 +773,8 @@ async function sendRefundNotification(tokenArray, name, body) {
             try {
                 //const response = await messaging.sendMulticast(message);
 
-                // Check for failures and collect failed tokens.
-                if (response.failureCount > 0) {
+                // Check for falses and collect failed tokens.
+                if (response.falseCount > 0) {
                     response.responses.forEach((resp, idx) => {
                         if (!resp.success) {
                             console.error(`Failed to send to ${chunk[idx]}: ${resp.error}`);
@@ -796,7 +796,7 @@ async function sendRefundNotification(tokenArray, name, body) {
         if (failedTokens.length > 0) {
             return {
                 status: 207,
-                message: "Notifications sent with partial failures.",
+                message: "Notifications sent with partial falses.",
                 failedTokens: failedTokens,
             };
         }
