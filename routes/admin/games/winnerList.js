@@ -329,7 +329,6 @@ router.post("/remaningWinnerList", authMiddleware, async (req, res) => {
     }
 });
 
-
 router.post('/gameWinner', authMiddleware, async (req, res) => {
     try {
         const {
@@ -717,6 +716,6 @@ async function calculateSum(session, providerId, gameDate) {
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 module.exports = router;
