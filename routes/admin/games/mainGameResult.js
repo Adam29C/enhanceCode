@@ -62,7 +62,7 @@ router.get("/", authMiddleware, async (req, res) => {
         }
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Error retrieving game results",
             error: e.message,
         });
@@ -95,7 +95,7 @@ router.get("/pastResult", authMiddleware, async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Error retrieving past results",
             error: error.message,
         });
@@ -165,7 +165,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
         });
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Server error. Please contact support.",
             error: e.message,
         });
@@ -189,7 +189,7 @@ router.post("/digits", authMiddleware, async (req, res) => {
         });
     } catch (err) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Server error occurred while inserting digits.",
             error: err.message,
         });
@@ -213,7 +213,7 @@ router.get("/revertPayment", authMiddleware, async (req, res) => {
         });
     } catch (e) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "Server error occurred while processing the request.",
             error: e.message,
         });
@@ -246,7 +246,7 @@ router.post("/", authMiddleware, async (req, res) => {
             });
             if (!openResult) {
                 return res.status(400).json({
-                    status: "Failure",
+                    status: false,
                     message: "Open result must be declared before declaring Close session.",
                     data: `Open Result Not Declared For: ${providerName}, Date: ${resultDate}`,
                 });
@@ -258,7 +258,7 @@ router.post("/", authMiddleware, async (req, res) => {
         );
         if (!findTime) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Time settings not found for the provider and day.",
             });
         }
@@ -268,7 +268,7 @@ router.post("/", authMiddleware, async (req, res) => {
         const endTime = moment(timeCheck, "h:mm a");
         if (todayDate === resultDate && beginningTime < endTime) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "It is not time to declare the result yet.",
             });
         }
@@ -279,14 +279,14 @@ router.post("/", authMiddleware, async (req, res) => {
         });
         if (existingResult) {
             return res.status(200).json({
-                status: "Failure",
+                status: false,
                 message: `Details already filled for: ${providerName}, Session: ${session}, Date: ${resultDate}`,
             });
         }
         const digitFamily = await gameDigit.findOne({ Digit: winningDigit });
         if (!digitFamily) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Winning digit family not found.",
             });
         }
@@ -340,7 +340,7 @@ router.post("/", authMiddleware, async (req, res) => {
         // }
     } catch (error) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "An error occurred while processing the request.",
             error: error.message,
         });
@@ -353,7 +353,7 @@ router.post("/paymentRevert", authMiddleware, async (req, res) => {
 
         if (!id || !provider || !gameSession || !digit || !digitFamily || !gameDate) {
             return res.status(400).json({
-                status: "Failure",
+                status: false,
                 message: "Invalid input parameters"
             });
         }
@@ -509,7 +509,7 @@ router.post("/paymentRevert", authMiddleware, async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "An error occurred",
             error: error.message,
         });
@@ -527,7 +527,7 @@ router.get("/refundPayment", authMiddleware, async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "An internal server error occurred.",
             error: error.message
         });
@@ -562,7 +562,7 @@ router.post("/refundList", authMiddleware, async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            status: "Failure",
+            status: false,
             message: "An internal server error occurred. Please contact support.",
             error: error.message,
         });
@@ -737,7 +737,7 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
 async function sendRefundNotification(tokenArray, name, body) {
     if (!Array.isArray(tokenArray) || tokenArray.length === 0) {
         return {
-            status: 400,
+            status: false,
             message: "No valid tokens provided for notification.",
         };
     }
@@ -747,7 +747,7 @@ async function sendRefundNotification(tokenArray, name, body) {
         let finalArr = tokenArray.filter(token => token.trim() !== "");
         if (finalArr.length === 0) {
             return {
-                status: 400,
+                status: false,
                 message: "All provided tokens are empty or invalid.",
             };
         }
@@ -785,7 +785,7 @@ async function sendRefundNotification(tokenArray, name, body) {
             } catch (error) {
                 console.error("Error sending message to chunk:", error);
                 return {
-                    status: 500,
+                    status: false,
                     message: "Failed to send notifications due to an internal error.",
                     error: error.message,
                 };
