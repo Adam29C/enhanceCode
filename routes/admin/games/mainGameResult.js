@@ -106,8 +106,11 @@ router.delete("/delete", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
         const formatted1 = dt.format("m/d/Y I:M:S p");
-        const { resultId, providerId, session: sessionType } = req.body;
 
+        // Destructure the necessary fields from req.body
+        const { resultId, providerId, session } = req.body;
+
+        // Check if all required fields are provided
         if (!resultId || !providerId || !session) {
             return res.status(400).json({
                 status: false,
@@ -115,6 +118,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
             });
         }
 
+        // Proceed with the deletion of the result
         const dltResult = await gameResult.deleteOne({ _id: resultId });
         if (dltResult.deletedCount === 0) {
             return res.status(400).json({
@@ -122,42 +126,46 @@ router.delete("/delete", authMiddleware, async (req, res) => {
                 message: "Result not found or already deleted",
             });
         }
-            if (sessionType === "Open") {
-                await gamesProvider.updateOne(
-                    { _id: providerId },
-                    {
-                        $set: {
-                            providerResult: "***-**-***",
-                            modifiedAt: formatted1,
-                            resultStatus: 0,
-                        },
-                    }
-                );
-            } else {
-                const result = await gamesProvider.findOne({ _id: providerId });
-                if (!result) {
-                    return res.status(400).json({
-                        sstatus: false,
-                        message: "Provider not found",
-                    });
-                }
 
-                let digit = result.providerResult;
-                const data = digit.split("-");
-                let openDigit = data[0];
-                let sumDgit = parseInt(data[1].charAt(0));
-                let finalDigit = `${openDigit}-${sumDgit}`;
-                await gamesProvider.updateOne(
-                    { _id: providerId },
-                    {
-                        $set: {
-                            providerResult: finalDigit,
-                            modifiedAt: formatted1,
-                            resultStatus: 1,
-                        },
-                    }
-                );
+        // Handle session type logic
+        if (session === "Open") {
+            // If the session is "Open", update the provider with default result
+            await gamesProvider.updateOne(
+                { _id: providerId },
+                {
+                    $set: {
+                        providerResult: "***-**-***",
+                        modifiedAt: formatted1,
+                        resultStatus: 0,
+                    },
+                }
+            );
+        } else {
+            // If session is not "Open", fetch the provider and update accordingly
+            const result = await gamesProvider.findOne({ _id: providerId });
+            if (!result) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Provider not found",
+                });
             }
+            let digit = result.providerResult;
+            const data = digit.split("-");
+            let openDigit = data[0];
+            let sumDgit = parseInt(data[1].charAt(0));
+            let finalDigit = `${openDigit}-${sumDgit}`;
+            await gamesProvider.updateOne(
+                { _id: providerId },
+                {
+                    $set: {
+                        providerResult: finalDigit,
+                        modifiedAt: formatted1,
+                        resultStatus: 1,
+                    },
+                }
+            );
+        }
+
         return res.status(200).json({
             status: true,
             message: "Result deleted successfully",
@@ -171,6 +179,7 @@ router.delete("/delete", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 router.post("/digits", authMiddleware, async (req, res) => {
     try {
