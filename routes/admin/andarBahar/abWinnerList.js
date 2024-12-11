@@ -14,13 +14,29 @@ const admins = require("../../../model/dashBoard/AdminModel.js");
 
 router.get("/abWinnerList", authMiddleware, async (req, res) => {
     try {
-        const { digit, provider, date, resultId, resultStatus } = req.body;
+        const { digit, provider, date, resultId, resultStatus, page = 1, limit = 10 } = req.query;
+
+        if (!digit || !provider || !date || resultId === undefined || resultStatus === undefined) {
+            return res.status(400).json({
+                status: false,
+                message: "All required fields must be provided."
+            });
+        }
+
+        const totalCount = await ABbids.countDocuments({
+            providerId: provider,
+            gameDate: date,
+            bidDigit: digit
+        });
 
         const resultList = await ABbids.find({
             providerId: provider,
             gameDate: date,
             bidDigit: digit
-        }).sort({ _id: -1 });
+        })
+        .sort({ _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
 
         const ABProvider = await abPorvider.findOne({ _id: provider });
         const gameType = await abGameType.find();
@@ -38,6 +54,9 @@ router.get("/abWinnerList", authMiddleware, async (req, res) => {
             data: pageData,
             resultData: resultList,
             gameDate: date,
+            currentPage: page,
+            totalPages: Math.ceil(totalCount / limit),
+            totalCount
         });
     } catch (error) {
         return res.status(500).json({
@@ -50,12 +69,25 @@ router.get("/abWinnerList", authMiddleware, async (req, res) => {
 
 router.post('/abWinners', authMiddleware, async (req, res) => {
     try {
-        const { providerId, windigit, gameDate, gamePrice, resultId,adminId } = req.body;
+        const { providerId, windigit, gameDate, gamePrice, resultId, adminId, page = 1, limit = 10 } = req.body;
         let namefor = '';
         let historyDataArray = [];
         let tokenArray = [];
 
-        const resultList = await ABbids.find({ providerId: providerId, bidDigit: windigit, gameDate: gameDate }).sort({ _id: -1 });
+        const totalCount = await ABbids.countDocuments({
+            providerId: providerId,
+            bidDigit: windigit,
+            gameDate: gameDate
+        });
+
+        const resultList = await ABbids.find({
+            providerId: providerId,
+            bidDigit: windigit,
+            gameDate: gameDate
+        })
+        .sort({ _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
 
         const dt0 = dateTime.create();
         const todayDate = dt0.format('d/m/Y');
@@ -149,7 +181,10 @@ router.post('/abWinners', authMiddleware, async (req, res) => {
 
         res.status(200).send({
             status: true,
-            message: 'Points Added Successfully'
+            message: 'Points Added Successfully',
+            currentPage: page,
+            totalPages: Math.ceil(totalCount / limit),
+            totalCount
         });
 
     } catch (error) {
