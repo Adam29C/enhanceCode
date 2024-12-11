@@ -505,7 +505,7 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
 
 router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
     try {
-        const { providerId, gameDate, session, adminId, jodiDigit, halfSangam1, halfSangam2, fullSangam } = req.body;
+        const { providerId, gameDate, session, adminId, jodiDigit, halfSangam1, halfSangam2, fullSangam, page = 1, limit = 10 } = req.body;
 
         if (!providerId || !gameDate || !session) {
             return res.status(400).json({
@@ -542,19 +542,26 @@ router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
                 },
                 { providerId, gameDate, gameSession: session },
             ],
-        });
+        })
+        .skip((page - 1) * limit) // Skip records for pagination
+        .limit(limit); // Limit the number of records per page
 
         if (session === "Close") {
             const closeResults = await Promise.all([
                 gameBids.find({
                     $and: [{ $or: [{ bidDigit: jodiDigit }] }, { providerId, gameDate, gameSession: session }],
-                }),
+                })
+                .skip((page - 1) * limit)
+                .limit(limit),
+
                 gameBids.find({
                     $and: [
                         { $or: [{ bidDigit: halfSangam1 }, { bidDigit: halfSangam2 }, { bidDigit: fullSangam }] },
                         { providerId, gameDate, gameSession: session },
                     ],
-                }),
+                })
+                .skip((page - 1) * limit)
+                .limit(limit),
             ]);
 
             resultList = [...resultList, ...closeResults[0], ...closeResults[1]];
@@ -648,10 +655,21 @@ router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
             await notification(req, res, providerResult.providerName, notificationArray);
         }
 
+        // Get total count for pagination
+        const totalBids = await gameBids.countDocuments({
+            $and: [
+                { providerId, gameDate, gameSession: session },
+                { $or: [{ bidDigit: digit }, { bidDigit: digitFamily }] },
+            ],
+        });
+
         res.status(200).json({
             status: true,
             message: "Points distributed successfully",
             totalPoints,
+            currentPage: page,
+            totalPages: Math.ceil(totalBids / limit), // Calculate total pages
+            totalBids,
         });
     } catch (error) {
         res.status(500).json({
@@ -661,6 +679,7 @@ router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 async function calculateSum(session, providerId, gameDate) {
     try {
