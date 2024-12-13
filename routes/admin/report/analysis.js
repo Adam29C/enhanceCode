@@ -181,8 +181,6 @@ router.get("/analysis", authMiddleware, async (req, res) => {
 //     }
 // });
 
-
-
 router.get("/analysisReport", authMiddleware, async (req, res) => {
     try {
         const { userName, limit = 10, page = 1 } = req.query;
@@ -318,6 +316,13 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
                 updatedAt,
             };
         });
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No report data found for the given criteria.",
+            });
+        }
 
         return res.status(200).json({
             status: true,

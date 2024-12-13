@@ -125,6 +125,21 @@ router.post("/userReportAB", authMiddleware, async (req, res) => {
         const totalPages = Math.ceil(totalItems / limit);
 
         const paginatedResult = finalResult.slice(skip, skip + limit);
+        
+        if(paginatedResult.length===0){
+            return res.json({ 
+                status: true, 
+                message: "Report generated successfully", 
+                data: paginatedResult,
+                pagination: {
+                    totalItems,
+                    totalPages,
+                    currentPage: page,
+                    itemsPerPage: limit,
+                }
+            });
+        }
+
 
         return res.json({ 
             status: true, 

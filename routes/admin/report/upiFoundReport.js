@@ -193,6 +193,17 @@ router.post("/getUPIFundReport", authMiddleware, async (req, res) => {
             upi_app_name: "googlepay",
             reqStatus: details.transaction_status,
         }));
+        if(newArray.length===0){
+            return res.json({
+                status: true,
+                message: "No Data Found",
+                data: newArray,
+                totalItems,
+                totalAmount,
+                totalPages: Math.ceil(totalItems / limit),
+                currentPage: page,
+            });
+        }
 
         return res.json({
             status: true,
