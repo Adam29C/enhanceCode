@@ -101,7 +101,19 @@ router.post("/getUPIReport", authMiddleware,async (req, res) => {
 
         const totalRecords = await history.countDocuments(query);
         const totalPages = Math.ceil(totalRecords / limit);
-
+        if(finalArray.length===0){
+            return res.json({
+                status: true,
+                message: "No Data Found",
+                data: finalArray,
+                pagination: {
+                    currentPage: page,
+                    totalPages: totalPages,
+                    totalRecords: totalRecords,
+                },
+            });
+        }
+        
         return res.json({
             status: true,
             message: "Success",
