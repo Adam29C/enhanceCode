@@ -186,7 +186,6 @@ router.get("/analysis", authMiddleware, async (req, res) => {
 router.get("/analysisReport", authMiddleware, async (req, res) => {
     try {
         const { userName, limit = 10, page = 1 } = req.query;
-        // Validate required inputs
         if (!userName) {
             return res.status(400).json({
                 status: false,
@@ -194,14 +193,12 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
             });
         }
 
-        const pageNumber = parseInt(page); // Page number for pagination
-        const limitNumber = parseInt(limit); // Limit number for pagination
-        const skip = (pageNumber - 1) * limitNumber; // Calculate skip
+        const pageNumber = parseInt(page); 
+        const limitNumber = parseInt(limit); 
+        const skip = (pageNumber - 1) * limitNumber; 
 
-        // Query for user
         let query = userName === 'all' ? {} : { username: userName };
 
-        // Aggregation queries
         const [bidsData, abBidsData, starBidsData, amountCreditDebit, userData] = await Promise.all([
             bids.aggregate([
                 { $match: userName === 'all' ? {} : { userName } },
@@ -254,7 +251,6 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
         });
 
         if (userName !== 'all' && userData) {
-            // Update or insert analysis report data for the user
             await analysisCol.updateOne(
                 { username: userName },
                 {
@@ -275,7 +271,6 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
             );
         }
 
-        // DataTables query for pagination and sorting
         const tableData = await analysisCol.dataTables({
             find: query,
             limit: limitNumber,
@@ -289,7 +284,9 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
             order: req.query.order,
         });
 
-        // Map data for response
+        const totalRecords = tableData.total;
+        const totalPages = Math.ceil(totalRecords / limitNumber);
+
         const data = tableData.data.map((item, index) => {
             const {
                 gameBidPoint = 0,
@@ -325,8 +322,9 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
         return res.status(200).json({
             status: true,
             data,
-            recordsFiltered: tableData.total,
-            recordsTotal: tableData.total,
+            recordsTotal: totalRecords,
+            currentPage: pageNumber,
+            totalPages,
         });
     } catch (error) {
         return res.status(500).json({
@@ -336,7 +334,6 @@ router.get("/analysisReport", authMiddleware, async (req, res) => {
         });
     }
 });
-
 
 
 module.exports = router;
