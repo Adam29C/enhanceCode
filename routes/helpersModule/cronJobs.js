@@ -168,67 +168,69 @@ module.exports = async function () {
 	// 	}
 	// });
 
-	cron.schedule("30 2 * * *", async () => {
-		let dataUpdate = await dashboard.find();
-		if (dataUpdate.length) {
-			let lastUpdate = dataUpdate[0].lastUpdatedAt;
-			let split = lastUpdate.split(" ");
-			let compareDate = split[0];
+	//this cron remove for the testing
+	// cron.schedule("30 2 * * *", async () => {
+	// 	let dataUpdate = await dashboard.find();
+	// 	if (dataUpdate.length) {
+	// 		let lastUpdate = dataUpdate[0].lastUpdatedAt;
+	// 		let split = lastUpdate.split(" ");
+	// 		let compareDate = split[0];
 
-			const dst = dateTime.create();
-			const todayDate = dst.format("d/m/Y");
-			const todayDate1 = dst.format("m/d/Y");
-			const datetime = dst.format("d/m/Y I:M:S");
-			if (todayDate === compareDate) {
-				executeQuery(todayDate, todayDate1, datetime);
-			} else {
-				const stattime = "12:30 AM";
-				const currentTime = dst.format("I:M:S");
-				const beginningTime = moment(currentTime, "h:mm a");
-				const endTime = moment(stattime, "h:mm a");
+	// 		const dst = dateTime.create();
+	// 		const todayDate = dst.format("d/m/Y");
+	// 		const todayDate1 = dst.format("m/d/Y");
+	// 		const datetime = dst.format("d/m/Y I:M:S");
+	// 		if (todayDate === compareDate) {
+	// 			executeQuery(todayDate, todayDate1, datetime);
+	// 		} else {
+	// 			const stattime = "12:30 AM";
+	// 			const currentTime = dst.format("I:M:S");
+	// 			const beginningTime = moment(currentTime, "h:mm a");
+	// 			const endTime = moment(stattime, "h:mm a");
 
-				if (beginningTime < endTime) {
-					const dateBefore = moment().subtract(1, "days").format("DD/MM/YYYY");
-					const dateBefore2 = moment().subtract(1, "days").format("MM/DD/YYYY");
-					const timeDate = dateBefore + currentTime;
-					executeQuery(dateBefore, dateBefore2, timeDate);
-				} else {
-					executeQuery(todayDate, todayDate1, datetime);
-				}
-			}
-		}
-	});
+	// 			if (beginningTime < endTime) {
+	// 				const dateBefore = moment().subtract(1, "days").format("DD/MM/YYYY");
+	// 				const dateBefore2 = moment().subtract(1, "days").format("MM/DD/YYYY");
+	// 				const timeDate = dateBefore + currentTime;
+	// 				executeQuery(dateBefore, dateBefore2, timeDate);
+	// 			} else {
+	// 				executeQuery(todayDate, todayDate1, datetime);
+	// 			}
+	// 		}
+	// 	}
+	// });
 
-	cron.schedule("30 3 * * * *", async () => {
-		let dataUpdate = await dashboard.find();
-		if (dataUpdate.length) {
-			let lastUpdate = dataUpdate[0].lastUpdatedAt;
-			let split = lastUpdate && lastUpdate.split(" ");
-			let compareDate = split && split.length && split[0];
+	//this cron remove for the testing
+	// cron.schedule("30 3 * * * *", async () => {
+	// 	let dataUpdate = await dashboard.find();
+	// 	if (dataUpdate.length) {
+	// 		let lastUpdate = dataUpdate[0].lastUpdatedAt;
+	// 		let split = lastUpdate && lastUpdate.split(" ");
+	// 		let compareDate = split && split.length && split[0];
 
-			const dst = dateTime.create();
-			const todayDate = dst.format("d/m/Y");
-			const todayDate1 = dst.format("m/d/Y");
-			const datetime = dst.format("d/m/Y I:M:S");
-			if (todayDate === compareDate) {
-				executeQuery5sec(todayDate, todayDate1, datetime);
-			} else {
-				const stattime = "12:30 AM";
-				const currentTime = dst.format("I:M:S");
-				const beginningTime = moment(currentTime, "h:mm a");
-				const endTime = moment(stattime, "h:mm a");
+	// 		const dst = dateTime.create();
+	// 		const todayDate = dst.format("d/m/Y");
+	// 		const todayDate1 = dst.format("m/d/Y");
+	// 		const datetime = dst.format("d/m/Y I:M:S");
+	// 		if (todayDate === compareDate) {
+	// 			executeQuery5sec(todayDate, todayDate1, datetime);
+	// 		} else {
+	// 			const stattime = "12:30 AM";
+	// 			const currentTime = dst.format("I:M:S");
+	// 			const beginningTime = moment(currentTime, "h:mm a");
+	// 			const endTime = moment(stattime, "h:mm a");
 
-				if (beginningTime < endTime) {
-					const dateBefore = moment().subtract(1, "days").format("DD/MM/YYYY");
-					const dateBefore2 = moment().subtract(1, "days").format("MM/DD/YYYY");
-					const timeDate = dateBefore + currentTime;
-					executeQuery5sec(dateBefore, dateBefore2, timeDate);
-				} else {
-					executeQuery5sec(todayDate, todayDate1, datetime);
-				}
-			}
-		}
-	});
+	// 			if (beginningTime < endTime) {
+	// 				const dateBefore = moment().subtract(1, "days").format("DD/MM/YYYY");
+	// 				const dateBefore2 = moment().subtract(1, "days").format("MM/DD/YYYY");
+	// 				const timeDate = dateBefore + currentTime;
+	// 				executeQuery5sec(dateBefore, dateBefore2, timeDate);
+	// 			} else {
+	// 				executeQuery5sec(todayDate, todayDate1, datetime);
+	// 			}
+	// 		}
+	// 	}
+	// });
 
 	cron.schedule("0 8 * * *", async () => {
 		try {
