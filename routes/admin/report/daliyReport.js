@@ -15,15 +15,18 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
                 message: "reqType, sdate, and edate are required.",
             });
         }
+        let startDate = sdate;
+        let endDate = edate
+        if (reqType != "PG") {
+            startDate = moment(sdate, "MM/DD/YYYY", true).format("DD/MM/YYYY");
+            endDate = moment(edate, "MM/DD/YYYY", true).format("DD/MM/YYYY");
 
-        const startDate = moment(sdate, "MM/DD/YYYY", true).format("DD/MM/YYYY");
-        const endDate = moment(edate, "MM/DD/YYYY", true).format("DD/MM/YYYY");
-
-        if (!moment(startDate, "DD/MM/YYYY", true).isValid() || !moment(endDate, "DD/MM/YYYY", true).isValid()) {
-            return res.status(400).json({
-                status: false,
-                message: "Invalid date format. Use MM/DD/YYYY.",
-            });
+            if (!moment(startDate, "DD/MM/YYYY", true).isValid() || !moment(endDate, "DD/MM/YYYY", true).isValid()) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Invalid date format. Use MM/DD/YYYY.",
+                });
+            }
         }
 
         const dateQuery = {
@@ -33,14 +36,12 @@ router.post("/dailyData", authMiddleware, async (req, res) => {
 
         let data;
         let totalItems;
-
         switch (reqType) {
             case "PG":
                 const gameQuery = { gameDate: dateQuery };
                 if (username && username.trim()) {
                     gameQuery.userName = username.trim();
                 }
-
                 totalItems = await bids.countDocuments(gameQuery);
                 data = await bids.find(gameQuery).skip((page - 1) * limit).limit(limit);
                 break;
