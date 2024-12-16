@@ -53,11 +53,15 @@ router.get("/getBriefDeposit", authMiddleware,async (req, res) => {
   }
 });
 
-router.get("/dashboardCount", authMiddleware,async (req, res) => {
+router.get("/dashboardCount", authMiddleware, async (req, res) => {
   try {
-    const thirtyDaysAgo = moment().subtract(30, 'days').toDate();
+    // Get today's date using moment.js
+    const todayDate = moment().format("DD/MM/YYYY");
+    const todayDate1 = moment().format("MM/DD/YYYY");
+    const datetime = moment().format("DD/MM/YYYY HH:mm:ss");
 
-    const [pageData, traceBal, countDlt, userCounts] = await Promise.all([
+    // Fetch data from multiple sources in parallel using Promise.all
+    const [pageData, traceBal, countDlt, userCounts, balance, banned_Users, Active_users, all_user, total_zero_bal_users, today_total_zero_bal_users, todayRegistered, weekRegistered, monthRegistered, lastmonthRegistered, lastweekRegistered, dataUpdate] = await Promise.all([
       mainPage.findOne({}),
       walletTrace.findOne({}).sort({ _id: -1 }).limit(1),
       deleteduser.countDocuments(),
@@ -67,23 +71,71 @@ router.get("/dashboardCount", authMiddleware,async (req, res) => {
             totalUsers: [{ $count: "total" }],
             bannedUsers: [{ $match: { banned: true } }, { $count: "banned" }],
             activeUsers: [
-              { $match: { lastLoginDate: { $gte: thirtyDaysAgo } } },
+              { $match: { lastLoginDate: { $gte: moment().subtract(30, 'days').toDate() } } },
               { $count: "active" }
             ]
           }
         }
-      ])
+      ]),
+      Users.aggregate([
+        { $match: { banned: false } },
+        { $group: { _id: null, sumdigit: { $sum: "$wallet_balance" } } },
+      ]),
+      Users.find({ banned: true }).count(),
+      Users.find({ loginStatus: { $in: [true, 'true'] } }).count(),
+      Users.find().count(),
+      Users.find({ wallet_balance: 0 }).count(),
+      Users.find({ wallet_balance: 0, CreatedAt: todayDate }).count(),
+      Users.find({ CreatedAt: { $regex: todayDate } }).count(),
+      Users.find({
+        timestamp: { $gte: moment().subtract(moment().diff(moment().startOf('week'), 'days'), 'd').unix() }
+      }).count(),
+      Users.find({
+        timestamp: { $gte: moment().startOf('month').unix() }
+      }).count(),
+      Users.find({
+        timestamp: { $gte: moment().subtract(1, 'months').startOf('month').unix(), $lte: moment().subtract(1, 'months').endOf('month').unix() }
+      }).count(),
+      Users.find({
+        timestamp: { $gte: moment().subtract(1, 'weeks').startOf('week').unix(), $lte: moment().subtract(1, 'weeks').endOf('week').unix() }
+      }).count(),
+      dashboard.find(),
     ]);
 
-    const allUsersCount = userCounts[0].totalUsers[0]?.total || 0;
-    const bannedUsersCount = userCounts[0].bannedUsers[0]?.banned || 0;
-    const activeUsersCount = userCounts[0].activeUsers[0]?.active || 0;
-
-    // Update the pageData object with new counts
+    // Extract counts and values from the aggregation results
+    const allUsersCount = userCounts[0]?.totalUsers[0]?.total || 0;
+    const bannedUsersCount = userCounts[0]?.bannedUsers[0]?.banned || 0;
+    const activeUsersCount = userCounts[0]?.activeUsers[0]?.active || 0;
+    const active_Wallet_Balance = balance[0]?.sumdigit || 0;
+    
+    // Extract and set the page data values
     pageData.banned_Users = bannedUsersCount;
     pageData.total_user = allUsersCount;
     pageData.active_count = activeUsersCount;
 
+    // Update the dashboard data
+    const update_id = dataUpdate[0]?._id;
+    const updateFinal = await dashboard.updateOne(
+      { _id: update_id },
+      {
+        $set: {
+          total_wallet_balance: parseInt(active_Wallet_Balance),
+          total_user: parseInt(allUsersCount),
+          banned_Users: parseInt(bannedUsersCount),
+          Active_users: parseInt(activeUsersCount),
+          total_zero_bal_users: parseInt(total_zero_bal_users),
+          today_total_zero_bal_users: parseInt(today_total_zero_bal_users),
+          todayRegistered: parseInt(todayRegistered),
+          current_Week_regis_user: parseInt(weekRegistered),
+          current_month_Registered: parseInt(monthRegistered),
+          lastmonthRegistered: parseInt(lastmonthRegistered),
+          lastweekRegistered: parseInt(lastweekRegistered),
+          lastUpdatedAt: datetime,
+        },
+      }
+    );
+
+    // Prepare the response data
     const responseData = {
       data: pageData,
       yesTerday: traceBal,
@@ -93,10 +145,12 @@ router.get("/dashboardCount", authMiddleware,async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: "Dashboard data fetched successfully",
+      message: "Dashboard data fetched and updated successfully",
       data: responseData,
     });
+    
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       status: false,
       message: "An error occurred while loading the dashboard.",
@@ -104,6 +158,7 @@ router.get("/dashboardCount", authMiddleware,async (req, res) => {
     });
   }
 });
+
 
 router.post("/getRegisteredUser", authMiddleware,async (req, res) => {
     try {
