@@ -15,17 +15,21 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
         const skip = (page - 1) * limit;
         const parsedLimit = parseInt(limit);
 
-        const userBebitReq = await fundReq.find({
+        // Define the base query to reuse for both data fetching and counting
+        const baseQuery = {
             reqDate: dateFormat,
             reqStatus: "Approved",
             reqType: "Debit",
             $and: [{ $or: [{ withdrawalMode: "Bank" }, { withdrawalMode: "Paytm" }] }],
-            //fromExport: true,//abhi mane data lane ke lia ise comment out kiya hai
-        })
+            //fromExport: true,
+        };
+
+        // Fetch data for the current page
+        const userBebitReq = await fundReq.find(baseQuery)
             .skip(skip)
             .limit(parsedLimit)
             .exec();
-           
+
         if (!userBebitReq || userBebitReq.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -37,6 +41,7 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
         let debitArray = {};
         let finalObject = {};
 
+        // Process the fetched data
         userBebitReq.forEach(req => {
             let reqAmount = req.reqAmount;
             let withdrawalMode = req.withdrawalMode;
@@ -60,6 +65,7 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
             };
         });
 
+        // Sort the data based on request time
         let arr = Object.entries(debitArray).map(([key, value]) => ({ key, ...value }));
         arr.sort((a, b) => {
             return new Date(a.reqTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.reqTime.split(' ').slice(1).join(' ')) - 
@@ -68,8 +74,10 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
 
         finalObject = Object.fromEntries(arr.map(item => [item.key, item]));
 
-        const userProfiles = await profileModel.find({ userId: { $in: userIdArray } }); // Renamed query result variable
+        // Fetch profiles for users in the current result set
+        const userProfiles = await profileModel.find({ userId: { $in: userIdArray } });
 
+        // Add profile information to the finalObject
         userProfiles.forEach(profile => {
             let id = profile.userId;
             if (finalObject[id]) {
@@ -83,25 +91,18 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
                 finalObject[id].paytm_number = profile.paytm_number;
             }
         });
+
+        // Calculate total count of matching documents for pagination
+        const totalCount = await fundReq.countDocuments(baseQuery);
+
+        // Send response with paginated data
         return res.status(200).json({
             status: true,
             message: "Report fetched successfully.",
-            approvedData:finalObject,
-            total: await fundReq.countDocuments({
-                reqDate: dateFormat,
-                reqStatus: "Approved",
-                reqType: "Debit",
-                $and: [{ $or: [{ withdrawalMode: "Bank" }, { withdrawalMode: "Paytm" }] }],
-                fromExport: true,
-            }),
+            approvedData: finalObject,
+            total: totalCount,
             page: parseInt(page),
-            totalPages: Math.ceil(await fundReq.countDocuments({
-                reqDate: dateFormat,
-                reqStatus: "Approved",
-                reqType: "Debit",
-                $and: [{ $or: [{ withdrawalMode: "Bank" }, { withdrawalMode: "Paytm" }] }],
-                fromExport: true,
-            }) / parsedLimit),
+            totalPages: Math.ceil(totalCount / parsedLimit),
             limit: parsedLimit,
         });
     } catch (error) {
@@ -112,6 +113,7 @@ router.post("/bank_ajax", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 router.post("/bankManual", authMiddleware, async (req, res) => {
     try {
