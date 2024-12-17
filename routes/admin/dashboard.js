@@ -281,6 +281,24 @@ router.get("/dashboardCount", authMiddleware, async (req, res) => {
     pageData.total_user = allUsersCount;
     pageData.active_count = activeUsersCount;
 
+    // Fetch the yesterday registration count with corrected date comparison
+    let yesterdayRegisterStart = moment().subtract(1, 'days').startOf('day').format("DD/MM/YYYY");
+    let yesterdayRegisterEnd = moment().subtract(1, 'days').endOf('day').format("DD/MM/YYYY");
+
+    // Query for yesterday's registrations using the corrected date range
+    const yesterdayRegistered = await Users.countDocuments({
+      CreatedAt: { $gte: yesterdayRegisterStart, $lte: yesterdayRegisterEnd }
+    });
+
+    // Fetch current week's start and end dates
+    const weekStart = moment().startOf('week').format("DD/MM/YYYY");
+    const weekEnd = moment().endOf('week').format("DD/MM/YYYY");
+
+    // Query for current week's registrations using the corrected date range
+    const currentWeekRegistered = await Users.countDocuments({
+      CreatedAt: { $gte: weekStart, $lte: weekEnd }
+    });
+
     // Perform date comparison like the cron job (checking last updated date)
     const lastUpdate = dataUpdate[0]?.lastUpdatedAt;
     const split = lastUpdate && lastUpdate.split(" ");
@@ -319,10 +337,11 @@ router.get("/dashboardCount", authMiddleware, async (req, res) => {
           total_zero_bal_users: parseInt(total_zero_bal_users),
           today_total_zero_bal_users: parseInt(today_total_zero_bal_users),
           todayRegistered: parseInt(todayRegistered),
-          current_Week_regis_user: parseInt(weekRegistered),
+          current_Week_regis_user: parseInt(currentWeekRegistered), // Updated current week registration
           current_month_Registered: parseInt(monthRegistered),
           lastmonthRegistered: parseInt(lastmonthRegistered),
           lastweekRegistered: parseInt(lastweekRegistered),
+          yesterdayRegistered: parseInt(yesterdayRegistered), // Added yesterdayRegistered
           lastUpdatedAt: datetime,
         },
       },
@@ -342,7 +361,7 @@ router.get("/dashboardCount", authMiddleware, async (req, res) => {
       message: "Dashboard data fetched and updated successfully",
       data: responseData,
     });
-    
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -352,6 +371,7 @@ router.get("/dashboardCount", authMiddleware, async (req, res) => {
     });
   }
 });
+
 async function executeQuery5sec(todayDate0, todayDate1, datetime) {
   if (process.env.pm_id == "1" || true) {
     try {

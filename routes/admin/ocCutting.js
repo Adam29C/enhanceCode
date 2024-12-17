@@ -62,6 +62,8 @@ router.post("/getFinalCutting", async (req, res) => {
     const date = req.body.date;
     const providerId = req.body.providerId;
     const session = req.body.session;
+    const page = req.body.page || 1;
+    const limit = req.body.limit || 10;
 
     const SingDigit = [
       "00",
@@ -165,6 +167,7 @@ router.post("/getFinalCutting", async (req, res) => {
       "98",
       "99",
     ];
+
     commonQuery(providerId, date, session)
       .then(async function (data) {
         let status = data.status;
@@ -179,13 +182,11 @@ router.post("/getFinalCutting", async (req, res) => {
               providerId: providerId,
               gameDate: date,
               $and: [
-                {
-                  $or: [
-                    { gameTypeName: "Jodi Digit" },
-                    { gameTypeName: "Half Sangam Digits" },
-                    { gameTypeName: "Full Sangam Digits" },
-                  ],
-                },
+                { $or: [
+                  { gameTypeName: "Jodi Digit" },
+                  { gameTypeName: "Half Sangam Digits" },
+                  { gameTypeName: "Full Sangam Digits" },
+                ] },
               ],
             },
             { bidDigit: 1, biddingPoints: 1, gameTypePrice: 1, gameSession: 1 }
@@ -195,13 +196,11 @@ router.post("/getFinalCutting", async (req, res) => {
             .find(
               {
                 $and: [
-                  {
-                    $or: [
-                      { gameName: "Single Pana" },
-                      { gameName: "Double Pana" },
-                      { gameName: "Triple Pana" },
-                    ],
-                  },
+                  { $or: [
+                    { gameName: "Single Pana" },
+                    { gameName: "Double Pana" },
+                    { gameName: "Triple Pana" },
+                  ] },
                 ],
               },
               { gameName: 1, gamePrice: 1, _id: 0 }
@@ -214,160 +213,34 @@ router.post("/getFinalCutting", async (req, res) => {
 
           let jodiPrice = 10;
 
-          for (index in allBidDataOC) {
-            let bidDigit = allBidDataOC[index].bidDigit;
-            let bidPoints = allBidDataOC[index].biddingPoints;
-            let splitDigit = bidDigit.split("-");
-            let digit = splitDigit[0];
-            let length = splitDigit[0].length;
-
-            if (length == 1 || length == 2) {
-              singleDigitSum = singleDigitSum + bidPoints;
-            } else {
-              panaSum = panaSum + bidPoints;
-            }
-            switch (length) {
-              case 1:
-                singleDigitArray[digit]["biddingPoints"] += bidPoints;
-                break;
-              case 2:
-                let char0 = parseInt(digit.charAt(0));
-                singleDigitArray[char0]["biddingPoints"] += bidPoints;
-                break;
-              case 3:
-                panaArray[digit]["biddingPoints"] += bidPoints;
-                break;
-            }
-          }
-
-          // Common match stage for both queries
           const matchStage = {
             $match: {
               providerId: mongoose.Types.ObjectId(providerId),
               gameDate: date,
             },
           };
-          // let finalData= await gameBids.find({providerId: new ObjectId(providerId),gameDate: date,gameTypeName: "Single Digit" })
+
           const [data1, data2, data3] = await Promise.all([
             gameBids.aggregate([
               matchStage,
-              {
-                $match: { bidDigit: { $in: SingDigit }, gameSession: "Close" },
-              },
-              {
+              { $match: { bidDigit: { $in: SingDigit }, gameSession: "Close" } },
+              { 
                 $group: {
-                  _id: {
-                    $switch: {
-                      branches: [
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 0] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 10] },
-                            ],
-                          },
-                          then: "0",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 10] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 20] },
-                            ],
-                          },
-                          then: "1",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 20] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 30] },
-                            ],
-                          },
-                          then: "2",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 30] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 40] },
-                            ],
-                          },
-                          then: "3",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 40] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 50] },
-                            ],
-                          },
-                          then: "4",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 50] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 60] },
-                            ],
-                          },
-                          then: "5",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 60] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 70] },
-                            ],
-                          },
-                          then: "6",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 70] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 80] },
-                            ],
-                          },
-                          then: "7",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 80] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 90] },
-                            ],
-                          },
-                          then: "8",
-                        },
-                        {
-                          case: {
-                            $and: [
-                              { $gte: [{ $toInt: "$bidDigit" }, 90] },
-                              { $lt: [{ $toInt: "$bidDigit" }, 100] },
-                            ],
-                          },
-                          then: "9",
-                        },
-                      ],
-                      default: "Other",
-                    },
-                  },
+                  _id: "$bidDigit",
                   sumdigit: { $sum: "$biddingPoints" },
                   countBid: { $sum: 1 },
                   date: { $first: "$gameDate" },
                   gamePrice: { $first: "$gameTypePrice" },
-                },
+                }
               },
-              { $sort: { _id: 1 } },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
             ]),
 
             gameBids.aggregate([
               matchStage,
-              {
-                $match: { gameSession: "Open" },
-              },
-              {
+              { $match: { gameSession: "Open" } },
+              { 
                 $group: {
                   _id: "$bidDigit",
                   sumdigit: { $sum: "$biddingPoints" },
@@ -375,27 +248,25 @@ router.post("/getFinalCutting", async (req, res) => {
                   date: { $first: "$gameDate" },
                   gamePrice: { $first: "$gameTypePrice" },
                   gameSession: { $first: "$gameSession" },
-                },
+                }
               },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
             ]),
 
             gameBids.aggregate([
-              {
-                $match: {
-                  gameDate: date,
-                  providerId: mongoose.Types.ObjectId(providerId),
-                  gameTypeName: "Half Sangam Digits",
-                },
-              },
-              {
+              { $match: { gameDate: date, providerId: mongoose.Types.ObjectId(providerId), gameTypeName: "Half Sangam Digits" } },
+              { 
                 $group: {
                   _id: "$bidDigit",
                   sumdigit: { $sum: "$biddingPoints" },
                   countBid: { $sum: 1 },
                   date: { $first: "$gameDate" },
                   gamePrice: { $first: "$gameTypePrice" },
-                },
+                }
               },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
             ]),
           ]);
 
@@ -438,6 +309,13 @@ router.post("/getFinalCutting", async (req, res) => {
             }
           });
 
+          const totalRecords = await gameBids.countDocuments({ 
+            providerId: mongoose.Types.ObjectId(providerId), 
+            gameDate: date, 
+            $or: [{ gameTypeName: "Jodi Digit" }, { gameTypeName: "Half Sangam Digits" }, { gameTypeName: "Full Sangam Digits" }]
+          });
+          const totalPages = Math.ceil(totalRecords / limit);
+
           res.json({
             status: 1,
             message: "success",
@@ -446,13 +324,14 @@ router.post("/getFinalCutting", async (req, res) => {
               panaArray: panaArray,
             },
             dataSum: { singleDigit: singleDigitSum, Pana: panaSum },
-            price: {
-              sp: sp,
-              dp: dp,
-              tp: tp,
-              jodiPrice: jodiPrice,
-            },
+            price: { sp, dp, tp, jodiPrice },
             mydata: { Open: combinedData, data2: data2 },
+            pagination: {
+              page,
+              limit,
+              total: totalRecords,
+              totalPages,
+            },
           });
         } else {
           res.status(200).json({
@@ -478,6 +357,7 @@ router.post("/getFinalCutting", async (req, res) => {
     });
   }
 });
+
 
 router.post("/finalCloseCutingGroup", authMiddleware, async (req, res) => {
   try {
@@ -639,7 +519,6 @@ router.post("/finalCloseCutingGroup", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 function rates(digit, loss, spp, dpp, tpp) {
   let spArray = [

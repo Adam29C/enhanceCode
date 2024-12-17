@@ -188,7 +188,7 @@ router.post("/xlsDataNew", async (req, res) => {
       });
     } catch (error) {
       res.json({
-        status: flase,
+        status: false,
         error: error.toString(),
       });
     }
