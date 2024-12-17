@@ -5,9 +5,10 @@ const authMiddleware = require("../../helpersModule/athetication");
 
 router.post("/profileChange", authMiddleware, async (req, res) => {
     try {
-        const perPage = parseInt(req.body.perPage) || 50;
+        const limit = parseInt(req.body.limit) || 50;  // perPage ko limit se replace kiya
         const page = parseInt(req.body.page) || 1;
         const searchQuery = req.body.search || "";
+        
         const searchFilter = {
             changeDetails: { $exists: true, $ne: [] },
             ...(searchQuery && {
@@ -20,20 +21,22 @@ router.post("/profileChange", authMiddleware, async (req, res) => {
                 ],
             }),
         };
+
         const records = await changeHistory
             .find(searchFilter)
-            .skip(perPage * (page - 1))
-            .limit(perPage);
+            .skip(limit * (page - 1))  // perPage ko limit se replace kiya
+            .limit(limit);  // perPage ko limit se replace kiya
+
         const totalCount = await changeHistory.countDocuments(searchFilter);
+
         return res.status(200).json({
             statusCode: 200,
             status: true,
-            //data: resultArray,
             records,
             current: page,
-            pages: Math.ceil(totalCount / perPage),
+            pages: Math.ceil(totalCount / limit),  // perPage ko limit se replace kiya
             count: totalCount,
-            showEntry: perPage * page,
+            showEntry: limit * page,  // perPage ko limit se replace kiya
             title: "Invoices",
         });
     } catch (error) {
@@ -44,6 +47,7 @@ router.post("/profileChange", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 router.post("/getHistory", authMiddleware, async (req, res) => {
     try {
