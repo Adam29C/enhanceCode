@@ -982,115 +982,133 @@ router.post("/Finapnb",authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/approveReq",authMiddleware,async (req, res) => {
-	try {
-		const updateArray = req.body.ids;
-		const userArray = req.body.userData;
-		const userplusIds = req.body.userplusIds;
-		const dt = dateTime.create();
-		const formatted = dt.format("m/d/Y I:M:S p");
-		const formatted2 = dt.format("d/m/Y I:M:S p");
-		const time = dt.format("I:M p");
-		const dateToday = dt.format("d/m/Y");
-		const userInfo = req.session.details;
-		const adminName = userInfo.username;
-		const adminId = userInfo.user_id;
-		let total = 0;
-		const historyArray = [];
+//ye comment hatane hai testing ke baad
 
+router.post("/approveReq", authMiddleware, async (req, res) => {
+    try {
+        const updateArray = req.body.ids;
+        const userArray = req.body.userData;
+        const userplusIds = req.body.userplusIds;
+        const adminId = req.body.adminName;  // Assuming adminId is sent in the body
 
-		const dailyReport = new daily({
-			ApprovedIDs: updateArray,
-			ReportName: time + " Report",
-			ReportTime: time,
-			ReportDate: dateToday,
-			adminName: adminName,
-		});
+        const dt = dateTime.create();
+        const formatted = dt.format("m/d/Y I:M:S p");
+        const formatted2 = dt.format("d/m/Y I:M:S p");
+        const time = dt.format("I:M p");
+        const dateToday = dt.format("d/m/Y");
 
-		await dailyReport.save();
+        let total = 0;
+        const historyArray = [];
 
-		await debitReq.updateMany(
-			{ _id: updateArray },
-			{
-				$set: {
-					reqStatus: "Approved",
-					UpdatedBy: adminName,
-					reqUpdatedAt: formatted,
-					fromExport: true,
-					from: 2,
-				},
-			}
-		);
+        // Create daily report (assuming it's required)
+        const dailyReport = new daily({
+            ApprovedIDs: updateArray,
+            ReportName: `${time} Report`,
+            ReportTime: time,
+            ReportDate: dateToday,
+            adminName: adminId,
+        });
 
-		for (index in userArray) {
-			let userId = userArray[index].userId;
-			let userName = userArray[index].username;
-			let transaction_amount = userArray[index].req_amt;
-			let mobile = userArray[index].mobile;
+        // Save daily report (uncomment if needed)
+        // await dailyReport.save();
 
-			total += parseInt(transaction_amount);
+        // Update debit requests (uncomment if needed)
+        // await debitReq.updateMany(
+        // 	{ _id: updateArray },
+        // 	{
+        // 		$set: {
+        // 			reqStatus: "Approved",
+        // 			UpdatedBy: adminId,
+        // 			reqUpdatedAt: formatted,
+        // 			fromExport: true,
+        // 			from: 2,
+        // 		},
+        // 	}
+        // );
 
-			let userDetail = await User.findOne(
-				{ _id: userId },
-				{ wallet_balance: 1,firebaseId:1 }
-			);
-			let wallet_balance = userDetail.wallet_balance;
-			let updateAmt = wallet_balance - transaction_amount;
-			await User.updateOne(
-				{ _id: userId },
-				{
-					$set: {
-						wallet_balance: updateAmt,
-						wallet_bal_updated_at: formatted2,
-					},
-				}
-			);
+        for (let index in userArray) {
+            let userId = userArray[index].userId;
+            let userName = userArray[index].username;
+            let transaction_amount = userArray[index].req_amt;
+            let mobile = userArray[index].mobile;
 
-			let dt0 = dateTime.create();
-			let time = dt0.format("I:M:S p");
+            total += parseInt(transaction_amount);
 
-			let rowSearch = userplusIds[userId];
-			let rowId = rowSearch.rowId
+            // Get user details from database
+            let userDetail = await User.findOne(
+                { _id: userId },
+                { wallet_balance: 1, firebaseId: 1 }
+            );
+            let wallet_balance = userDetail.wallet_balance;
+            let updateAmt = wallet_balance - transaction_amount;
 
-			let dataHistory = {
-				userId: userId,
-				bidId: rowId,
-				filterType: 9,
-				previous_amount: wallet_balance,
-				current_amount: updateAmt,
-				transaction_amount: transaction_amount,
-				username: userName,
-				description: "Amount Debited For Withdraw Request",
-				transaction_date: dateToday,
-				transaction_time: time,
-				transaction_status: "Success",
-				reqType: "Debit",
-				admin_id: adminId,
-				addedBy_name: adminName,
-				mobile: mobile,
-			};
-			historyArray.push(dataHistory);
-			updateReal(total);
+            // Update wallet balance (uncomment if required)
+            // await User.updateOne(
+            // 	{ _id: userId },
+            // 	{
+            // 		$set: {
+            // 			wallet_balance: updateAmt,
+            // 			wallet_bal_updated_at: formatted2,
+            // 		},
+            // 	}
+            // );
 
-			let userToken = [];
-			userToken.push(userDetail.firebaseId);
-			let title = `Your Debit (Withdrawal) Request Of Rs.${transaction_amount}/- is Approved ✔️🤑💰`;
-			let body = `Hello ${userName} 🤩🤩`;
-			notification(userToken, title, body);
-		}
+            let dt0 = dateTime.create();
+            let currentTime = dt0.format("I:M:S p");
 
-		await history.insertMany(historyArray);
+            // Get user rowId from userplusIds
+            let rowSearch = userplusIds[userId];
+            let rowId = rowSearch ? rowSearch.rowId : null;  // Safely access rowId
 
-		res.json({
-			status: true,
-		});
-	} catch (error) {
-		res.json({
-			status: false,
-			error: error,
-		});
-	}
+            let dataHistory = {
+                userId: userId,
+                bidId: rowId,
+                filterType: 9,
+                previous_amount: wallet_balance,
+                current_amount: updateAmt,
+                transaction_amount: transaction_amount,
+                username: userName,
+                description: "Amount Debited For Withdraw Request",
+                transaction_date: dateToday,
+                transaction_time: currentTime,
+                transaction_status: "Success",
+                reqType: "Debit",
+                admin_id: adminId,
+                addedBy_name: adminId,
+                mobile: mobile,
+            };
+
+            historyArray.push(dataHistory);
+
+            // Update real-time data (assuming updateReal is a function)
+            updateReal(total);
+
+            // Send notification (uncomment if required)
+            let userToken = [userDetail.firebaseId];
+            let title = `Your Debit (Withdrawal) Request Of Rs.${transaction_amount}/- is Approved ✔️🤑💰`;
+            let body = `Hello ${userName} 🤩🤩`;
+            // notification(userToken, title, body);
+        }
+
+        // Save transaction history (uncomment if required)
+        // await history.insertMany(historyArray);
+
+        return res.status(200).json({
+            statusCode: 200,
+            status: true,
+            message: "Request processed successfully.",
+        });
+
+    } catch (error) {
+        // Log error details in case of failure, but avoid sensitive details in production
+        return res.status(500).json({
+            status: false,
+            message: "Internal Server Error",
+            error: error.message || "Something went wrong",
+        });
+    }
 });
+
 
 router.post("/decline", async (req, res) => {
     try {
