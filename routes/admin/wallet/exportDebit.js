@@ -17,7 +17,7 @@ router.post("/", authMiddleware, async (req, res) => {
     try {
         // Extract limit and page from the request body
         const { limit = 10, page = 1 } = req.body;
-
+         console.log("gg")
         // Validate limit and page values
         const parsedLimit = parseInt(limit, 10);
         const parsedPage = parseInt(page, 10);
@@ -43,9 +43,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
         const dt = dateTime.create();
         const formattedDate = dt.format("d/m/Y");
-
-        // Find user debit requests with limit and pagination
-		//yha par maine query hatai hai jisse data a sake baad me ise lgana hai
+        console.log({ reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate })
         const userDebitRequests = await debitReq.find(
 		{ reqStatus: "Pending", reqType: "Debit", reqDate: formattedDate },
 		{ _id: 1, userId: 1, reqAmount: 1, withdrawalMode: 1, reqDate: 1 }
@@ -194,39 +192,6 @@ router.post("/xlsDataNew", async (req, res) => {
     }
 });
 
-router.post("/getDetails",authMiddleware,  async (req, res) => {
-    try {
-        const { acc_num } = req.body;
-
-        if (!acc_num) {
-            return res.status(400).json({
-                status: false,
-                message: "Account number is required",
-            });
-        }
-
-        const profile = await userProfile.find({
-            account_no: { $regex: acc_num },
-        });
-        const profileAgain = await userProfile.find({
-            "changeDetails.old_acc_no": { $regex: acc_num },
-        });
-
-        const mergedProfiles = [...profile, ...profileAgain];
-
-        return res.status(200).json({
-            status: true,
-            message: "Profiles fetched successfully",
-            data: mergedProfiles,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            status: false,
-            message: "Internal Server Error",
-            error: error.message || "Something went wrong",
-        });
-    }
-});
 
 router.post("/todayApproved",authMiddleware, async (req, res) => {
 	try {
@@ -741,21 +706,41 @@ router.post("/xlsDataDailyTrakCondition",authMiddleware, async (req, res) => {
 	}
 });
 
-router.post("/getDetails", async (req, res) => {
-	try {
-		const number = req.body.acc_num;
-		let profile = await userProfile.find({ account_no: { $regex: number } });
-		let profileAgain = await userProfile.find({
-			"changeDetails.old_acc_no": { $regex: number },
-		});
-		let merge = [...profile, ...profileAgain]
-		res.json(merge);
-	} catch (error) {
-		res.json({
-			status: false,
-			error: error,
-		});
-	}
+router.post("/getDetails",authMiddleware, async (req, res) => {
+    try {
+        const number = req.body.acc_num;
+
+        if (!number || typeof number !== 'string' || number.trim().length === 0) {
+            return res.status(400).json({
+                status: 0,
+                error: "Invalid account number"
+            });
+        }
+
+        const searchProfile = { account_no: { $regex: `^${number}`, $options: 'i' } };
+        const searchProfileAgain = { "changeDetails.old_acc_no": { $regex: `^${number}`, $options: 'i' } };
+
+        const [profile, profileAgain] = await Promise.all([
+            userProfile.find(searchProfile),
+            userProfile.find(searchProfileAgain)
+        ]);
+
+        const mergedResults = [...profile, ...profileAgain];
+        const uniqueResults = Array.from(new Set(mergedResults.map(a => a._id)))
+            .map(id => mergedResults.find(a => a._id === id));
+
+        res.json({
+            status: 1,
+            data: uniqueResults
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            status: 0,
+            error: "An error occurred while processing the request.",
+            message: error.message || error
+        });
+    }
 });
 
 router.post("/getChangeDetails",authMiddleware,async (req, res) => {
