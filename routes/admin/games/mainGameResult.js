@@ -577,7 +577,7 @@ router.post("/refundList", authMiddleware, async (req, res) => {
 
 router.post("/refundAll", authMiddleware, async (req, res) => {
     try {
-        const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName } = req.body;
+        const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName, page = 1, limit = 10 } = req.body;
 
         if (!providerId || !resultDate || !providerName) {
             return res.status(400).json({
@@ -597,8 +597,8 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
         const [transactionDate, transactionTime] = formattedDateTime.split(" ");
         let tokenArray = [];
 
+        // Handling Single Refund (type === 1)
         if (type === 1) {
-            // Single user refund
             const findUser = await mainUser.findOne({ _id: userid }, { wallet_balance: 1 });
             if (!findUser) {
                 return res.status(404).json({
@@ -667,11 +667,14 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
             sendRefundNotification(tokenArray, singleUserBid.providerName, notificationBody);
 
         } else {
+            // Bulk Refund with Pagination
             const userlist = await gameBids.find({
                 providerId,
                 gameDate: resultDate,
                 winStatus: 0,
-            });
+            })
+            .skip((page - 1) * limit) // Skip records based on page number
+            .limit(limit); // Limit the number of records per page
 
             if (!userlist.length) {
                 return res.status(404).json({
@@ -739,6 +742,7 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 async function sendRefundNotification(tokenArray, name, body) {
     if (!Array.isArray(tokenArray) || tokenArray.length === 0) {
