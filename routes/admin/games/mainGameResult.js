@@ -595,7 +595,6 @@ router.post("/refundList", authMiddleware, async (req, res) => {
     }
 });
 
-
 router.post("/refundAll", authMiddleware, async (req, res) => {
     try {
         const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName } = req.body;
@@ -761,8 +760,6 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
         });
     }
 });
-
-
 
 async function sendRefundNotification(tokenArray, name, body) {
     if (!Array.isArray(tokenArray) || tokenArray.length === 0) {
