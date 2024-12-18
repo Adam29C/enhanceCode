@@ -10,6 +10,7 @@ const gameDigit=require("../../../model/digits")
 const gameBids = require("../../../model/games/gameBids");
 const revertEntries = require("../../../model/revertPayment");
 const history = require('../../../model/wallet_history');
+const mainUser = require("../../../model/API/Users");
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
