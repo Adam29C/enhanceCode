@@ -468,7 +468,6 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             }
         }));
 
-        console.log(historyDataArray, "historyDataArray");
 
         await Promise.all([
             gameBids.bulkWrite(bidUpdates),
@@ -506,7 +505,6 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             }
         });
     } catch (error) {
-        console.log(error)
         res.status(500).json({
             status: false,
             message: 'An error occurred while distributing winnings.',
