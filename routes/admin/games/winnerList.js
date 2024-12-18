@@ -605,12 +605,10 @@ router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
                     },
                 }
             );
-
-            const user = await user.findOne({ _id: userId });
-            if (user) {
-                const { wallet_balance, username, firebaseId } = user;
+            const userInfo = await user.findOne({ _id: userId });
+            if (userInfo) {
+                const { wallet_balance, username, firebaseId } = userInfo;
                 const newBalance = wallet_balance + winPoints;
-
                 await user.updateOne(
                     { _id: userId },
                     { $set: { wallet_balance: newBalance, wallet_bal_updated_at: currentTime } }
