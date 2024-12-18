@@ -214,7 +214,7 @@ router.get("/revertPayment", authMiddleware, async (req, res) => {
         const dt = dateTime.create();
         const formatted = dt.format("m/d/Y");
         const result = await gameResult
-            .find({status:0})
+            .find()
             .sort({ _id: -1 })
             .where("resultDate")
             .equals(formatted);
