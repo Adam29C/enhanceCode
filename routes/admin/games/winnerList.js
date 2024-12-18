@@ -9,6 +9,7 @@ const notification = require('../../helpersModule/sendNotification');
 const gameSum = require('../../../model/dashBoard/BidSumGames');
 const dateTime = require('node-datetime');
 const admins = require("../../../model/dashBoard/AdminModel.js");
+const { ObjectId } = require('mongodb');
 
 router.post("/mainWinnerList", authMiddleware, async (req, res) => {
     try {
@@ -371,7 +372,7 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
                 { providerId, gameDate, gameSession: session }
             ]
         }).skip(skip).limit(limit);
-
+     
         if (winningBids.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -420,16 +421,19 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
                 previous_amount: 0,
                 current_amount: 0,
                 description: `Amount added for winning ${providerName} - ${gameTypeName}`,
-                transaction_date: currentTime,
+                transaction_date: currentTime,  // Ensure `transaction_date` is included
+                transaction_time: currentTime,  // Ensure `transaction_time` is included
                 transaction_status: "Success",
                 admin_id: adminId,
                 addedBy_name: adminId ? (await admins.findById(adminId)).adminName : null,
             });
         }
 
+        // Fetch user information including `username`
         const userIds = Array.from(userUpdates.keys());
         const users = await user.find({ _id: { $in: userIds } });
 
+        // Loop through users and update `historyDataArray`
         for (const user of users) {
             const userId = user._id.toString();
             const updateData = userUpdates.get(userId);
@@ -440,7 +444,12 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
 
             historyDataArray = historyDataArray.map(entry =>
                 entry.userId.toString() === userId
-                    ? { ...entry, previous_amount: previous_balance, current_amount: updateData.wallet_balance }
+                    ? {
+                        ...entry,
+                        previous_amount: previous_balance,
+                        current_amount: updateData.wallet_balance,
+                        username: user.username  // Ensure the `username` field is added
+                    }
                     : entry
             );
 
@@ -459,10 +468,12 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             }
         }));
 
+        console.log(historyDataArray, "historyDataArray");
+
         await Promise.all([
             gameBids.bulkWrite(bidUpdates),
             user.bulkWrite(userUpdateOperations),
-            history.insertMany(historyDataArray),
+            history.insertMany(historyDataArray),  
             gameResult.updateOne({ _id: resultId }, { $set: { status: 1 } }),
             gameBids.updateMany(
                 { winStatus: 0, providerId, gameDate, gameSession: session },
@@ -470,7 +481,8 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             )
         ]);
 
-        await notification(req, res, providerName, notificationArray);
+        // Send notifications
+       // await notification(req, res, providerName, notificationArray);
 
         // Calculate total pages for pagination
         const totalItems = await gameBids.countDocuments({
@@ -494,6 +506,7 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             }
         });
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             status: false,
             message: 'An error occurred while distributing winnings.',
@@ -501,6 +514,8 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
         });
     }
 });
+
+
 
 router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
     try {
