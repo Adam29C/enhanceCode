@@ -7,6 +7,9 @@ const gameResult = require("../../../model/games/GameResult");
 const authMiddleware = require("../../helpersModule/athetication")
 const gameSetting =require("../../../model/games/AddSetting")
 const gameDigit=require("../../../model/digits")
+const gameBids = require("../../../model/games/gameBids");
+const revertEntries = require("../../../model/revertPayment");
+const history = require('../../../model/wallet_history');
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
@@ -359,13 +362,6 @@ router.post("/", authMiddleware, async (req, res) => {
 router.post("/paymentRevert", authMiddleware, async (req, res) => {
     try {
         const { resultId: id, providerId: provider, session: gameSession, digit, family: digitFamily, date: gameDate, adminId, adminName } = req.body;
-
-        if (!id || !provider || !gameSession || !digit || !digitFamily || !gameDate) {
-            return res.status(400).json({
-                status: false,
-                message: "Invalid input parameters"
-            });
-        }
         const dt = dateTime.create();
         const formattedDate = dt.format("d/m/Y");
         const formattedTime = dt.format("I:M:S p");
