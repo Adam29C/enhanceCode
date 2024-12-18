@@ -542,18 +542,24 @@ router.get("/refundPayment", authMiddleware, async (req, res) => {
 
 router.post("/refundList", authMiddleware, async (req, res) => {
     try {
-        const { providerId, resultDate } = req.body;
+        const { providerId, resultDate, page = 1, limit = 10 } = req.body;
+
+        // Validate required parameters
         if (!providerId || !resultDate) {
             return res.status(400).json({
                 status: false,
                 message: "Provider ID and result date are required.",
             });
         }
+
+        // Fetch the paginated list of user bids for refund
         const userlist = await gameBids.find({
             providerId: providerId,
             gameDate: resultDate,
             winStatus: 0,
-        });
+        })
+        .skip((page - 1) * limit)  // Skip based on the page number
+        .limit(limit);  // Limit based on the specified limit
 
         if (userlist.length === 0) {
             return res.status(400).json({
@@ -561,10 +567,24 @@ router.post("/refundList", authMiddleware, async (req, res) => {
                 message: "No records found for the specified criteria.",
             });
         }
+
+        // Count the total number of records for pagination metadata
+        const totalCount = await gameBids.countDocuments({
+            providerId: providerId,
+            gameDate: resultDate,
+            winStatus: 0,
+        });
+
         return res.status(200).json({
             status: true,
             message: "Refund list retrieved successfully.",
             data: userlist,
+            pagination: {
+                page: page,
+                limit: limit,
+                totalCount: totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+            },
         });
     } catch (error) {
         return res.status(500).json({
@@ -575,9 +595,10 @@ router.post("/refundList", authMiddleware, async (req, res) => {
     }
 });
 
+
 router.post("/refundAll", authMiddleware, async (req, res) => {
     try {
-        const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName, page = 1, limit = 10 } = req.body;
+        const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName } = req.body;
 
         if (!providerId || !resultDate || !providerName) {
             return res.status(400).json({
@@ -667,14 +688,12 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
             sendRefundNotification(tokenArray, singleUserBid.providerName, notificationBody);
 
         } else {
-            // Bulk Refund with Pagination
+            // Bulk Refund (Without Pagination)
             const userlist = await gameBids.find({
                 providerId,
                 gameDate: resultDate,
                 winStatus: 0,
-            })
-            .skip((page - 1) * limit) // Skip records based on page number
-            .limit(limit); // Limit the number of records per page
+            });
 
             if (!userlist.length) {
                 return res.status(404).json({
@@ -742,6 +761,7 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 
 async function sendRefundNotification(tokenArray, name, body) {
