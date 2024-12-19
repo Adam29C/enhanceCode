@@ -277,8 +277,9 @@ router.get("/pastResult",authMiddleware,  async (req, res) => {
 });
 
 //ye api inhance hui hai but testing karna hai ye payment Revert ki api hai
-router.post("/paymentRevert",authMiddleware, async (req, res) => {
+router.post("/paymentRevert", authMiddleware, async (req, res) => {
   try {
+      console.log("1");
       const { resultId, providerId, digit, date, family } = req.body;
 
       // Check if required fields are provided
@@ -295,7 +296,7 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
 
       // Initialize the update result placeholder
       const updateResult = "***-*";
-      
+
       // Fetch the list of winning bids
       const winnerList = await starBids
           .find({
@@ -304,6 +305,7 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
               $or: [{ bidDigit: digit }, { bidDigit: family }]
           })
           .sort({ _id: -1, bidDigit: 1 });
+
       if (winnerList.length > 0) {
           let historyArray = [];
           let historyDataArray = [];
@@ -312,10 +314,25 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
               const winner = winnerList[index];
               const { _id: rowId, userId, gameWinPoints, providerName, gameTypeName, userName, mobileNumber, gameTypeId } = winner;
 
+              // Log the userId for debugging
+              console.log("userId: ", userId);
+
               // Fetch the user's wallet balance
               const user = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
+
+              // Check if the user exists
+              if (!user) {
+                  console.log(`User not found for userId: ${userId}`);
+                  return res.status(404).json({
+                      status: false,
+                      message: `User not found for userId: ${userId}`
+                  });
+              }
+
               const walletBal = user.wallet_balance;
               const revertBalance = walletBal - gameWinPoints;
+
+              console.log(walletBal, "hhhhh", revertBalance, userId);
 
               // Update the wallet balance of the user
               await mainUser.updateOne({ _id: userId }, { $set: { wallet_balance: revertBalance } });
@@ -399,6 +416,7 @@ router.post("/paymentRevert",authMiddleware, async (req, res) => {
   }
 });
 
+
 router.get("/refundPayment",authMiddleware, async (req, res) => {
   try {
       const provider = await StarlineProvider.find().sort({ _id: 1 });
@@ -417,10 +435,21 @@ router.get("/refundPayment",authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/refundList",authMiddleware, async (req, res) => {
+router.post("/refundList", authMiddleware, async (req, res) => {
   try {
-      const { providerId, resultDate } = req.body;
+      const { providerId, resultDate, page = 1, limit = 10 } = req.body;
+
+      const skip = (page - 1) * limit;
+
       const userlist = await starBids.find({
+          providerId: providerId,
+          gameDate: resultDate,
+          winStatus: 0,
+      })
+      .skip(skip)
+      .limit(limit);
+
+      const totalCount = await starBids.countDocuments({
           providerId: providerId,
           gameDate: resultDate,
           winStatus: 0,
@@ -430,6 +459,12 @@ router.post("/refundList",authMiddleware, async (req, res) => {
           status: true,
           message: "Refund list fetched successfully",
           data: userlist,
+          pagination: {
+              totalCount,
+              totalPages: Math.ceil(totalCount / limit),
+              currentPage: page,
+              limit: limit
+          },
       });
   } catch (error) {
       return res.status(500).json({

@@ -117,12 +117,12 @@ router.post('/starWinners', authMiddleware, async (req, res) => {
                         updatedAt: formatted
                     }
                 });
-
+            console.log(userID,"userId")
             const userBal = await user.findOne({ _id: userID }, {
                 wallet_balance: 1, username: 1,
                 firebaseId: 1
             });
-
+            console.log(userBal,"userBal")
             const previous_amount = userBal.wallet_balance;
             const current_amount = previous_amount + bal;
             const name = userBal.username;
@@ -194,6 +194,7 @@ router.post('/starWinners', authMiddleware, async (req, res) => {
         });
 
     } catch (error) {
+        console.log(error,"error")
         res.status(500).send({
             status: false,
             message: 'Something Bad Happened',

@@ -766,7 +766,6 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
     }
 });
 
-
 async function sendRefundNotification(tokenArray, name, body) {
     if (!Array.isArray(tokenArray) || tokenArray.length === 0) {
         return {
