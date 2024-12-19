@@ -37,7 +37,9 @@ router.get("/", authMiddleware, async (req, res) => {
 
 router.post("/getResult", authMiddleware, async (req, res) => {
   try {
-    const { provider } = req.body;
+    const { provider, date } = req.body;
+
+    // Check if provider is missing
     if (!provider) {
       return res.status(400).json({
         statusCode: 400,
@@ -46,13 +48,15 @@ router.post("/getResult", authMiddleware, async (req, res) => {
       });
     }
 
+    // Fetch the game types
     const type = await ABtype.find(
       {},
       { gamePrice: 1, _id: 1, gameName: 1 }
     ).sort({ _id: 1 });
 
+    // Aggregation query for data1 - Filter by provider and date
     const data1 = await ABbids.aggregate([
-      { $match: { providerId: new ObjectId(provider) } },
+      { $match: { providerId: new ObjectId(provider), gameDate: date } }, // Added date condition
       {
         $group: {
           _id: "$gameTypeId",
@@ -63,8 +67,9 @@ router.post("/getResult", authMiddleware, async (req, res) => {
       },
     ]);
 
+    // Aggregation query for data2 - Filter by provider and date
     const data2 = await ABbids.aggregate([
-      { $match: { providerId: new ObjectId(provider) } },
+      { $match: { providerId: new ObjectId(provider), gameDate: date } }, // Added date condition
       {
         $group: {
           _id: "$bidDigit",
@@ -75,14 +80,16 @@ router.post("/getResult", authMiddleware, async (req, res) => {
       },
     ]);
 
+    // Check if data1 is empty
     if (!data1 || data1.length === 0) {
       return res.status(404).json({
         statusCode: 404,
         status: false,
-        message: "No data found for the given provider",
+        message: "No data found for the given provider and date",
       });
     }
 
+    // Return the result
     res.status(200).json({
       statusCode: 200,
       status: true,
@@ -94,6 +101,7 @@ router.post("/getResult", authMiddleware, async (req, res) => {
       },
     });
   } catch (error) {
+    // Handle error
     res.status(500).json({
       statusCode: 500,
       status: false,
@@ -102,6 +110,7 @@ router.post("/getResult", authMiddleware, async (req, res) => {
     });
   }
 });
+
 
 router.post("/getBidData", authMiddleware, async (req, res) => {
   try {
