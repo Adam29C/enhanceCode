@@ -599,6 +599,7 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
     try {
         const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName } = req.body;
 
+        // Validation checks
         if (!providerId || !resultDate || !providerName) {
             return res.status(400).json({
                 status: false,
@@ -617,8 +618,8 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
         const [transactionDate, transactionTime] = formattedDateTime.split(" ");
         let tokenArray = [];
 
-        // Handling Single Refund (type === 1)
         if (type === 1) {
+            // Handling Single Refund (type === 1)
             const findUser = await mainUser.findOne({ _id: userid }, { wallet_balance: 1 });
             if (!findUser) {
                 return res.status(404).json({
@@ -654,13 +655,6 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
                 });
             }
 
-            // await gameBids.deleteOne({
-            //     userId: userid,
-            //     providerId,
-            //     gameDate: resultDate,
-            //     winStatus: 0,
-            // });
-
             const historyEntry = new history({
                 userId: userid,
                 bidId: singleUserBid._id,
@@ -679,12 +673,15 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
                 addedBy_name: adminName,
             });
 
+            // Save history entry in bulk
             await historyEntry.save();
 
             tokenArray.push(firebaseId);
 
             const notificationBody = `Hello ${singleUserUpdate.username}, Your Bid Amount ${biddingPoints}/- RS is refunded successfully to your wallet!`;
-            sendRefundNotification(tokenArray, singleUserBid.providerName, notificationBody);
+
+            // Sending notification in parallel
+            await sendRefundNotification(tokenArray, singleUserBid.providerName, notificationBody);
 
         } else {
             // Bulk Refund (Without Pagination)
@@ -701,14 +698,14 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
                 });
             }
 
-            for (const userBid of userlist) {
+            // Optimized Bulk Refund Handling (using Promise.all)
+            const userUpdates = userlist.map(async (userBid) => {
                 const { _id: bidId, userId, biddingPoints } = userBid;
 
                 const findUser = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
-                if (!findUser) continue;
+                if (!findUser) return; // Skip if user is not found
 
                 const currentAmount = findUser.wallet_balance;
-
                 const updatedUser = await mainUser.findOneAndUpdate(
                     { _id: userId },
                     {
@@ -737,14 +734,22 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
                     addedBy_name: adminName,
                 });
 
+                // Save history entry in bulk
                 await historyEntry.save();
 
                 const firebaseId = updatedUser.firebaseId;
-                if (firebaseId) tokenArray.push(firebaseId);
-            }
+                return firebaseId;
+            });
+
+            const firebaseIds = await Promise.all(userUpdates);
+
+            // Filter out null or undefined firebaseIds
+            tokenArray = firebaseIds.filter(id => id);
 
             const notificationBody = `Hello Khatri Games User, Your refund for date: ${resultDate} has been processed successfully.`;
-            sendRefundNotification(tokenArray, providerName, notificationBody);
+
+            // Sending notifications in parallel
+            await sendRefundNotification(tokenArray, providerName, notificationBody);
         }
 
         return res.status(200).json({
@@ -760,6 +765,7 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
         });
     }
 });
+
 
 async function sendRefundNotification(tokenArray, name, body) {
     if (!Array.isArray(tokenArray) || tokenArray.length === 0) {
