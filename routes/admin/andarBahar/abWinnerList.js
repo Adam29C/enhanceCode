@@ -11,10 +11,12 @@ const dateTime = require('node-datetime');
 const Pusher = require('pusher');
 const admins = require("../../../model/dashBoard/AdminModel.js");
 
-router.get("/abWinnerList", authMiddleware, async (req, res) => {
+router.post("/abWinnerList", authMiddleware, async (req, res) => {
     try {
-        const { digit, provider, date, resultId, resultStatus, page = 1, limit = 10 } = req.query;
+        // Extracting the data from the request body instead of query
+        const { digit, provider, date, resultId, resultStatus, page = 1, limit = 10 } = req.body;
 
+        // Validation check for required fields
         if (!digit || !provider || !date || resultId === undefined || resultStatus === undefined) {
             return res.status(400).json({
                 status: false,
@@ -22,12 +24,14 @@ router.get("/abWinnerList", authMiddleware, async (req, res) => {
             });
         }
 
+        // Count total documents matching the provided filters
         const totalCount = await ABbids.countDocuments({
             providerId: provider,
             gameDate: date,
             bidDigit: digit
         });
 
+        // Fetch the result list based on the provided filters
         const resultList = await ABbids.find({
             providerId: provider,
             gameDate: date,
@@ -37,9 +41,13 @@ router.get("/abWinnerList", authMiddleware, async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit);
 
+        // Fetch provider details
         const ABProvider = await abPorvider.findOne({ _id: provider });
+
+        // Fetch the list of game types
         const gameType = await abGameType.find();
 
+        // Prepare the page data
         const pageData = {
             dispData: ABProvider,
             gametype: gameType,
@@ -47,6 +55,7 @@ router.get("/abWinnerList", authMiddleware, async (req, res) => {
             resultStatus: parseInt(resultStatus, 10),
         };
 
+        // Return the response with result data
         return res.status(200).json({
             status: true,
             message: "AB Game Winners List",
