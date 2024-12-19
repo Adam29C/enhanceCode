@@ -899,12 +899,12 @@ router.post("/refundAll", session, async (req, res) => {
 			// 	}
 			// );
 
-			await gameBids.deleteOne({
-				userId: userId,
-				providerId: providerId,
-				gameDate: resultDate,
-				winStatus: 0,
-			})
+			// await gameBids.deleteOne({
+			// 	userId: userId,
+			// 	providerId: providerId,
+			// 	gameDate: resultDate,
+			// 	winStatus: 0,
+			// })
 
 			const dateTime = formatted2.split(" ");
 			let arrValue = new history({

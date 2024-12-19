@@ -654,12 +654,12 @@ router.post("/refundAll", authMiddleware, async (req, res) => {
                 });
             }
 
-            await gameBids.deleteOne({
-                userId: userid,
-                providerId,
-                gameDate: resultDate,
-                winStatus: 0,
-            });
+            // await gameBids.deleteOne({
+            //     userId: userid,
+            //     providerId,
+            //     gameDate: resultDate,
+            //     winStatus: 0,
+            // });
 
             const historyEntry = new history({
                 userId: userid,
@@ -843,4 +843,4 @@ async function sendRefundNotification(tokenArray, name, body) {
     }
 }
 
-module.exports = router
+module.exports = router; 
