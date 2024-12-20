@@ -114,26 +114,46 @@ router.post("/getResult", authMiddleware, async (req, res) => {
 
 router.post("/getBidData", authMiddleware, async (req, res) => {
   try {
-    const date = req.body.date;
-    const bidDigit = req.body.bidDigit;
-    const gameId = req.body.id;
+    const { date, bidDigit, id: gameId, limit = 10, page = 1 } = req.body;
+
+    const limitNumber = parseInt(limit, 10);
+    const pageNumber = parseInt(page, 10);
+
+    const skip = (pageNumber - 1) * limitNumber;
+
     const bidData = await ABbids.find({
       providerId: gameId,
       gameDate: date,
       bidDigit: bidDigit,
-    }).sort({ _id: 1 });
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Bid Data Fatch Successfully",
-        bidData: bidData,
-      });
+    })
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ _id: 1 });
+
+    const totalCount = await ABbids.countDocuments({
+      providerId: gameId,
+      gameDate: date,
+      bidDigit: bidDigit,
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Bid Data Fetched Successfully",
+      bidData: bidData,
+      pagination: {
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limitNumber),
+        currentPage: pageNumber,
+        itemsPerPage: limitNumber,
+      },
+    });
   } catch (e) {
-    return res
-      .status(400)
-      .json({ status: false, message: "Internal Server Error" });
+    return res.status(400).json({
+      status: false,
+      message: "Internal Server Error",
+    });
   }
 });
+
 
 module.exports = router;

@@ -356,22 +356,10 @@ router.get("/getWinner",authMiddleware,async (req, res) => {
 router.post("/paymentRevert",authMiddleware,async (req, res) => {
     try {
         const { resultId, providerId, digit, date } = req.body;
-
         if (!resultId || !providerId || !digit || !date) {
             return res.status(400).json({
                 status: false,
                 message: "Missing required fields: resultId, providerId, digit, or date."
-            });
-        }
-
-        const userInfo = req.session?.details;
-        const adminId = userInfo?.user_id;
-        const adminName = userInfo?.username;
-
-        if (!adminId || !adminName) {
-            return res.status(400).json({
-                status: false,
-                message: "Admin session details are missing."
             });
         }
 
@@ -415,11 +403,12 @@ router.post("/paymentRevert",authMiddleware,async (req, res) => {
                     transaction_status: "Success",
                     win_revert_status: 0,
                     transaction_time: formattedTime,
-                    admin_id: adminId,
-                    addedBy_name: adminName,
+                    admin_id: req.user.id,  
+                    addedBy_name: req.user.name  
+                   
                 };
-                historyDataArray.push(transactionHistory);
 
+                historyDataArray.push(transactionHistory);
 
                 const providerHistory = {
                     userId,
@@ -438,7 +427,6 @@ router.post("/paymentRevert",authMiddleware,async (req, res) => {
                 historyArray.push(providerHistory);
             }
         }
-
         await revertEntries.insertMany(historyArray);
         await history.insertMany(historyDataArray);
 
