@@ -182,13 +182,13 @@ router.get("/web/games", async (req, res) => {
           const cbtTime = moment(gameDetail.CBT, "hh:mm A");
           let message;
           if (nowTime.isBefore(obtTime) && gameDetail.isClosed === "1") {
-            message = "Betting is running for open";
+            message = "Running for open";
           } else if (
             nowTime.isAfter(obtTime) &&
             nowTime.isBefore(cbtTime) &&
             gameDetail.isClosed === "1"
           ) {
-            message = "Betting is running for close";
+            message = "Running for close";
           } else {
             message = "Close for today";
           }
@@ -252,9 +252,9 @@ router.get("/web/startline", async (req, res) => {
         const cbt = moment(setting.CBT, "HH:mm A");
         let message;
         if (currentTime.isBetween(obt, cbt) && setting.isClosed === "1") {
-          message = "Betting is running";
+          message = "Running for open";
         } else {
-          message = "Close for today";
+          message = "Running for close";
         }
 
         return {
@@ -319,9 +319,9 @@ router.get("/web/AbList", async (req, res) => {
         const cbt = moment(setting.CBT, "HH:mm A");
         let message;
         if (currentTime.isBetween(obt, cbt) && setting.isClosed === "1") {
-          message = "Betting is running";
+          message = "Running for open";
         } else {
-          message = "Close for today";
+          message = "Running for close";
         }
 
         return {
