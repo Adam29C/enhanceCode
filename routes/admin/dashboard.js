@@ -465,94 +465,104 @@ async function executeQuery5sec(todayDate0, todayDate1, datetime) {
 }
 
 
-router.post("/getRegisteredUser", authMiddleware,async (req, res) => {
-    try {
-      const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
-      // const todayDate = moment().format("DD/MM/YYYY"); 
-      const todayDate = "14/11/2024"
-      let query = {};
-      let userFundArr = {}; 
-      let returnJson = {};
-      query.CreatedAt = { $regex: todayDate };
-  
-      if (searchQuery) {
-        query.$or = [
-          { username: { $regex: searchQuery, $options: "i" } }, 
-          { email: { $regex: searchQuery, $options: "i" } }, 
-        ];
-      }
-  
-      if (reqType == "1") {
-        query.wallet_balance = 0;
+router.post("/getRegisteredUser", authMiddleware, async (req, res) => {
+  try {
+    const { reqType, page = 1, limit = 10, searchQuery = "" } = req.body; 
+    const todayDate = moment().format("DD/MM/YYYY"); 
+    let query = {};
+    let userFundArr = {}; 
+    let returnJson = {};
+    query.CreatedAt = { $regex: todayDate };
 
-        const todayRegistered = await Users
-          .find(query)
-          .skip((page - 1) * limit) 
-          .limit(parseInt(limit)); 
-        const totalUsers = await Users.countDocuments(query);
-
-        returnJson = {
-          todayRegistered,
-          pagination: {
-            totalUsers,
-            totalPages: Math.ceil(totalUsers / limit),
-            currentPage: page,
-            pageSize: limit,
-          },
-        };
-      } else {
-        query.wallet_balance = { $gt: 0 };
-        const todayRegistered = await Users
-          .find(query)
-          .skip((page - 1) * limit) 
-          .limit(parseInt(limit));
-        const userIds = todayRegistered.map((user) => user._id);
-
-        const userFunds = await total.find({
-          userId: { $in: userIds },
-          reqDate: todayDate,
-          reqType: "Credit",
-          reqStatus: "Approved",
-        });
-  
-        userFunds.forEach((fund) => {
-          const userId = fund.userId.toString();
-          const reqAmount = fund.reqAmount;
-
-          if (!userFundArr[userId]) {
-            userFundArr[userId] = reqAmount;
-          } else {
-            userFundArr[userId] += reqAmount;
-          }
-        });
-  
-        const totalUsers = await Users.countDocuments(query);
-  
-        returnJson = {
-          todayRegistered,
-          userFundArr,
-          pagination: {
-            totalUsers,
-            totalPages: Math.ceil(totalUsers / limit),
-            currentPage: page,
-            pageSize: limit,
-          },
-        };
-      }
-  
-      return res.json({
-        status: true,
-        message: "Data fetched successfully",
-        data: returnJson,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        status: false,
-        message: "An error occurred while fetching registered users.",
-        error: error.message,
-      });
+    if (searchQuery) {
+      query.$or = [
+        { username: { $regex: searchQuery, $options: "i" } }, 
+        { email: { $regex: searchQuery, $options: "i" } }, 
+      ];
     }
+
+    if (reqType == "1") {
+      query.wallet_balance = 0;
+
+      const todayRegistered = await Users
+        .find(query)
+        .skip((page - 1) * limit) 
+        .limit(parseInt(limit)); 
+      const totalUsers = await Users.countDocuments(query);
+
+      // Add SNo to the response data
+      todayRegistered.forEach((user, index) => {
+        user.SNo = (page - 1) * limit + index + 1;
+      });
+
+      returnJson = {
+        todayRegistered,
+        pagination: {
+          totalUsers,
+          totalPages: Math.ceil(totalUsers / limit),
+          currentPage: page,
+          pageSize: limit,
+        },
+      };
+    } else {
+      query.wallet_balance = { $gt: 0 };
+      const todayRegistered = await Users
+        .find(query)
+        .skip((page - 1) * limit) 
+        .limit(parseInt(limit));
+      const userIds = todayRegistered.map((user) => user._id);
+
+      const userFunds = await total.find({
+        userId: { $in: userIds },
+        reqDate: todayDate,
+        reqType: "Credit",
+        reqStatus: "Approved",
+      });
+
+      userFunds.forEach((fund) => {
+        const userId = fund.userId.toString();
+        const reqAmount = fund.reqAmount;
+
+        if (!userFundArr[userId]) {
+          userFundArr[userId] = reqAmount;
+        } else {
+          userFundArr[userId] += reqAmount;
+        }
+      });
+
+      const totalUsers = await Users.countDocuments(query);
+
+      // Add SNo to the response data
+      todayRegistered.forEach((user, index) => {
+        user.SNo = (page - 1) * limit + index + 1;
+      });
+
+      returnJson = {
+        todayRegistered,
+        userFundArr,
+        pagination: {
+          totalUsers,
+          totalPages: Math.ceil(totalUsers / limit),
+          currentPage: page,
+          pageSize: limit,
+        },
+      };
+    }
+
+    return res.json({
+      status: true,
+      message: "Data fetched successfully",
+      data: returnJson,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: "An error occurred while fetching registered users.",
+      error: error.message,
+    });
+  }
 });
+
 
 router.post("/getRegisteredUserLogs",authMiddleware, async (req, res) => {
   try {
