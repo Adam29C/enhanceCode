@@ -9,6 +9,7 @@ const gamesSetting = require("../../../model/games/AddSetting");
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    console.log("ffff")
     const finalArr = {};
     const provider = await starProvider.find().sort({ _id: 1 });
     const finalNew = [];

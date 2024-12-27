@@ -35,6 +35,35 @@ router.post('/starlineHistory', verify, async (req, res)=>{
     }
 });
 
+router.post('/gameResultHistory', verify, async (req, res)=>{
+    
+    try{
+        const date = req.body.date;
+        const formatDate = moment(date , 'DD/MM/YYYY').format('MM/DD/YYYY');
+        const resultData = await gameResult.find({resultDate : formatDate}).sort({_id: -1});    
+        if (Object.keys(resultData).length === 0){
+            res.status(200).json({
+                status: 0,
+                message: "No Result Found For Date : " + date
+            });
+        }
+        else{
+            res.status(200).json({
+                status: 1,
+                message: "Success",
+                data: resultData
+            });
+        }
+    }
+    catch (e) {
+        res.status(400).json({
+            status: 0,
+            message: "Something Bad Happened Please Contact Support",
+            error : e
+        });
+    }
+});
+
 router.post('/fundRequestHistory', verify, async (req, res)=>{
     try {
         const resultData = await fund.find({userId : req.body.id}).sort({_id: -1}).limit(30);
