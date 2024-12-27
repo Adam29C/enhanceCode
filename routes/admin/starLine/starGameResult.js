@@ -209,8 +209,8 @@ router.post("/", authMiddleware, async (req, res) => {
       );
 
       // Send notifications if needed (uncomment the notification block if required)
-      // let token = [];
-      // notification(req, res, finalResult, token);
+      let token = [];
+      notification(req, res, finalResult, token);
 
       return res.status(201).json({
           status: true,

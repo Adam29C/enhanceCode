@@ -11,6 +11,7 @@ const gameBids = require("../../../model/games/gameBids");
 const revertEntries = require("../../../model/revertPayment");
 const history = require('../../../model/wallet_history');
 const mainUser = require("../../../model/API/Users");
+const lodash = require("lodash");
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const dt = dateTime.create();
@@ -334,7 +335,7 @@ router.post("/", authMiddleware, async (req, res) => {
         sendStatus = 1;
         if (sendStatus === 1) {
             let token = [];
-            //notification(req, res, finalResult, token);
+            notification(req, res, finalResult, token);
             return res.status(201).json({
                 status: true,
                 message: "Result declared successfully.",
@@ -595,10 +596,10 @@ router.post("/refundList", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/refundAll", authMiddleware, async (req, res) => {
+router.post("/refundAll", async (req, res) => {
     try {
         const { type, providerId, resultDate, providerName, userid, biddingPoints, adminId, adminName } = req.body;
-
+        console.log("1")
         // Validation checks
         if (!providerId || !resultDate || !providerName) {
             return res.status(400).json({
@@ -773,6 +774,7 @@ async function sendRefundNotification(tokenArray, name, body) {
             message: "No valid tokens provided for notification.",
         };
     }
+    console.log("e")
 
     try {
         // Filter out empty tokens and divide tokens into chunks of 500 (Firebase limit).
@@ -803,7 +805,7 @@ async function sendRefundNotification(tokenArray, name, body) {
         for (let chunk of tokenChunks) {
             let message = { ...messageTemplate, tokens: chunk };
             try {
-                //const response = await messaging.sendMulticast(message);
+                const response = await messaging.sendMulticast(message);
 
                 // Check for falses and collect failed tokens.
                 if (response.falseCount > 0) {

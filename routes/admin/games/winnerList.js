@@ -481,7 +481,7 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
         ]);
 
         // Send notifications
-       // await notification(req, res, providerName, notificationArray);
+        await notification(req, res, providerName, notificationArray);
 
         // Calculate total pages for pagination
         const totalItems = await gameBids.countDocuments({

@@ -292,14 +292,14 @@ router.post("/walletUpdate", authMiddleware, async (req, res) => {
                 },
             },
         ];
-        //await User.bulkWrite(operations);
+        await User.bulkWrite(operations);
 
-        //const userToken = [firebaseId];
-        //const notificationTitle = type === 1
-          //  ? `Your Credit (Deposit) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`
-           // : `Your Debit (Withdrawal) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`;
-       // const notificationBody = `Hello ${username} 🤩🤩`;
-        //notification(userToken, notificationTitle, notificationBody);
+        const userToken = [firebaseId];
+        const notificationTitle = type === 1
+           ? `Your Credit (Deposit) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`
+           : `Your Debit (Withdrawal) Request Of Rs. ${bal}/- is Approved ✔️🤑💰`;
+       const notificationBody = `Hello ${username} 🤩🤩`;
+        notification(userToken, notificationTitle, notificationBody);
         res.json({
             status: true,
             username,

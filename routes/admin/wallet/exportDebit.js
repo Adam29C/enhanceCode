@@ -1087,11 +1087,11 @@ router.post("/approveReq", authMiddleware, async (req, res) => {
             let userToken = [userDetail.firebaseId];
             let title = `Your Debit (Withdrawal) Request Of Rs.${transaction_amount}/- is Approved ✔️🤑💰`;
             let body = `Hello ${userName} 🤩🤩`;
-            // notification(userToken, title, body);
+             notification(userToken, title, body);
         }
 
         // Save transaction history (uncomment if required)
-        // await history.insertMany(historyArray);
+         await history.insertMany(historyArray);
 
         return res.status(200).json({
             statusCode: 200,

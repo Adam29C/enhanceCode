@@ -9,15 +9,15 @@ const mainUser = require("../../../model/API/Users");
 const revertEntries = require("../../../model/revertPayment");
 const history = require("../../../model/wallet_history");
 const moment = require("moment");
-//const messaging = require("../../../firebase");
+const messaging = require("../../../firebase");
 const lodash = require('lodash');
 const authMiddleware=require("../../helpersModule/athetication")
 
-// const gcm = require("node-gcm");
-// const sender = new gcm.Sender(
-// 	"AAAAz-Vezi4:APA91bHNVKatfjZiHl13fcF1xzWK5pLOixdZlHE8KVRwIxVHLJdWGF973uErxgjL_HkzzD1K7a8oxgfjXp4StlVk_tNOTYdFkSdWe6vaKw6hVEDdt0Dw-J0rEeHpbozOMXd_Xlt-_dM1"
-// );
-// const sender = new gcm.Sender(process.env.FIREBASE_SENDER_KEY);
+const gcm = require("node-gcm");
+const sender = new gcm.Sender(
+	"AAAAz-Vezi4:APA91bHNVKatfjZiHl13fcF1xzWK5pLOixdZlHE8KVRwIxVHLJdWGF973uErxgjL_HkzzD1K7a8oxgfjXp4StlVk_tNOTYdFkSdWe6vaKw6hVEDdt0Dw-J0rEeHpbozOMXd_Xlt-_dM1"
+);
+//const sender = new gcm.Sender(process.env.FIREBASE_SENDER_KEY);
 
 router.get("/",authMiddleware, async (req, res) => {
     try {
@@ -505,7 +505,7 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
         const { type, providerId, resultDate, providerName, userId, biddingPoints } = req.body;
         const formatted2 = moment().format("DD/MM/YYYY hh:mm:ss A");
         let tokenArray = [];
-        
+        console.log("a")
         if (type === 1) {
             // Single user refund
             const findUser = await mainUser.findOne({ _id: userId }, { wallet_balance: 1 });
@@ -651,7 +651,7 @@ async function sendRefundNotification(tokenArray, name, body) {
 		token: finalArr,
 	};
 	try {
-		//const response = await messaging.sendMulticast(message);
+		const response = await messaging.sendMulticast(message);
 		console.log('Successfully sent message:', response);
 		if (response.failureCount > 0) {
 			response.responses.forEach((resp, idx) => {
@@ -681,8 +681,9 @@ async function sendRefundNotification(tokenArray, name, body) {
 	};
 	for (let chunk of tokenChunks) {
 		message.tokens = chunk;
+        console.log(message,"message")
 		try {
-			//const response = await messaging.sendMulticast(message);
+			const response = await messaging.sendMulticast(message);
 			if (response.failureCount > 0) {
 				response.responses.forEach((resp, idx) => {
 					if (!resp.success) {
