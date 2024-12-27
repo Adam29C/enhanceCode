@@ -58,18 +58,18 @@ router.get("/starLineProviderById", authMiddleware,async (req, res) => {
 });
 
 router.post("/insertStarLineProvider", authMiddleware,async (req, res) => {
-  const { providerName, result } = req.body;
+  const { gamename, result } = req.body;
 
-  if (!providerName || !result) {
+  if (!gamename || !result) {
     return res.status(400).json({
       status: false,
-      message: "'providerName' and 'result' are required fields."
+      message: "'gamename' and 'result' are required fields."
     });
   }
   const formatted = moment().format("YYYY-MM-DD HH:mm:ss");
 
   const provider = new starlineProvider({
-    providerName: providerName,
+    providerName: gamename,
     providerResult: result,
     modifiedAt: formatted
   });
