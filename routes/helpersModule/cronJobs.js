@@ -30,7 +30,7 @@ const client = new MongoClient(process.env.DB_CONNECT, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 })
-
+//bhai ne raat bhar gu sugha 
 const chatDomain = process.env.CHAT_DOMAIN;
 module.exports = async function () {
 	// cron.schedule("45 23 * * *", async () => {

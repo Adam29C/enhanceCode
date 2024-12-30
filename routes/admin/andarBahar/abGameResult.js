@@ -121,7 +121,7 @@ router.delete("/delete",authMiddleware, async (req, res) => {
 
 router.post("/",authMiddleware,async (req, res) => {
     try {
-        const { providerId, resultDate, winningDigit, session } = req.body;
+        const { providerId, resultDate, winningDigit, session,providerName } = req.body;
 
         if (!providerId || !resultDate || !winningDigit || !session) {
             return res.status(400).json({
@@ -164,7 +164,7 @@ router.post("/",authMiddleware,async (req, res) => {
 
                 const newResult = new ABgameResult({
                     providerId: providerId,
-                    providerName: findTime.providerName,  // Assuming providerName is also stored in game settings
+                    providerName:providerName,  // Assuming providerName is also stored in game settings
                     resultDate: resultDate,
                     winningDigit: winningDigit,
                     status: 0,
@@ -187,7 +187,7 @@ router.post("/",authMiddleware,async (req, res) => {
                     status: 0,
                     winningDigit: winningDigit,
                     resultId: savedResult._id,
-                    providerName: findTime.providerName,
+                    providerName: providerName,
                     time: moment().format("D/M/YYYY h:mm:ss a")
                 };
 
@@ -222,7 +222,7 @@ router.post("/",authMiddleware,async (req, res) => {
 
             const newResult = new ABgameResult({
                 providerId: providerId,
-                providerName: findTime.providerName, // Assuming providerName is available in game settings
+                providerName:providerName, // Assuming providerName is available in game settings
                 resultDate: resultDate,
                 winningDigit: winningDigit,
                 status: 0
