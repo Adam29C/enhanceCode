@@ -84,7 +84,7 @@ router.get("/revertPayment",authMiddleware, async (req, res) => {
     }
 });
 
-router.delete("/delete",authMiddleware, async (req, res) => {
+router.delete("/delete", async (req, res) => {
     try {
         const { resultId, providerId, dltPast } = req.body;
         const formattedDate = moment().format("M/D/YYYY h:mm:ss A");
@@ -119,138 +119,8 @@ router.delete("/delete",authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/",authMiddleware,async (req, res) => {
-    try {
-        const { providerId, resultDate, winningDigit, session,providerName } = req.body;
 
-        if (!providerId || !resultDate || !winningDigit || !session) {
-            return res.status(400).json({
-                status: false,
-                message: "Missing required fields: providerId, resultDate, winningDigit, and session are required."
-            });
-        }
 
-        const todayDay = moment().format("dddd");  // Get the full day name (e.g., "Monday", "Tuesday")
-        const currentTime = moment().format("h:mm a");
-        const todayDate = moment().format("M/D/YYYY");
-        
-        const findTime = await gameSetting.findOne({ providerId: providerId, gameDay: todayDay });
-        if (!findTime) {
-            return res.status(404).json({
-                status: false,
-                message: "Game settings not found for the given providerId and gameDay."
-            });
-        }
-        const timeCheck = findTime.OBRT;
-        const beginningTime = moment(currentTime, "h:mm a");
-        const endTime = moment(timeCheck, "h:mm a");
-
-        // If todayDate matches the resultDate and time check passes
-        if (todayDate === resultDate) {
-            if (beginningTime >= endTime) {
-                const existingResult = await ABgameResult.findOne({
-                    providerId: providerId,
-                    resultDate: resultDate,
-                    session: session
-                });
-                if (existingResult) {
-                    return res.json({
-                        status: false,
-                        message: "Details already filled for this provider and session.",
-                        data: `Details already filled for: ${providerId}, Session: ${session}, Date: ${resultDate}`
-                    });
-                }
-                
-
-                const newResult = new ABgameResult({
-                    providerId: providerId,
-                    providerName:providerName,  // Assuming providerName is also stored in game settings
-                    resultDate: resultDate,
-                    winningDigit: winningDigit,
-                    status: 0,
-                    createdAt: moment().format("D/M/YYYY h:mm:ss a")
-                });
-                const savedResult = await newResult.save();
-                await ABgamesProvider.updateOne(
-                    { _id: providerId },
-                    {
-                        $set: {
-                            providerResult: winningDigit,
-                            modifiedAt: moment().format("D/M/YYYY h:mm:ss a"),
-                            resultStatus: 1
-                        }
-                    }
-                );
-                const notificationData = {
-                    providerId: providerId,
-                    resultDate: resultDate,
-                    status: 0,
-                    winningDigit: winningDigit,
-                    resultId: savedResult._id,
-                    providerName: providerName,
-                    time: moment().format("D/M/YYYY h:mm:ss a")
-                };
-
-                noti(req, res, winningDigit, []); // Assuming noti handles the notification logic
-
-                return res.json({
-                    status: true,
-                    message: "Result declared successfully.",
-                    data: notificationData
-                });
-            } else {
-                return res.json({
-                    status: false,
-                    message: "It is not time to declare the result yet.",
-                    data: "Result cannot be declared before the specified time."
-                });
-            }
-        } else {
-            const existingResult = await ABgameResult.findOne({
-                providerId: providerId,
-                resultDate: resultDate,
-                session: session
-            });
-
-            if (existingResult) {
-                return res.json({
-                    status: false,
-                    message: "Details already filled for this provider and session.",
-                    data: `Details already filled for: ${providerId}, Session: ${session}, Date: ${resultDate}`
-                });
-            }
-
-            const newResult = new ABgameResult({
-                providerId: providerId,
-                providerName:providerName, // Assuming providerName is available in game settings
-                resultDate: resultDate,
-                winningDigit: winningDigit,
-                status: 0
-            });
-
-            const countResult = await ABgameResult.countDocuments({ resultDate: resultDate });
-            const providerCount = await ABgamesProvider.countDocuments();
-            const pendingCount = providerCount - countResult;
-
-            await newResult.save();
-
-            return res.json({
-                status: true,
-                message: "Result declared successfully.",
-                countResultt: countResult,
-                providerCountt: providerCount,
-                pendingCountt: pendingCount
-            });
-        }
-    } catch (e) {
-        console.error("Error in result declaration:", e);
-        return res.status(500).json({
-            status: false,
-            message: "Server error. Please contact support.",
-            error: e.message
-        });
-    }
-});
 
 router.get("/pastResult",authMiddleware, async (req, res) => {
     try {

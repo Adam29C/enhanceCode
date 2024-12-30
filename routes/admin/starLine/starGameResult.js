@@ -67,7 +67,7 @@ router.get("/revertPayment",authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/delete",authMiddleware, async (req, res) => {
+router.delete("/delete", async (req, res) => {
   try {
     const { resultId, providerId, dltPast } = req.body;
     const formatted1 = moment().format("MM/DD/YYYY hh:mm:ss A");
