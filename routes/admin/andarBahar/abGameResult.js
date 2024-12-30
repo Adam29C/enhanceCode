@@ -134,7 +134,6 @@ router.post("/",authMiddleware,async (req, res) => {
         const currentTime = moment().format("h:mm a");
         const todayDate = moment().format("M/D/YYYY");
         
-        console.log("1");
         const findTime = await gameSetting.findOne({ providerId: providerId, gameDay: todayDay });
         if (!findTime) {
             return res.status(404).json({
@@ -142,11 +141,9 @@ router.post("/",authMiddleware,async (req, res) => {
                 message: "Game settings not found for the given providerId and gameDay."
             });
         }
-        console.log("2");
         const timeCheck = findTime.OBRT;
         const beginningTime = moment(currentTime, "h:mm a");
         const endTime = moment(timeCheck, "h:mm a");
-        console.log("3");
 
         // If todayDate matches the resultDate and time check passes
         if (todayDate === resultDate) {
@@ -156,7 +153,6 @@ router.post("/",authMiddleware,async (req, res) => {
                     resultDate: resultDate,
                     session: session
                 });
-                console.log("4");
                 if (existingResult) {
                     return res.json({
                         status: false,
@@ -165,7 +161,6 @@ router.post("/",authMiddleware,async (req, res) => {
                     });
                 }
                 
-				console.log("5",findTime);
 
                 const newResult = new ABgameResult({
                     providerId: providerId,
@@ -175,9 +170,7 @@ router.post("/",authMiddleware,async (req, res) => {
                     status: 0,
                     createdAt: moment().format("D/M/YYYY h:mm:ss a")
                 });
-                console.log("6")
                 const savedResult = await newResult.save();
-				console.log("7");
                 await ABgamesProvider.updateOne(
                     { _id: providerId },
                     {
@@ -188,7 +181,6 @@ router.post("/",authMiddleware,async (req, res) => {
                         }
                     }
                 );
-				console.log("8");
                 const notificationData = {
                     providerId: providerId,
                     resultDate: resultDate,

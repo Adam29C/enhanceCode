@@ -23,7 +23,7 @@ const abgamesResultSchema = new mongoose.Schema({
         },
         createdAt:{
             type: String,
-            required: true
+            //required: true
         },
         status:{
             type: Number,
