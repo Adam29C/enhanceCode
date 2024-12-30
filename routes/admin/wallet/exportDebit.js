@@ -298,11 +298,10 @@ router.post("/showCondition", authMiddleware, async (req, res) => {
     try {
         const { searchType: reqStatus, reportDate, page = 1, limit = 10 } = req.body;
         const formatDate = moment(reportDate, "MM/DD/YYYY").format("DD/MM/YYYY");
-        let totlaAmt = 0;
+        let totalAmt = 0;
         let query;
 
         const skip = (page - 1) * limit;
-
         switch (reqStatus) {
             case "0":
                 query = {
@@ -360,8 +359,7 @@ router.post("/showCondition", authMiddleware, async (req, res) => {
             withdrawalMode: 1,
             reqDate: 1,
             username: 1,
-        })
-        .skip(skip)
+        }).skip(skip)
         .limit(limit);
 
         let userIdArray = [];
@@ -373,9 +371,11 @@ router.post("/showCondition", authMiddleware, async (req, res) => {
             let reqDate = userBebitReq[index].reqDate;
             let username = userBebitReq[index].username;
             let user = userBebitReq[index].userId;
-            let userKi = mongoose.mongo.ObjectId(user);
-            userIdArray.push(userKi);
-            totlaAmt += reqAmount;
+            let userKi = mongoose.mongo.ObjectId(user); 
+
+            userIdArray.push(userKi); 
+            totalAmt += reqAmount;
+
             debitArray[userKi] = {
                 reqAmount: reqAmount,
                 withdrawalMode: withdrawalMode,
@@ -390,12 +390,46 @@ router.post("/showCondition", authMiddleware, async (req, res) => {
             ifsc_code: 1,
             bank_name: 1,
             username: 1,
+            userId: 1,  
+        });
+
+        let uniqueProfiles = [];
+        let seenUserIds = new Set();
+
+        user_Profile.forEach(profile => {
+            if (!seenUserIds.has(profile.userId)) {
+                seenUserIds.add(profile.userId);
+                uniqueProfiles.push(profile);
+            }
+        });
+
+        let mergedProfileData = userBebitReq.map(req => {
+            const userProfileData = uniqueProfiles.find(profile => {
+                return profile.userId.toString() === req.userId.toString();
+            });
+
+            const profile = userProfileData ? {
+                account_holder_name: userProfileData.account_holder_name,
+                account_no: userProfileData.account_no,
+                ifsc_code: userProfileData.ifsc_code,
+                bank_name: userProfileData.bank_name,
+            } : {};
+
+            return {
+                _id: req._id,
+                userId: req.userId,
+                reqAmount: req.reqAmount,
+                withdrawalMode: req.withdrawalMode,
+                reqDate: req.reqDate,
+                username: req.username,
+                ...profile,
+            };
         });
 
         res.json({
             status: true,
-            Profile: user_Profile,
-            totalAmt: totlaAmt,
+            Profile: mergedProfileData,
+            totalAmt: totalAmt,
             totalRecords: await debitReq.countDocuments(query),
             page,
             limit
@@ -403,10 +437,11 @@ router.post("/showCondition", authMiddleware, async (req, res) => {
     } catch (error) {
         res.json({
             status: false,
-            error: error,
+            error: error.message || error,
         });
     }
 });
+
 
 router.post("/xlsDataNewCondition",authMiddleware, async (req, res) => {
 	try {
