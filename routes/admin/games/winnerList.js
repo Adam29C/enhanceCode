@@ -373,12 +373,12 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             ]
         }).skip(skip).limit(limit);
      
-        if (winningBids.length === 0) {
-            return res.status(404).json({
-                status: false,
-                message: 'No winning bids found for the given criteria.'
-            });
-        }
+        // if (winningBids.length === 0) {
+        //     return res.status(200).json({
+        //         status: true,
+        //         message: 'No winning bids found for the given criteria.',
+        //     });
+        // }
 
         const bidUpdates = [];
         const userUpdates = new Map();
