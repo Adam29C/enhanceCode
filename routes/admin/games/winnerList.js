@@ -403,7 +403,6 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
                     }
                 }
             });
-
             if (userUpdates.has(userId.toString())) {
                 userUpdates.get(userId.toString()).wallet_balance += winPoints;
             } else {
@@ -412,7 +411,6 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
                     details: { providerName, gameTypeName }
                 });
             }
-
             historyDataArray.push({
                 userId,
                 bidId: _id,
@@ -432,9 +430,9 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
         // Fetch user information including `username`
         const userIds = Array.from(userUpdates.keys());
         const users = await user.find({ _id: { $in: userIds } });
-
         // Loop through users and update `historyDataArray`
         for (const user of users) {
+
             const userId = user._id.toString();
             const updateData = userUpdates.get(userId);
 
@@ -452,7 +450,7 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
                     }
                     : entry
             );
-
+   
             if (user.firebaseId) {
                 notificationArray.push({
                     firebaseId: user.firebaseId,
@@ -480,9 +478,8 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
             )
         ]);
 
-        // Send notifications
-        await notification(req, res, providerName, notificationArray);
-
+        // Send notifications providerName
+        //await notification(req, res, providerName , notificationArray);
         // Calculate total pages for pagination
         const totalItems = await gameBids.countDocuments({
             $and: [
@@ -512,8 +509,6 @@ router.post('/gameWinner', authMiddleware, async (req, res) => {
         });
     }
 });
-
-
 
 router.post("/remainingGameWinner", authMiddleware, async (req, res) => {
     try {

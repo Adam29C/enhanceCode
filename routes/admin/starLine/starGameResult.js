@@ -529,7 +529,7 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
           });
 
           // Save the history entry
-          await history.save(historyEntry);
+          await historyEntry.save();
 
           // Send notification
           tokenArray.push(singleUserUpdate.firebaseId);
@@ -577,7 +577,7 @@ router.post("/refundAll",authMiddleware, async (req, res) => {
                   });
 
                   // Save the history entry
-                  await history.save(historyEntry);
+                  await historyEntry.save();
 
                   // Delete the bid entry
                   await starBids.deleteOne({ _id: user._id });
