@@ -183,6 +183,7 @@ router.post('/starWinners', authMiddleware, async (req, res) => {
         );
 
         let sumDgit = namefor;
+        console.log("tokenArraytokenArraytokenArray:::",tokenArray)
         await notification(req, res, sumDgit, tokenArray);
 
         res.status(200).send({
